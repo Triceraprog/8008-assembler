@@ -578,7 +578,7 @@ int main(int argc, char** argv)
     {
         if (strcasecmp(argv[1], "-v") == 0)
             verbose = 1;
-        else if (strcasecmp(argv[1], "-ln") == 0)
+        else if (strcasecmp(argv[1], "-nl") == 0)
             listfile = 0;
         else if (strcasecmp(argv[1], "-d") == 0)
             debug = 1;

@@ -41,17 +41,27 @@ def file_equal(ref_file, file_):
             return not difference_found
 
 
+def file_equal_binary(ref_file, file_):
+    with open(file_, "rb") as f:
+        with open(ref_file, "rb") as ref_f:
+            file_content = f.read()
+            ref_file_content = ref_f.read()
+
+            return len(file_content) == len(ref_file_content) and file_content == ref_file_content
+
+
 @contextlib.contextmanager
 def temp_files(list_of_paths):
-    for path in list_of_paths:
-        if path.exists() and path.is_file():
-            path.unlink()
+    def unlink_files(files):
+        for path in files:
+            if path.exists() and path.is_file():
+                path.unlink()
+
+    unlink_files(list_of_paths)
     try:
         yield None
     finally:
-        for path in list_of_paths:
-            if path.exists() and path.is_file():
-                path.unlink()
+        unlink_files(list_of_paths)
 
 
 help_output_first_line_words = ["Usage: ", "[options] infile"]
@@ -67,6 +77,22 @@ help_output = """    where <infile> is assembly code file, extension defaults to
 """
 
 ASSEMBLY_TEXT = "Assembly Performed"
+
+
+class DataFiles:
+    def __init__(self):
+        data_path = pathlib.Path("data")
+        self.input_file = data_path.joinpath("basics.asm")
+        self.output_hex_file = data_path.joinpath("basics.hex")
+        self.output_lst_file = data_path.joinpath("basics.lst")
+        self.output_bin_file = data_path.joinpath("basics.bin")
+        self.output_hex_ref_file = data_path.joinpath("ref_basics.hex")
+        self.output_bin_ref_file = data_path.joinpath("ref_basics.bin")
+        self.output_lst_ref_file = data_path.joinpath("ref_basics.lst")
+        self.output_lst_debug_ref_file = data_path.joinpath("ref_basics_debug.lst")
+        self.output_lst_bin_ref_file = data_path.joinpath("ref_basics_bin.lst")
+
+        self.temp_files = [self.output_lst_file, self.output_hex_file, self.output_bin_file]
 
 
 class TestFunctional(unittest.TestCase):
@@ -88,32 +114,82 @@ class TestFunctional(unittest.TestCase):
             self.assertEqual(line, expected)
 
     def test_assemble_a_file(self):
-        data_path = pathlib.Path("data")
-        input_file = data_path.joinpath("basics.asm")
-        output_hex_file = data_path.joinpath("basics.hex")
-        output_lst_file = data_path.joinpath("basics.lst")
+        files = DataFiles()
 
-        with temp_files([output_hex_file, output_lst_file]):
-            result = run_assembler([input_file])
+        with temp_files(files.temp_files):
+            result = run_assembler([files.input_file])
 
             self.assertEqual(result.returncode, 0)
             self.assertEqual(result.stdout, '')
             self.assertEqual(result.stderr, '')
 
-            self.assertTrue(output_hex_file.is_file())
-            self.assertTrue(output_lst_file.is_file())
+            self.assertTrue(files.output_hex_file.is_file())
+            self.assertTrue(files.output_lst_file.is_file())
+            self.assertFalse(files.output_bin_file.is_file())
 
-            output_hex_ref_file = data_path.joinpath("ref_basics.hex")
-            output_lst_ref_file = data_path.joinpath("ref_basics.lst")
+            self.assertTrue(file_equal(files.output_hex_ref_file, files.output_hex_file),
+                            msg=f"File differs {files.output_hex_file}")
+            self.assertTrue(file_equal(files.output_lst_ref_file, files.output_lst_file),
+                            msg=f"File differs {files.output_lst_file}")
 
-            self.assertTrue(file_equal(output_hex_ref_file, output_hex_file), msg=f"File differs {output_hex_file}")
-            self.assertTrue(file_equal(output_lst_ref_file, output_lst_file), msg=f"File differs {output_lst_file}")
+    @unittest.skip  # This option makes the assembler crash
+    def test_assemble_a_file_with_no_output_listing(self):
+        files = DataFiles()
+
+        with temp_files(files.temp_files):
+            result = run_assembler(["-nl", files.input_file])
+
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, '')
+            self.assertEqual(result.stderr, '')
+
+            self.assertTrue(files.output_hex_file.is_file())
+            self.assertFalse(files.output_lst_file.is_file())
+            self.assertFalse(files.output_bin_file.is_file())
+
+    def test_assemble_a_file_with_output_debug(self):
+        files = DataFiles()
+
+        with temp_files(files.temp_files):
+            result = run_assembler(["-d", files.input_file])
+
+            self.assertEqual(result.returncode, 0)
+            self.assertNotEqual(result.stdout, '')  # Don't care much about what's the debug output
+            self.assertEqual(result.stderr, '')
+
+            self.assertTrue(files.output_hex_file.is_file())
+            self.assertTrue(files.output_lst_file.is_file())
+            self.assertFalse(files.output_bin_file.is_file())
+
+            self.assertTrue(file_equal(files.output_hex_ref_file, files.output_hex_file),
+                            msg=f"File differs {files.output_hex_file}")
+            self.assertTrue(file_equal(files.output_lst_debug_ref_file, files.output_lst_file),
+                            msg=f"File differs {files.output_lst_file}")
+
+    def test_assemble_a_file_with_output_binary(self):
+        files = DataFiles()
+
+        with temp_files(files.temp_files):
+            result = run_assembler(["-bin", files.input_file])
+
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, '')
+            self.assertEqual(result.stderr, '')
+
+            self.assertFalse(files.output_hex_file.is_file())
+            self.assertTrue(files.output_lst_file.is_file())
+            self.assertTrue(files.output_bin_file.is_file())
+
+            self.assertTrue(file_equal_binary(files.output_bin_ref_file, files.output_bin_file),
+                            msg=f"File differs {files.output_bin_file}")
+            self.assertTrue(file_equal(files.output_lst_bin_ref_file, files.output_lst_file),
+                            msg=f"File differs {files.output_lst_file}")
 
 # Next tets
 # DONE - Assembly of a file, check the output
-# - Assembly of a file, check the output with -nl
-# - Assembly of a file, check the output with -d
-# - Assembly of a file, check the output with -bin
+# DONE - Assembly of a file, check the output with -nl
+# DONE - Assembly of a file, check the output with -d
+# DONE - Assembly of a file, check the output with -bin
 # - Assembly of a file, check the output with -octal
 # - Assembly of a file, check the output with -single
 # - Assembly of a file, check the output with -markascii
