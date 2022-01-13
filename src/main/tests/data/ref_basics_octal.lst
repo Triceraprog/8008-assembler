@@ -1,0 +1,114 @@
+AS8 assembler for intel 8008, t.e.jones Version 1.0
+Options: listfile=1 debug=0 binaryout=0 singlelist=0
+octalnums=1 markascii=0
+Infile=data/basics.asm
+Assembly Performed: Thu Jan 13 23:40:33 2022
+
+
+Line Addr.  CodeBytes   Source Line
+---- ------ ----------- ----------------------------------
+   1                    VALUE:  EQU 012
+   2                    LONG:   EQU 050#050
+   3                    
+   4                        ; Comment
+   5                        ORG 000#000
+   6                    
+   7                        ; Index Register Instructions
+   8 00-000 300             LAA
+   9 00-001 371             LMB
+  10 00-002 327             LCM
+  11 00-003 036 030         LDI 030
+  12 00-005 046 377         LEI 0xFF
+  13 00-007 056 000         LHI \HB\SOMEDATA
+  14 00-011 066 165         LLI \LB\SOMEDATA
+  15 00-013 076 123         LMI 123
+  16 00-015 030             IND
+  17 00-016 041             DCE
+  18                    
+  19                        ; Accumulator group
+  20 00-017 202             ADC
+  21 00-020 207             ADM
+  22 00-021 004 000         ADI 0x00
+  23 00-023 213             ACD
+  24 00-024 217             ACM
+  25 00-025 014 022         ACI 022
+  26                    
+  27 00-027 225             SUH
+  28 00-030 227             SUM
+  29 00-031 024 033         SUI 033
+  30 00-033 231             SBB
+  31 00-034 237             SBM
+  32 00-035 034 021         SBI 0x11
+  33                    
+  34 00-037 240             NDA
+  35 00-040 247             NDM
+  36 00-041 044 000         NDI 0x00
+  37 00-043 251             XRB
+  38 00-044 257             XRM
+  39 00-045 054 012         XRI 10
+  40 00-047 262             ORC
+  41 00-050 267             ORM
+  42 00-051 064 021         ORI 0x11
+  43 00-053 273             CPD
+  44 00-054 277             CPM
+  45 00-055 074 111         CPI 111
+  46                    
+  47 00-057 002             RLC
+  48 00-060 012             RRC
+  49 00-061 022             RAL
+  50 00-062 032             RAR
+  51                    
+  52                        ; Program Counter and Stack Control Instructions
+  53                    LOOP:
+  54 00-063 104 063 000     JMP LOOP
+  55 00-066 100 063 000     JFC LOOP
+  56 00-071 140 063 000     JTC LOOP
+  57 00-074 110 063 000     JFZ LOOP
+  58 00-077 150 063 000     JTZ LOOP
+  59 00-102 120 063 000     JFS LOOP
+  60 00-105 160 063 000     JTS LOOP
+  61 00-110 130 063 000     JFP LOOP
+  62 00-113 170 063 000     JTP LOOP
+  63                    
+  64 00-116 106 151 000     CAL ROUTINE
+  65 00-121 102 151 000     CFC ROUTINE
+  66 00-124 142 151 000     CTC ROUTINE
+  67 00-127 112 151 000     CFZ ROUTINE
+  68 00-132 152 151 000     CTZ ROUTINE
+  69 00-135 122 151 000     CFS ROUTINE
+  70 00-140 162 151 000     CTS ROUTINE
+  71 00-143 132 151 000     CFP ROUTINE
+  72 00-146 172 151 000     CTP ROUTINE
+  73                    
+  74                        ; RST 0 ; Not supported at the moment
+  75                    
+  76                    ROUTINE:
+  77 00-151 007             RET
+  78 00-152 003             RFC
+  79 00-153 043             RTC
+  80 00-154 013             RFZ
+  81 00-155 053             RTZ
+  82 00-156 023             RFS
+  83 00-157 063             RTS
+  84 00-160 033             RFP
+  85 00-161 073             RTP
+  86                    
+  87                        ; Input Ouput Instructions
+  88 00-162 105             INP 2
+  89 00-163 121             OUT 000
+  90                    
+  91                        ; Machine Instruction
+  92 00-164 001             HLT
+  93                    
+  94                    SOMEDATA:
+  95 00-165 000 001 002      DATA 000,001,002,003,004    ; End of line comment
+     00-170 003 004 
+  96 00-172                 DATA *2
+Symbol Count: 5
+    Symbol  Oct Val  DecVal
+    ------  -------  ------
+     VALUE      012     10
+      LONG   50 050  10280
+      LOOP      063     51
+   ROUTINE      151    105
+  SOMEDATA      165    117
