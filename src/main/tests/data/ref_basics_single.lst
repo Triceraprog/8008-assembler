@@ -1,0 +1,166 @@
+AS8 assembler for intel 8008, t.e.jones Version 1.0
+Options: listfile=1 debug=0 binaryout=0 singlelist=1
+octalnums=0 markascii=0
+Infile=data/basics.asm
+Assembly Performed: Fri Jan 14 23:44:23 2022
+
+
+Line Addr.  DAT Source Line
+---- ------ --- ----------------------------------
+   1            VALUE:  EQU 012
+   2            LONG:   EQU 050#050
+   3            
+   4                ; Comment
+   5                ORG 000#000
+   6            
+   7                ; Index Register Instructions
+   8 00-000 300     LAA
+   9 00-001 371     LMB
+  10 00-002 327     LCM
+  11 00-003 036     LDI 030
+     00-004 036
+  12 00-005 046     LEI 0xFF
+     00-006 377
+  13 00-007 056     LHI \HB\SOMEDATA
+     00-010 000
+  14 00-011 066     LLI \LB\SOMEDATA
+     00-012 165
+  15 00-013 076     LMI 123
+     00-014 173
+  16 00-015 030     IND
+  17 00-016 041     DCE
+  18            
+  19                ; Accumulator group
+  20 00-017 202     ADC
+  21 00-020 207     ADM
+  22 00-021 004     ADI 0x00
+     00-022 000
+  23 00-023 213     ACD
+  24 00-024 217     ACM
+  25 00-025 014     ACI 022
+     00-026 026
+  26            
+  27 00-027 225     SUH
+  28 00-030 227     SUM
+  29 00-031 024     SUI 033
+     00-032 041
+  30 00-033 231     SBB
+  31 00-034 237     SBM
+  32 00-035 034     SBI 0x11
+     00-036 021
+  33            
+  34 00-037 240     NDA
+  35 00-040 247     NDM
+  36 00-041 044     NDI 0x00
+     00-042 000
+  37 00-043 251     XRB
+  38 00-044 257     XRM
+  39 00-045 054     XRI 10
+     00-046 012
+  40 00-047 262     ORC
+  41 00-050 267     ORM
+  42 00-051 064     ORI 0x11
+     00-052 021
+  43 00-053 273     CPD
+  44 00-054 277     CPM
+  45 00-055 074     CPI 111
+     00-056 157
+  46            
+  47 00-057 002     RLC
+  48 00-060 012     RRC
+  49 00-061 022     RAL
+  50 00-062 032     RAR
+  51            
+  52                ; Program Counter and Stack Control Instructions
+  53            LOOP:
+  54 00-063 104     JMP LOOP
+     00-064 063
+     00-065 000
+  55 00-066 100     JFC LOOP
+     00-067 063
+     00-070 000
+  56 00-071 140     JTC LOOP
+     00-072 063
+     00-073 000
+  57 00-074 110     JFZ LOOP
+     00-075 063
+     00-076 000
+  58 00-077 150     JTZ LOOP
+     00-100 063
+     00-101 000
+  59 00-102 120     JFS LOOP
+     00-103 063
+     00-104 000
+  60 00-105 160     JTS LOOP
+     00-106 063
+     00-107 000
+  61 00-110 130     JFP LOOP
+     00-111 063
+     00-112 000
+  62 00-113 170     JTP LOOP
+     00-114 063
+     00-115 000
+  63            
+  64 00-116 106     CAL ROUTINE
+     00-117 151
+     00-120 000
+  65 00-121 102     CFC ROUTINE
+     00-122 151
+     00-123 000
+  66 00-124 142     CTC ROUTINE
+     00-125 151
+     00-126 000
+  67 00-127 112     CFZ ROUTINE
+     00-130 151
+     00-131 000
+  68 00-132 152     CTZ ROUTINE
+     00-133 151
+     00-134 000
+  69 00-135 122     CFS ROUTINE
+     00-136 151
+     00-137 000
+  70 00-140 162     CTS ROUTINE
+     00-141 151
+     00-142 000
+  71 00-143 132     CFP ROUTINE
+     00-144 151
+     00-145 000
+  72 00-146 172     CTP ROUTINE
+     00-147 151
+     00-150 000
+  73            
+  74                ; RST 0 ; Not supported at the moment
+  75            
+  76            ROUTINE:
+  77 00-151 007     RET
+  78 00-152 003     RFC
+  79 00-153 043     RTC
+  80 00-154 013     RFZ
+  81 00-155 053     RTZ
+  82 00-156 023     RFS
+  83 00-157 063     RTS
+  84 00-160 033     RFP
+  85 00-161 073     RTP
+  86            
+  87                ; Input Ouput Instructions
+  88 00-162 105     INP 2
+  89 00-163 121     OUT 000
+  90            
+  91                ; Machine Instruction
+  92 00-164 001     HLT
+  93            
+  94            SOMEDATA:
+  95 00-165 000     DATA 000,001,002,003,004    ; End of line comment
+%02o-137 000
+%02o-137 000
+%02o-137 000
+%02o-137 000
+  96 00-172         DATA *2
+Symbol Count: 5
+    Symbol  Oct Val  DecVal
+    ------  -------  ------
+     VALUE      014     12
+      LONG   62 062  12850
+      LOOP      063     51
+   ROUTINE      151    105
+  SOMEDATA      165    117
