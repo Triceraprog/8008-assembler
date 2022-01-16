@@ -88,12 +88,14 @@ class DataFiles:
         self.output_bin_file = data_path.joinpath("basics.bin")
         self.output_hex_ref_file = data_path.joinpath("ref_basics.hex")
         self.output_hex_octal_ref_file = data_path.joinpath("ref_basics_octal.hex")
+        self.output_hex_markascii_ref_file = data_path.joinpath("ref_basics_markascii.hex")
         self.output_bin_ref_file = data_path.joinpath("ref_basics.bin")
         self.output_lst_ref_file = data_path.joinpath("ref_basics.lst")
         self.output_lst_debug_ref_file = data_path.joinpath("ref_basics_debug.lst")
         self.output_lst_bin_ref_file = data_path.joinpath("ref_basics_bin.lst")
         self.output_lst_octal_ref_file = data_path.joinpath("ref_basics_octal.lst")
         self.output_lst_single_ref_file = data_path.joinpath("ref_basics_single.lst")
+        self.output_lst_markascii_ref_file = data_path.joinpath("ref_basics_markascii.lst")
 
         self.temp_files = [self.output_lst_file, self.output_hex_file, self.output_bin_file]
 
@@ -226,13 +228,25 @@ class TestFunctional(unittest.TestCase):
             self.assertTrue(file_equal(files.output_lst_single_ref_file, files.output_lst_file),
                             msg=f"File differs {files.output_lst_file}")
 
-# Next tets
-# DONE - Assembly of a file, check the output
-# DONE - Assembly of a file, check the output with -nl
-# DONE - Assembly of a file, check the output with -d
-# DONE - Assembly of a file, check the output with -bin
-# DONE - Assembly of a file, check the output with -octal
-# DONE - Assembly of a file, check the output with -single
-# - Assembly of a file, check the output with -markascii
-# Then a big test with the whole SCELBAL, for compatibility (probably check if the file is there not to distribute it)
+    def test_assemble_a_file_with_markascii_output(self):
+        files = DataFiles()
+
+        with temp_files(files.temp_files):
+            result = run_assembler(["-markascii", files.input_file])
+
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, '')
+            self.assertEqual(result.stderr, '')
+
+            self.assertTrue(files.output_hex_file.is_file())
+            self.assertTrue(files.output_lst_file.is_file())
+            self.assertFalse(files.output_bin_file.is_file())
+
+            self.assertTrue(file_equal(files.output_hex_markascii_ref_file, files.output_hex_file),
+                            msg=f"File differs {files.output_hex_file}")
+            self.assertTrue(file_equal(files.output_lst_markascii_ref_file, files.output_lst_file),
+                            msg=f"File differs {files.output_lst_file}")
+
+# Next tests
+# A big test with the whole SCELBAL, for compatibility (probably check if the file is there not to distribute it)
 # When the assembler will be done and ROM rewritten, then make the test on them too
