@@ -101,6 +101,16 @@ class DataFiles:
 
 
 class TestFunctional(unittest.TestCase):
+    def assert_files(self, files, hex_present, lst_present, bin_present):
+        def assert_one_file(filename, should_be_present):
+            assert_function = self.assertTrue if should_be_present else self.assertFalse
+            # noinspection PyArgumentList
+            assert_function(filename.is_file(), msg=f"Presence of {filename.name} should be: {should_be_present}")
+
+        assert_one_file(files.output_hex_file, hex_present)
+        assert_one_file(files.output_lst_file, lst_present)
+        assert_one_file(files.output_bin_file, bin_present)
+
     def test_without_arguments_help_is_display(self):
         from os import linesep
 
@@ -128,9 +138,7 @@ class TestFunctional(unittest.TestCase):
             self.assertEqual(result.stdout, '')
             self.assertEqual(result.stderr, '')
 
-            self.assertTrue(files.output_hex_file.is_file())
-            self.assertTrue(files.output_lst_file.is_file())
-            self.assertFalse(files.output_bin_file.is_file())
+            self.assert_files(files, hex_present=True, lst_present=True, bin_present=False)
 
             self.assertTrue(file_equal(files.output_hex_ref_file, files.output_hex_file),
                             msg=f"File differs {files.output_hex_file}")
@@ -148,9 +156,7 @@ class TestFunctional(unittest.TestCase):
             self.assertEqual(result.stdout, '')
             self.assertEqual(result.stderr, '')
 
-            self.assertTrue(files.output_hex_file.is_file())
-            self.assertFalse(files.output_lst_file.is_file())
-            self.assertFalse(files.output_bin_file.is_file())
+            self.assert_files(files, hex_present=True, lst_present=False, bin_present=False)
 
     def test_assemble_a_file_with_output_debug(self):
         files = DataFiles()
@@ -162,9 +168,7 @@ class TestFunctional(unittest.TestCase):
             self.assertNotEqual(result.stdout, '')  # Don't care much about what's the debug output
             self.assertEqual(result.stderr, '')
 
-            self.assertTrue(files.output_hex_file.is_file())
-            self.assertTrue(files.output_lst_file.is_file())
-            self.assertFalse(files.output_bin_file.is_file())
+            self.assert_files(files, hex_present=True, lst_present=True, bin_present=False)
 
             self.assertTrue(file_equal(files.output_hex_ref_file, files.output_hex_file),
                             msg=f"File differs {files.output_hex_file}")
@@ -181,9 +185,7 @@ class TestFunctional(unittest.TestCase):
             self.assertEqual(result.stdout, '')
             self.assertEqual(result.stderr, '')
 
-            self.assertFalse(files.output_hex_file.is_file())
-            self.assertTrue(files.output_lst_file.is_file())
-            self.assertTrue(files.output_bin_file.is_file())
+            self.assert_files(files, hex_present=False, lst_present=True, bin_present=True)
 
             self.assertTrue(file_equal_binary(files.output_bin_ref_file, files.output_bin_file),
                             msg=f"File differs {files.output_bin_file}")
@@ -200,9 +202,7 @@ class TestFunctional(unittest.TestCase):
             self.assertEqual(result.stdout, '')
             self.assertEqual(result.stderr, '')
 
-            self.assertTrue(files.output_hex_file.is_file())
-            self.assertTrue(files.output_lst_file.is_file())
-            self.assertFalse(files.output_bin_file.is_file())
+            self.assert_files(files, hex_present=True, lst_present=True, bin_present=False)
 
             self.assertTrue(file_equal(files.output_hex_octal_ref_file, files.output_hex_file),
                             msg=f"File differs {files.output_hex_file}")
@@ -219,9 +219,7 @@ class TestFunctional(unittest.TestCase):
             self.assertEqual(result.stdout, '')
             self.assertEqual(result.stderr, '')
 
-            self.assertTrue(files.output_hex_file.is_file())
-            self.assertTrue(files.output_lst_file.is_file())
-            self.assertFalse(files.output_bin_file.is_file())
+            self.assert_files(files, hex_present=True, lst_present=True, bin_present=False)
 
             self.assertTrue(file_equal(files.output_hex_ref_file, files.output_hex_file),
                             msg=f"File differs {files.output_hex_file}")
@@ -238,9 +236,7 @@ class TestFunctional(unittest.TestCase):
             self.assertEqual(result.stdout, '')
             self.assertEqual(result.stderr, '')
 
-            self.assertTrue(files.output_hex_file.is_file())
-            self.assertTrue(files.output_lst_file.is_file())
-            self.assertFalse(files.output_bin_file.is_file())
+            self.assert_files(files, hex_present=True, lst_present=True, bin_present=False)
 
             self.assertTrue(file_equal(files.output_hex_markascii_ref_file, files.output_hex_file),
                             msg=f"File differs {files.output_hex_file}")
