@@ -83,21 +83,28 @@ class DataFiles:
     def __init__(self):
         data_path = pathlib.Path("data")
         self.input_file = data_path.joinpath("basics.asm")
+        self.scelbal_input_file = data_path.joinpath("sc-micral-n.asm")
+
         self.output_hex_file = data_path.joinpath("basics.hex")
         self.output_lst_file = data_path.joinpath("basics.lst")
         self.output_bin_file = data_path.joinpath("basics.bin")
+        self.output_scelbal_hex_file = data_path.joinpath("sc-micral-n.hex")
+        self.output_scelbal_lst_file = data_path.joinpath("sc-micral-n.lst")
         self.output_hex_ref_file = data_path.joinpath("ref_basics.hex")
         self.output_hex_octal_ref_file = data_path.joinpath("ref_basics_octal.hex")
         self.output_hex_markascii_ref_file = data_path.joinpath("ref_basics_markascii.hex")
         self.output_bin_ref_file = data_path.joinpath("ref_basics.bin")
         self.output_lst_ref_file = data_path.joinpath("ref_basics.lst")
+        self.output_scelbal_lst_ref_file = data_path.joinpath("ref_sc-micral-n.lst")
+        self.output_scelbal_hex_ref_file = data_path.joinpath("ref_sc-micral-n.hex")
         self.output_lst_debug_ref_file = data_path.joinpath("ref_basics_debug.lst")
         self.output_lst_bin_ref_file = data_path.joinpath("ref_basics_bin.lst")
         self.output_lst_octal_ref_file = data_path.joinpath("ref_basics_octal.lst")
         self.output_lst_single_ref_file = data_path.joinpath("ref_basics_single.lst")
         self.output_lst_markascii_ref_file = data_path.joinpath("ref_basics_markascii.lst")
 
-        self.temp_files = [self.output_lst_file, self.output_hex_file, self.output_bin_file]
+        self.temp_files = [self.output_lst_file, self.output_hex_file, self.output_bin_file,
+                           self.output_scelbal_lst_file, self.output_scelbal_hex_file]
 
 
 class TestFunctional(unittest.TestCase):
@@ -243,6 +250,19 @@ class TestFunctional(unittest.TestCase):
             self.assertTrue(file_equal(files.output_lst_markascii_ref_file, files.output_lst_file),
                             msg=f"File differs {files.output_lst_file}")
 
-# Next tests
-# A big test with the whole SCELBAL, for compatibility (probably check if the file is there not to distribute it)
+    def test_assemble_scelbal(self):
+        files = DataFiles()
+
+        with temp_files(files.temp_files):
+            result = run_assembler(["-octal", files.scelbal_input_file])
+
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, '')
+            self.assertEqual(result.stderr, '')
+
+            self.assertTrue(file_equal(files.output_scelbal_hex_ref_file, files.output_scelbal_hex_file),
+                            msg=f"File differs {files.output_scelbal_hex_file}")
+            self.assertTrue(file_equal(files.output_scelbal_lst_ref_file, files.output_scelbal_lst_file),
+                            msg=f"File differs {files.output_scelbal_lst_file}")
+
 # When the assembler will be done and ROM rewritten, then make the test on them too
