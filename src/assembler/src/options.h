@@ -16,13 +16,13 @@ public:
     void parse(int argc, const char** argv);
 
 public:
-    int verbose = 0;
-    int generate_list_file = 1;
-    int debug = 0;
-    int single_byte_list = 0;
-    int generate_binary_file = 0;
-    int input_num_as_octal = 0;
-    int mark_8_ascii = 0;
+    bool verbose = false;
+    bool generate_list_file = true;
+    bool debug = false;
+    bool single_byte_list = false;
+    bool generate_binary_file = false;
+    bool input_num_as_octal = false;
+    bool mark_8_ascii = false;
 
     std::string input_filename;
 

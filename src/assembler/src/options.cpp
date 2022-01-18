@@ -1,7 +1,6 @@
 #include "options.h"
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+
+#include <algorithm>
 #include <iostream>
 #include <ranges>
 #include <string_view>
@@ -24,40 +23,31 @@ std::size_t Options::parse_command_line(int argc, const char** argv)
     std::vector<std::string_view> argv_vector{argv, argv + argc};
     std::vector<std::string_view> left_arguments{};
 
+    using option_selector = std::tuple<std::string_view, bool*, bool>;
+    std::vector<option_selector> options = {{"-v", &verbose, true},
+                                            {"-nl", &generate_list_file, false},
+                                            {"-d", &debug, true},
+                                            {"-bin", &generate_binary_file, true},
+                                            {"-octal", &input_num_as_octal, true},
+                                            {"-single", &single_byte_list, true},
+                                            {"-markascii", &mark_8_ascii, true}};
+
     for (auto& arg : argv_vector | std::ranges::views::drop(1))
     {
-        if (arg == "-v")
+        if (arg[0] == '-')
         {
-            verbose = 1;
-        }
-        else if (arg == "-nl")
-        {
-            generate_list_file = 0;
-        }
-        else if (arg == "-d")
-        {
-            debug = 1;
-        }
-        else if (arg == "-bin")
-        {
-            generate_binary_file = 1;
-        }
-        else if (arg == "-octal")
-        {
-            input_num_as_octal = 1;
-        }
-        else if (arg == "-single")
-        {
-            single_byte_list = 1;
-        }
-        else if (arg == "-markascii")
-        {
-            mark_8_ascii = 1;
-        }
-        else if (arg[0] == '-')
-        {
-            std::cerr << "unknown option " << arg << "\n";
-            std::cerr << "    type " << argv_vector[0] << " for usage" << std::endl;
+            auto found_option = std::ranges::find_if(
+                    options, [&arg](const auto& option) { return arg == std::get<0>(option); });
+
+            if (found_option != options.end())
+            {
+                *std::get<1>(*found_option) = std::get<2>(*found_option);
+            }
+            else
+            {
+                std::cerr << "unknown option " << arg << "\n";
+                std::cerr << "    type " << argv_vector[0] << " for usage" << std::endl;
+            }
         }
         else
         {
