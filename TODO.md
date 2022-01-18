@@ -3,3 +3,4 @@
 - Pseudo instructions
 - Micral N specific instructions
 - New syntax support alongside old syntax
+- Check name of executable and if as8, enters a compatible mode if needed
