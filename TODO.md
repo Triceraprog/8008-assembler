@@ -1,0 +1,5 @@
+- Option to output an expended, simple assembly code with a syntax for another assembler, especially as8
+- Macro system
+- Pseudo instructions
+- Micral N specific instructions
+- New syntax support alongside old syntax
