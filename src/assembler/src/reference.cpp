@@ -367,7 +367,7 @@ void writebyte(int data, int address)
     {
         if (first)
         {
-            if ((progmemory = static_cast<unsigned char*>(malloc(16384))) == NULL)
+            if ((progmemory = static_cast<unsigned char*>(malloc(16384))) == nullptr)
             {
                 fprintf(stderr, "Can't allocate 16384 bytes for prog memory\n");
                 exit(-1);
@@ -600,14 +600,14 @@ int main(int argc, const char** argv)
    *
    */
 
-    if ((ifp = fopen(global_options.input_filename.c_str(), "rt")) == NULL)
+    if ((ifp = fopen(global_options.input_filename.c_str(), "rt")) == nullptr)
     {
         fprintf(stderr, "Can't open %s as input file\n", global_options.input_filename.c_str());
         exit(-1);
     }
     if (global_options.generate_binary_file)
     {
-        if ((ofp = fopen(outfilename, "wb")) == NULL)
+        if ((ofp = fopen(outfilename, "wb")) == nullptr)
         {
             fprintf(stderr, "Can't open %s as output file\n", outfilename);
             exit(-1);
@@ -615,7 +615,7 @@ int main(int argc, const char** argv)
     }
     else
     {
-        if ((ofp = fopen(outfilename, "wt")) == NULL)
+        if ((ofp = fopen(outfilename, "wt")) == nullptr)
         {
             fprintf(stderr, "Can't open %s as output file\n", outfilename);
             exit(-1);
@@ -623,7 +623,7 @@ int main(int argc, const char** argv)
     }
     if (global_options.generate_list_file)
     {
-        if ((lfp = fopen(listfilename, "wt")) == NULL)
+        if ((lfp = fopen(listfilename, "wt")) == nullptr)
         {
             fprintf(stderr, "Can't open %s as input file\n", listfilename);
             exit(-1);
