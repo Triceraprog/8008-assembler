@@ -551,7 +551,7 @@ int finddata(char* line, int* outdata)
     return (n);
 }
 
-int main(int argc, char** argv)
+int main(int argc, const char** argv)
 {
 
     char filebase[80], infilename[80], outfilename[80], listfilename[80];
@@ -568,66 +568,24 @@ int main(int argc, char** argv)
     timetm = localtime(&timet);
     cptr = asctime(timetm);
 
-    /*
-   *
-   * First job is to check arguments,  process any options, and
-   * give usage message if not correctly invoked.
-   *
-   */
-
-    while ((argc > 1) && (argv[1][0] == '-'))
+    try
     {
-        if (strcasecmp(argv[1], "-v") == 0)
-            global_options.verbose = 1;
-        else if (strcasecmp(argv[1], "-nl") == 0)
-            global_options.generate_list_file = 0;
-        else if (strcasecmp(argv[1], "-d") == 0)
-            global_options.debug = 1;
-        else if (strcasecmp(argv[1], "-bin") == 0)
-            global_options.generate_binary_file = 1;
-        else if (strcasecmp(argv[1], "-octal") == 0)
-            global_options.input_num_as_octal = 1;
-        else if (strcasecmp(argv[1], "-single") == 0)
-            global_options.single_byte_list = 1;
-        else if (strcasecmp(argv[1], "-markascii") == 0)
-            global_options.mark_8_ascii = 1;
-        else
-        {
-            fprintf(stderr, "unknown option [%s]\n", argv[1]);
-            fprintf(stderr, "    type %s for usage\n", argv[0]);
-            exit(-1);
-        }
-        /* remove that option from list */
-        if (argc > 2)
-            for (i = 1; i <= argc - 1; i++)
-                argv[i] = argv[i + 1];
-        argc--;
+        global_options.parse(argc, argv);
     }
+    catch (InvalidCommandLine&)
+    {
+        exit(-1);
+    }
+
     if (global_options.single_byte_list)
         singlespacepad[0] = 0;
     else
         strcpy(singlespacepad, "        ");
 
-    if (argc != 2)
-    {
-        fprintf(stderr, "Usage: %s [options] infile\n", argv[0]);
-        fprintf(stderr, "    where <infile> is assembly code file, extension defaults to .asm\n");
-        fprintf(stderr, "    and options include...\n");
-        fprintf(stderr, "    -v        verbose output\n");
-        fprintf(stderr, "    -nl       no list (default is to make .lst file.)\n");
-        fprintf(stderr, "    -d        debug assembler (extra output)\n");
-        fprintf(stderr, "    -bin      makes output binary ROM file, otherwise intel hex\n");
-        fprintf(stderr,
-                "    -octal    makes unidentified 3-digit numbers octal (default decimal)\n");
-        fprintf(stderr, "    -single   makes .lst file single byte per line, otherwise 3/line.\n");
-        fprintf(stderr, "    -markascii makes highest bit in ascii bytes a one (mark).\n");
-        exit(-1);
-    }
-
     {
         /* if filename has '.' in it, don't need extension added */
         int needextension = 1;
-        strcpy(infilename, argv[1]);
+        strcpy(infilename, global_options.input_filename.c_str());
         for (i = 0; i < strlen(infilename); i++)
         {
             filebase[i] = infilename[i];
@@ -716,7 +674,7 @@ int main(int argc, char** argv)
             global_options.single_byte_list);
     fprintf(lfp, "octalnums=%d markascii=%d\n", global_options.input_num_as_octal,
             global_options.mark_8_ascii);
-    fprintf(lfp, "Infile=%s\n", argv[1]);
+    fprintf(lfp, "Infile=%s\n", global_options.input_filename.c_str());
     fprintf(lfp, "Assembly Performed: %s\n\n", cptr);
     if (global_options.single_byte_list)
     {
