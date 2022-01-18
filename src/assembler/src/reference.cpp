@@ -582,23 +582,10 @@ int main(int argc, const char** argv)
     else
         strcpy(singlespacepad, "        ");
 
-    {
-        /* if filename has '.' in it, don't need extension added */
-        int needextension = 1;
-        strcpy(infilename, global_options.input_filename.c_str());
-        for (i = 0; i < strlen(infilename); i++)
-        {
-            filebase[i] = infilename[i];
-            if (infilename[i] == '.')
-            {
-                needextension = 0;
-                break;
-            }
-        }
-        filebase[i] = 0;
-        if (needextension)
-            sprintf(infilename, "%s.asm", infilename);
-    }
+
+    strcpy(infilename, global_options.input_filename.c_str());
+    strcpy(filebase, global_options.input_filename_base.c_str());
+
     /* write either hex file or binary file */
     if (global_options.generate_binary_file)
         sprintf(outfilename, "%s.bin", filebase);

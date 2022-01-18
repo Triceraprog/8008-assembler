@@ -16,6 +16,8 @@ void Options::parse(int argc, const char** argv)
         display_help(argv);
         throw InvalidCommandLine();
     }
+
+    adjust_filenames();
 }
 
 std::size_t Options::parse_command_line(int argc, const char** argv)
@@ -75,4 +77,17 @@ void Options::display_help(const char** argv)
     fprintf(stderr, "    -octal    makes unidentified 3-digit numbers octal (default decimal)\n");
     fprintf(stderr, "    -single   makes .lst file single byte per line, otherwise 3/line.\n");
     fprintf(stderr, "    -markascii makes highest bit in ascii bytes a one (mark).\n");
+}
+
+void Options::adjust_filenames()
+{
+    if (auto dot_index = input_filename.find('.'); dot_index != std::string::npos)
+    {
+        input_filename_base = input_filename.substr(0, dot_index);
+    }
+    else
+    {
+        input_filename_base = input_filename;
+        input_filename += ".asm";
+    }
 }

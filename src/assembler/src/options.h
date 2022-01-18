@@ -25,10 +25,12 @@ public:
     bool mark_8_ascii = false;
 
     std::string input_filename;
+    std::string input_filename_base;
 
 private:
     std::size_t parse_command_line(int argc, const char** argv);
     static void display_help(const char** argv);
+    void adjust_filenames();
 };
 
 #endif //INC_8008_ASSEMBLER_OPTIONS_H
