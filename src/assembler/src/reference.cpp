@@ -1,3 +1,5 @@
+#include "options.h"
+
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -16,9 +18,9 @@ struct
 int numsymbols;
 
 FILE *ifp, *ofp, *lfp;
-int verbose = 0, listfile = 1, debug = 0, singlelist = 0;
-int binaryout = 0, octalnums = 0, markascii = 0;
 int linecount;
+
+Options global_options;
 
 struct
 {
@@ -160,7 +162,7 @@ void parseline(char* line, char* label, char* opcode, char* arg1, char* arg2, in
         printf("WARNING: extra text on line %d %s\n", linecount, line);
     }
 
-    if (debug)
+    if (global_options.debug)
         printf("label=<%s> opcode=<%s> args=%d arg1=<%s> arg2=<%s> extra=<%s>\n", label, opcode,
                *args, arg1, arg2, extrastuff);
 }
@@ -218,11 +220,11 @@ int evaluateargument(char* arg)
         return (i & 0xFF);
     }
 
-    if (debug)
+    if (global_options.debug)
         printf("evaluating %s\n", arg);
     n = sscanf(arg, "%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%s", part[0],
                &operation[0], part[1], &operation[1], part[2], &operation[2], part[3], extra);
-    if (debug)
+    if (global_options.debug)
         printf("n=%d part0=%s operation0=%c part1=%s operation1=%c part2=%s operation2=%c part3=%s "
                "extra=%s\n",
                n, part[0], operation[0], part[1], operation[1], part[2], operation[2], part[3],
@@ -293,7 +295,7 @@ int evaluateargument(char* arg)
         }
         else
         {
-            if ((strlen(part[j]) == 3) && (octalnums))
+            if ((strlen(part[j]) == 3) && (global_options.input_num_as_octal))
             {
                 if (sscanf(part[j], "%o", &val) != 1)
                 {
@@ -310,7 +312,7 @@ int evaluateargument(char* arg)
                 }
             }
         }
-        if (debug)
+        if (global_options.debug)
             printf("      for %s got value %d\n", part[j], val);
         if (j == 0)
             sum = val;
@@ -332,7 +334,7 @@ int evaluateargument(char* arg)
                 exit(-1);
             }
         }
-        if (debug)
+        if (global_options.debug)
             printf("     for got sum %d\n", sum);
     }
     return (sum);
@@ -361,7 +363,7 @@ void writebyte(int data, int address)
         exit(-1);
     }
 
-    if (binaryout)
+    if (global_options.generate_binary_file)
     {
         if (first)
         {
@@ -512,8 +514,8 @@ int finddata(char* line, int* outdata)
             if (strlen(ptr) < 1)
                 break;
         }
-        /* if "markascii" option, set the highest bit of these ascii bytes */
-        if (markascii)
+        /* if "global_options.markascii" option, set the highest bit of these ascii bytes */
+        if (global_options.mark_8_ascii)
             for (i = 0; i < n; i++)
                 outdata[i] = outdata[i] | 0x80;
     }
@@ -549,7 +551,6 @@ int finddata(char* line, int* outdata)
     return (n);
 }
 
-
 int main(int argc, char** argv)
 {
 
@@ -577,19 +578,19 @@ int main(int argc, char** argv)
     while ((argc > 1) && (argv[1][0] == '-'))
     {
         if (strcasecmp(argv[1], "-v") == 0)
-            verbose = 1;
+            global_options.verbose = 1;
         else if (strcasecmp(argv[1], "-nl") == 0)
-            listfile = 0;
+            global_options.generate_list_file = 0;
         else if (strcasecmp(argv[1], "-d") == 0)
-            debug = 1;
+            global_options.debug = 1;
         else if (strcasecmp(argv[1], "-bin") == 0)
-            binaryout = 1;
+            global_options.generate_binary_file = 1;
         else if (strcasecmp(argv[1], "-octal") == 0)
-            octalnums = 1;
+            global_options.input_num_as_octal = 1;
         else if (strcasecmp(argv[1], "-single") == 0)
-            singlelist = 1;
+            global_options.single_byte_list = 1;
         else if (strcasecmp(argv[1], "-markascii") == 0)
-            markascii = 1;
+            global_options.mark_8_ascii = 1;
         else
         {
             fprintf(stderr, "unknown option [%s]\n", argv[1]);
@@ -602,7 +603,7 @@ int main(int argc, char** argv)
                 argv[i] = argv[i + 1];
         argc--;
     }
-    if (singlelist)
+    if (global_options.single_byte_list)
         singlespacepad[0] = 0;
     else
         strcpy(singlespacepad, "        ");
@@ -641,12 +642,12 @@ int main(int argc, char** argv)
             sprintf(infilename, "%s.asm", infilename);
     }
     /* write either hex file or binary file */
-    if (binaryout)
+    if (global_options.generate_binary_file)
         sprintf(outfilename, "%s.bin", filebase);
     else
         sprintf(outfilename, "%s.hex", filebase);
     sprintf(listfilename, "%s.lst", filebase);
-    if (debug)
+    if (global_options.debug)
         printf("filebase=\"%s\" infile=\"%s\" outfile=\"%s\" listfile=\"%s\"\n", filebase,
                infilename, outfilename, listfilename);
     /*
@@ -661,7 +662,7 @@ int main(int argc, char** argv)
         fprintf(stderr, "Can't open %s as input file\n", infilename);
         exit(-1);
     }
-    if (binaryout)
+    if (global_options.generate_binary_file)
     {
         if ((ofp = fopen(outfilename, "wb")) == NULL)
         {
@@ -677,7 +678,7 @@ int main(int argc, char** argv)
             exit(-1);
         }
     }
-    if (listfile)
+    if (global_options.generate_list_file)
     {
         if ((lfp = fopen(listfilename, "wt")) == NULL)
         {
@@ -685,7 +686,7 @@ int main(int argc, char** argv)
             exit(-1);
         }
     }
-    if (debug)
+    if (global_options.debug)
         printf("opened all files\n");
 
     /*
@@ -704,17 +705,20 @@ int main(int argc, char** argv)
    *
    */
 
-    if (debug || verbose)
+    if (global_options.debug || global_options.verbose)
         printf("Pass number One:  Read and Define Symbols\n");
     linecount = 0;
     curaddress = 0;
     fprintf(lfp, "AS8 assembler for intel 8008, t.e.jones Version 1.0\n");
-    fprintf(lfp, "Options: listfile=%d debug=%d ", listfile, debug);
-    fprintf(lfp, "binaryout=%d singlelist=%d\n", binaryout, singlelist);
-    fprintf(lfp, "octalnums=%d markascii=%d\n", octalnums, markascii);
+    fprintf(lfp, "Options: listfile=%d debug=%d ", global_options.generate_list_file,
+            global_options.debug);
+    fprintf(lfp, "binaryout=%d singlelist=%d\n", global_options.generate_binary_file,
+            global_options.single_byte_list);
+    fprintf(lfp, "octalnums=%d markascii=%d\n", global_options.input_num_as_octal,
+            global_options.mark_8_ascii);
     fprintf(lfp, "Infile=%s\n", argv[1]);
     fprintf(lfp, "Assembly Performed: %s\n\n", cptr);
-    if (singlelist)
+    if (global_options.single_byte_list)
     {
         fprintf(lfp, "Line Addr.  DAT Source Line\n");
         fprintf(lfp, "---- ------ --- ----------------------------------\n");
@@ -732,11 +736,11 @@ int main(int argc, char** argv)
         if (strlen(line) > 0)
             line[strlen(line) - 1] = 0;
         linecount++;
-        if (verbose || debug)
+        if (global_options.verbose || global_options.debug)
             printf("     0x%X \"%s\"\n", curaddress, line);
         /* this function breaks line into separate parts */
         parseline(line, label, opcode, arg1str, arg2str, &args);
-        if (debug)
+        if (global_options.debug)
             printf("parsed line label=%s opcode=%s arg1str=%s\n", label, opcode, arg1str);
         if (label[0] != 0)
         {
@@ -752,7 +756,7 @@ int main(int argc, char** argv)
                 val = evaluateargument(arg1str);
             else
                 val = curaddress;
-            if (debug)
+            if (global_options.debug)
                 printf("at address=%d=%X defining %s = %d =0x%X\n", curaddress, curaddress, label,
                        val, val);
             definesymbol(label, val);
@@ -790,7 +794,7 @@ int main(int argc, char** argv)
         else if (strcasecmp(opcode, "data") == 0)
         {
             n = finddata(line, datalist);
-            if (debug)
+            if (global_options.debug)
                 printf("got %d items in datalist\n", n);
             /* a negative number denotes that much space to save, but not specifying data */
             /* if so, just change sign to positive */
@@ -829,7 +833,7 @@ int main(int argc, char** argv)
    *
    */
 
-    if (verbose || debug)
+    if (global_options.verbose || global_options.debug)
         printf("Pass number Two:  Re-read and assemble codes\n");
     rewind(ifp);
     linecount = 0;
@@ -841,7 +845,7 @@ int main(int argc, char** argv)
         if (strlen(line) > 0)
             line[strlen(line) - 1] = 0;
         linecount++;
-        if (verbose || debug)
+        if (global_options.verbose || global_options.debug)
             printf("     0x%X \"%s\"\n", curaddress, line);
         /* this function breaks line into separate parts */
         parseline(line, label, opcode, arg1str, arg2str, &args);
@@ -849,26 +853,26 @@ int main(int argc, char** argv)
         if (opcode[0] == 0)
         {
             /* must just be a comment line (or label only) */
-            if (listfile)
+            if (global_options.generate_list_file)
                 fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad, line);
             continue;
         }
         /* check if this opcode is one of the pseudoops */
         if (strcasecmp(opcode, "equ") == 0)
         {
-            if (listfile)
+            if (global_options.generate_list_file)
                 fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad, line);
             continue;
         }
         if (strcasecmp(opcode, "cpu") == 0)
         {
-            if (listfile)
+            if (global_options.generate_list_file)
                 fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad, line);
             continue;
         }
         if (strcasecmp(opcode, "equ") == 0)
         {
-            if (listfile)
+            if (global_options.generate_list_file)
                 fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad, line);
             continue;
         }
@@ -880,13 +884,13 @@ int main(int argc, char** argv)
                         arg1str);
                 exit(-1);
             }
-            if (listfile)
+            if (global_options.generate_list_file)
                 fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad, line);
             continue;
         }
         if (strcasecmp(opcode, "end") == 0)
         {
-            if (listfile)
+            if (global_options.generate_list_file)
                 fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad, line);
             /* could break here, but rather than break, */
             /* we will go ahead and check for more with a continue */
@@ -898,7 +902,7 @@ int main(int argc, char** argv)
             /* if n is negative, that number of bytes are just reserved */
             if (n < 0)
             {
-                if (listfile)
+                if (global_options.generate_list_file)
                     fprintf(lfp, "%4d %02o-%03o     %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
                             (lineaddress & 0xFF), singlespacepad, line);
                 curaddress += 0 - n;
@@ -906,9 +910,9 @@ int main(int argc, char** argv)
             }
             for (i = 0; i < n; i++)
                 writebyte(datalist[i], curaddress++);
-            if (listfile)
+            if (global_options.generate_list_file)
             {
-                if (singlelist)
+                if (global_options.single_byte_list)
                 {
                     fprintf(lfp, "%4d %02o-%03o %03o %s\n", linecount, ((lineaddress >> 8) & 0xFF),
                             (lineaddress & 0xFF), datalist[0], line);
@@ -1003,7 +1007,7 @@ int main(int argc, char** argv)
         {
             /* single byte, no arguments */
             writebyte(opcodes[i].code, curaddress++);
-            if (listfile)
+            if (global_options.generate_list_file)
                 fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
                         (lineaddress & 0xFF), opcodes[i].code, singlespacepad, line);
         }
@@ -1019,9 +1023,9 @@ int main(int argc, char** argv)
             code = opcodes[i].code;
             writebyte(code, curaddress++);
             writebyte(arg1, curaddress++);
-            if (listfile)
+            if (global_options.generate_list_file)
             {
-                if (singlelist)
+                if (global_options.single_byte_list)
                 {
                     fprintf(lfp, "%4d %02o-%03o %03o %s\n", linecount, ((lineaddress >> 8) & 0xFF),
                             (lineaddress & 0xFF), code, line);
@@ -1052,9 +1056,9 @@ int main(int argc, char** argv)
             writebyte(code, curaddress++);
             writebyte(lowbyte, curaddress++);
             writebyte(highbyte, curaddress++);
-            if (listfile)
+            if (global_options.generate_list_file)
             {
-                if (singlelist)
+                if (global_options.single_byte_list)
                 {
                     fprintf(lfp, "%4d %02o-%03o %03o %s\n", linecount, ((lineaddress >> 8) & 0xFF),
                             (lineaddress & 0xFF), code, line);
@@ -1088,7 +1092,7 @@ int main(int argc, char** argv)
             }
             code = opcodes[i].code + (arg1 << 1);
             writebyte(code, curaddress++);
-            if (listfile)
+            if (global_options.generate_list_file)
                 fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
                         (lineaddress & 0xFF), code, singlespacepad, line);
         }
@@ -1101,8 +1105,8 @@ int main(int argc, char** argv)
     }
     /* signal to close off output file */
     writebyte(-1, -1);
-    /* write symbol table to listfile */
-    if (listfile)
+    /* write symbol table to global_options.listfile */
+    if (global_options.generate_list_file)
     {
         fprintf(lfp, "Symbol Count: %d\n", numsymbols);
         fprintf(lfp, "    Symbol  Oct Val  DecVal\n");
