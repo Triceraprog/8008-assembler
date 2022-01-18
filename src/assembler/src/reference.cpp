@@ -554,7 +554,7 @@ int finddata(char* line, int* outdata)
 int main(int argc, const char** argv)
 {
 
-    char filebase[80], infilename[80], outfilename[80], listfilename[80];
+    char outfilename[80], listfilename[80];
     char line[100], cleanline[100], label[20];
     char opcode[80], arg1str[20], arg2str[20], c, *cptr;
     char singlespacepad[9]; /* this is some extra padding if we use single space list file */
@@ -582,19 +582,17 @@ int main(int argc, const char** argv)
     else
         strcpy(singlespacepad, "        ");
 
-
-    strcpy(infilename, global_options.input_filename.c_str());
-    strcpy(filebase, global_options.input_filename_base.c_str());
-
     /* write either hex file or binary file */
     if (global_options.generate_binary_file)
-        sprintf(outfilename, "%s.bin", filebase);
+        sprintf(outfilename, "%s.bin", global_options.input_filename_base.c_str());
     else
-        sprintf(outfilename, "%s.hex", filebase);
-    sprintf(listfilename, "%s.lst", filebase);
+        sprintf(outfilename, "%s.hex", global_options.input_filename_base.c_str());
+    sprintf(listfilename, "%s.lst", global_options.input_filename_base.c_str());
     if (global_options.debug)
-        printf("filebase=\"%s\" infile=\"%s\" outfile=\"%s\" listfile=\"%s\"\n", filebase,
-               infilename, outfilename, listfilename);
+        printf("global_options.input_filename_base.c_str()=\"%s\" infile=\"%s\" outfile=\"%s\" "
+               "listfile=\"%s\"\n",
+               global_options.input_filename_base.c_str(), global_options.input_filename.c_str(),
+               outfilename, listfilename);
     /*
    *
    * Okay, now we have options processed, and we know file names.
@@ -602,9 +600,9 @@ int main(int argc, const char** argv)
    *
    */
 
-    if ((ifp = fopen(infilename, "rt")) == NULL)
+    if ((ifp = fopen(global_options.input_filename.c_str(), "rt")) == NULL)
     {
-        fprintf(stderr, "Can't open %s as input file\n", infilename);
+        fprintf(stderr, "Can't open %s as input file\n", global_options.input_filename.c_str());
         exit(-1);
     }
     if (global_options.generate_binary_file)
