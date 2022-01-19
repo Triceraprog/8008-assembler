@@ -1,22 +1,49 @@
-#include "options.h"
 #include "files.h"
+#include "options.h"
 
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <tuple>
 
-/* this is a lot of symbols, but needed for SCELBAL */
-#define MAXSYMBOLS 1000
+const size_t MAXSYMBOLS = 1000;
 
-struct
+class SymbolTable
 {
-    char label[10];
-    int value;
-} symbols[MAXSYMBOLS];
+public:
+    void define_symbol(char* symbol, int value)
+    {
+        symbols[numsymbols].label = std::string{symbol};
+        symbols[numsymbols].value = value;
+        numsymbols++;
+    }
 
-int numsymbols;
+    std::tuple<bool, int> get_symbol_value(const char* symbol) const
+    {
+        int i;
+        for (i = 0; i < numsymbols; i++)
+        {
+            if (symbols[i].label == std::string{symbol})
+            {
+                return {true, symbols[i].value};
+            }
+        }
+        return {false, 0};
+    }
+
+    struct Symbol
+    {
+        std::string label;
+        int value;
+    };
+
+    Symbol symbols[MAXSYMBOLS];
+    int numsymbols;
+
+private:
+};
 
 int linecount;
 
@@ -167,26 +194,6 @@ void parseline(char* line, char* label, char* opcode, char* arg1, char* arg2, in
                *args, arg1, arg2, extrastuff);
 }
 
-void definesymbol(char* symbol, int value)
-{
-    strcpy(symbols[numsymbols].label, symbol);
-    symbols[numsymbols].value = value;
-    numsymbols++;
-}
-
-int findsymbol(char* symbol)
-{
-    int i;
-    for (i = 0; i < numsymbols; i++)
-    {
-        if (strcasecmp(symbols[i].label, symbol) == 0)
-        {
-            return (i);
-        }
-    }
-    return (-1);
-}
-
 int findopcode(char* str)
 {
     int i;
@@ -196,7 +203,7 @@ int findopcode(char* str)
     return (-1);
 }
 
-int evaluateargument(char* arg)
+int evaluateargument(const SymbolTable& symbol_table, char* arg)
 {
     int i, n, j, k;
     char part[4][20], operation[3], extra[80];
@@ -211,12 +218,12 @@ int evaluateargument(char* arg)
 
     if (strncmp(arg, "\\HB\\", 4) == 0)
     {
-        i = evaluateargument(arg + 4);
+        i = evaluateargument(symbol_table, arg + 4);
         return ((i >> 8) & 0xFF);
     }
     if (strncmp(arg, "\\LB\\", 4) == 0)
     {
-        i = evaluateargument(arg + 4);
+        i = evaluateargument(symbol_table, arg + 4);
         return (i & 0xFF);
     }
 
@@ -242,9 +249,10 @@ int evaluateargument(char* arg)
 
         if (isalpha(part[j][0]))
         {
-            if ((i = findsymbol(part[j])) != -1)
+            if (auto symbol_value = symbol_table.get_symbol_value(part[j]);
+                std::get<0>(symbol_value))
             {
-                val = symbols[i].value;
+                val = std::get<1>(symbol_value);
             }
             else
             {
@@ -427,7 +435,7 @@ void writebyte(int data, int address, FILE* ofp)
     }
 }
 
-int finddata(char* line, int* outdata)
+int finddata(const SymbolTable& symbol_table, char* line, int* outdata)
 {
     char *ptr, c;
     char cleanline[80];
@@ -545,7 +553,7 @@ int finddata(char* line, int* outdata)
         }
         for (i = 0; i < n; i++)
         {
-            *(outdata++) = evaluateargument(arg[i]);
+            *(outdata++) = evaluateargument(symbol_table, arg[i]);
         }
     }
     return (n);
@@ -580,20 +588,16 @@ int main(int argc, const char** argv)
     else
         strcpy(singlespacepad, "        ");
 
-    /* write either hex file or binary file */
     Files files(global_options);
     FILE* ifp = files.ifp;
     FILE* ofp = files.ofp;
     FILE* lfp = files.lfp;
 
     /*
-   *
-   * Now initialize the symbol table, to get ready for assembly.
-   *
-   *
-   */
+     * Now initialize the symbol table, to get ready for assembly.
+     */
 
-    numsymbols = 0;
+    SymbolTable symbol_table;
 
     /*
    *
@@ -642,21 +646,21 @@ int main(int argc, const char** argv)
         if (label[0] != 0)
         {
             /* check to make sure not already defined */
-            if ((i = findsymbol(label)) != -1)
+            if (auto symbol_value = symbol_table.get_symbol_value(label); std::get<0>(symbol_value))
             {
                 fprintf(stderr, " in line %d %s label %s already defined as %d\n", linecount, line,
-                        label, symbols[i].value);
+                        label, std::get<1>(symbol_value));
                 exit(-1);
             }
             /* define it */
             if ((strcasecmp(opcode, "equ") == 0) || (strcasecmp(opcode, "org") == 0))
-                val = evaluateargument(arg1str);
+                val = evaluateargument(symbol_table, arg1str);
             else
                 val = curaddress;
             if (global_options.debug)
                 printf("at address=%d=%X defining %s = %d =0x%X\n", curaddress, curaddress, label,
                        val, val);
-            definesymbol(label, val);
+            symbol_table.define_symbol(label, val);
         }
 
         if (opcode[0] == 0)
@@ -677,7 +681,7 @@ int main(int argc, const char** argv)
 
         if (strcasecmp(opcode, "org") == 0)
         {
-            if ((curaddress = evaluateargument(arg1str)) == -1)
+            if ((curaddress = evaluateargument(symbol_table, arg1str)) == -1)
             {
                 fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount, line,
                         arg1str);
@@ -690,7 +694,7 @@ int main(int argc, const char** argv)
         }
         else if (strcasecmp(opcode, "data") == 0)
         {
-            n = finddata(line, datalist);
+            n = finddata(symbol_table, line, datalist);
             if (global_options.debug)
                 printf("got %d items in datalist\n", n);
             /* a negative number denotes that much space to save, but not specifying data */
@@ -775,7 +779,7 @@ int main(int argc, const char** argv)
         }
         if (strcasecmp(opcode, "org") == 0)
         {
-            if ((curaddress = evaluateargument(arg1str)) == -1)
+            if ((curaddress = evaluateargument(symbol_table, arg1str)) == -1)
             {
                 fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount, line,
                         arg1str);
@@ -795,7 +799,7 @@ int main(int argc, const char** argv)
         }
         else if (strcasecmp(opcode, "data") == 0)
         {
-            n = finddata(line, datalist);
+            n = finddata(symbol_table, line, datalist);
             /* if n is negative, that number of bytes are just reserved */
             if (n < 0)
             {
@@ -885,7 +889,7 @@ int main(int argc, const char** argv)
         }
         if (args == 1)
         {
-            if ((arg1 = evaluateargument(arg1str)) == -1)
+            if ((arg1 = evaluateargument(symbol_table, arg1str)) == -1)
             {
                 fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount, line,
                         arg1str);
@@ -1005,18 +1009,18 @@ int main(int argc, const char** argv)
     /* write symbol table to global_options.listfile */
     if (global_options.generate_list_file)
     {
-        fprintf(lfp, "Symbol Count: %d\n", numsymbols);
+        fprintf(lfp, "Symbol Count: %d\n", symbol_table.numsymbols);
         fprintf(lfp, "    Symbol  Oct Val  DecVal\n");
         fprintf(lfp, "    ------  -------  ------\n");
-        for (i = 0; i < numsymbols; i++)
+        for (i = 0; i < symbol_table.numsymbols; i++)
         {
-            if (symbols[i].value > 255)
-                fprintf(lfp, "%10s   %2o %03o  %5d\n", symbols[i].label,
-                        ((symbols[i].value >> 8) & 0xFF), (symbols[i].value & 0xFF),
-                        symbols[i].value);
+            if (symbol_table.symbols[i].value > 255)
+                fprintf(lfp, "%10s   %2o %03o  %5d\n", symbol_table.symbols[i].label.c_str(),
+                        ((symbol_table.symbols[i].value >> 8) & 0xFF),
+                        (symbol_table.symbols[i].value & 0xFF), symbol_table.symbols[i].value);
             else
-                fprintf(lfp, "%10s      %03o  %5d\n", symbols[i].label, symbols[i].value,
-                        symbols[i].value);
+                fprintf(lfp, "%10s      %03o  %5d\n", symbol_table.symbols[i].label.c_str(),
+                        symbol_table.symbols[i].value, symbol_table.symbols[i].value);
         }
     }
 }
