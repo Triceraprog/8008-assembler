@@ -4,6 +4,8 @@
 #include <deque>
 #include <string>
 
+class Options;
+
 class LineTokenizer
 {
 public:
@@ -22,5 +24,7 @@ private:
     static std::string consume_parsed(std::deque<std::string>& parsed);
     void adjust_label();
 };
+
+LineTokenizer parse_line(const Options& options, const std::string& line, int line_count);
 
 #endif //INC_8008_ASSEMBLER_LINE_TOKENIZER_H

@@ -10,17 +10,18 @@
 #include <cstring>
 #include <ctime>
 #include <iostream>
-#include <regex>
 
 Options global_options;
 
-struct
+struct Opcode
 {
     char* mnemonic;
     unsigned char code;
     int rule;
-} opcodes[] = {
-        /* first the basic load immediates */
+};
+
+Opcode opcodes[] = {
+        /* first the basic load immediate */
         "lai", 0006, 1, "lbi", 0016, 1, "lci", 0026, 1, "ldi", 0036, 1, "lei", 0046, 1, "lhi", 0056,
         1, "lli", 0066, 1, "lmi", 0076, 1,
         /* now the increment registers */
@@ -29,7 +30,7 @@ struct
         /* now decrement registers */
         "dcb", 0011, 0, "dcc", 0021, 0, "dcd", 0031, 0, "dce", 0041, 0, "dch", 0051, 0, "dcl", 0061,
         0,
-        /* next add registers to accum */
+        /* next add registers to accumulator */
         "ada", 0200, 0, "adb", 0201, 0, "adc", 0202, 0, "add", 0203, 0, "ade", 0204, 0, "adh", 0205,
         0, "adl", 0206, 0, "adm", 0207, 0, "adi", 0004, 1, "aca", 0210, 0, "acb", 0211, 0, "acc",
         0212, 0, "acd", 0213, 0, "ace", 0214, 0, "ach", 0215, 0, "acl", 0216, 0, "acm", 0217, 0,
@@ -88,55 +89,6 @@ struct
  *  2:two byte address follows
  *  3:output port number follows
  */
-
-std::string clean_line(const std::string& input_line)
-{
-    using namespace std::string_literals;
-
-    std::string clean{input_line};
-
-    auto pos = clean.find_first_of(";/\n\x0a"s);
-    if (pos != std::string::npos)
-    {
-        clean.resize(std::max(0, static_cast<int>(pos - 1)));
-    }
-
-    std::ranges::replace_if(
-            clean, [](const auto c) { return c == ','; }, ' ');
-
-    return clean;
-}
-
-LineTokenizer parse_line(const std::string& line, int line_count)
-{
-    using namespace std::string_literals;
-
-    std::string cleaned_line = clean_line(line);
-
-    LineTokenizer tokens(cleaned_line);
-
-    if (tokens.warning_on_label)
-    {
-        std::cerr << "WARNING: in line " << line_count << " " << cleaned_line << " label "
-                  << tokens.label << " lacking colon, and not 'equ' pseudo-op.\n";
-    }
-
-    if ((tokens.arg_count > 2) && (!ci_equals(tokens.opcode, "data")))
-    {
-        std::cerr << "WARNING: extra text on line " << line_count << " " << line << "\n";
-    }
-
-    if (global_options.debug)
-    {
-        std::cout << "label=<" << tokens.label << "> ";
-        std::cout << "opcode=<" << tokens.opcode << "> ";
-        std::cout << "args=<" << tokens.arg_count << "> ";
-        std::cout << "arg1=<" << tokens.arg1 << "> ";
-        std::cout << "arg2=<" << tokens.arg2 << ">\n";
-    }
-
-    return tokens;
-}
 
 int find_opcode(std::string_view str)
 {
@@ -576,7 +528,7 @@ void first_pass(SymbolTable& symbol_table, Files& files)
             std::cout << "\"" << input_line << "\"\n";
         }
         /* this function breaks line into separate parts */
-        LineTokenizer tokens = parse_line(input_line, line_count);
+        LineTokenizer tokens = parse_line(global_options, input_line, line_count);
 
         if (global_options.debug)
         {
@@ -723,7 +675,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
             printf("     0x%X \"%s\"\n", current_address, input_line.c_str());
         }
 
-        LineTokenizer tokens = parse_line(input_line, line_count);
+        LineTokenizer tokens = parse_line(global_options, input_line, line_count);
         int args = tokens.arg_count;
 
         if (tokens.opcode.empty())

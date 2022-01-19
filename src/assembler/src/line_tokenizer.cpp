@@ -1,4 +1,5 @@
 #include "line_tokenizer.h"
+#include "options.h"
 #include "utils.h"
 
 #include <iostream>
@@ -68,4 +69,57 @@ void LineTokenizer::debug_print() const
 {
     std::cout << "parsed line label=" << label << " opcode=" << opcode << " arg1str=" << arg1
               << "\n";
+}
+
+namespace
+{
+    std::string clean_line(const std::string& input_line)
+    {
+        using namespace std::string_literals;
+
+        std::string clean{input_line};
+
+        auto pos = clean.find_first_of(";/\n\x0a");
+        if (pos != std::string::npos)
+        {
+            clean.resize(std::max(0, static_cast<int>(pos - 1)));
+        }
+
+        std::ranges::replace_if(
+                clean, [](const auto c) { return c == ','; }, ' ');
+
+        return clean;
+    }
+
+}
+
+LineTokenizer parse_line(const Options& options, const std::string& line, int line_count)
+{
+    using namespace std::string_literals;
+
+    std::string cleaned_line = clean_line(line);
+
+    LineTokenizer tokens(cleaned_line);
+
+    if (tokens.warning_on_label)
+    {
+        std::cerr << "WARNING: in line " << line_count << " " << cleaned_line << " label "
+                  << tokens.label << " lacking colon, and not 'equ' pseudo-op.\n";
+    }
+
+    if ((tokens.arg_count > 2) && (!ci_equals(tokens.opcode, "data")))
+    {
+        std::cerr << "WARNING: extra text on line " << line_count << " " << line << "\n";
+    }
+
+    if (options.debug)
+    {
+        std::cout << "label=<" << tokens.label << "> ";
+        std::cout << "opcode=<" << tokens.opcode << "> ";
+        std::cout << "args=<" << tokens.arg_count << "> ";
+        std::cout << "arg1=<" << tokens.arg1 << "> ";
+        std::cout << "arg2=<" << tokens.arg2 << ">\n";
+    }
+
+    return tokens;
 }
