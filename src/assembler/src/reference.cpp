@@ -18,7 +18,6 @@ struct
 
 int numsymbols;
 
-FILE *ifp, *ofp, *lfp;
 int linecount;
 
 Options global_options;
@@ -348,7 +347,7 @@ int evaluateargument(char* arg)
 
 #define MAXONLINE 16
 
-void writebyte(int data, int address)
+void writebyte(int data, int address, FILE* ofp)
 {
     static int currentline[32];
     static int lineaddress;
@@ -563,6 +562,8 @@ public:
 
     ~Files() {}
 
+    FILE *ifp, *ofp, *lfp;
+
 private:
     void set_output_filenames(const Options& options)
     {
@@ -655,6 +656,9 @@ int main(int argc, const char** argv)
 
     /* write either hex file or binary file */
     Files files(global_options);
+    FILE* ifp = files.ifp;
+    FILE* ofp = files.ofp;
+    FILE* lfp = files.lfp;
 
     /*
    *
@@ -876,7 +880,7 @@ int main(int argc, const char** argv)
                 continue;
             }
             for (i = 0; i < n; i++)
-                writebyte(datalist[i], curaddress++);
+                writebyte(datalist[i], curaddress++, ofp);
             if (global_options.generate_list_file)
             {
                 if (global_options.single_byte_list)
@@ -973,7 +977,7 @@ int main(int argc, const char** argv)
         if (opcodes[i].rule == 0)
         {
             /* single byte, no arguments */
-            writebyte(opcodes[i].code, curaddress++);
+            writebyte(opcodes[i].code, curaddress++, ofp);
             if (global_options.generate_list_file)
                 fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
                         (lineaddress & 0xFF), opcodes[i].code, singlespacepad, line);
@@ -988,8 +992,8 @@ int main(int argc, const char** argv)
                 exit(-1);
             }
             code = opcodes[i].code;
-            writebyte(code, curaddress++);
-            writebyte(arg1, curaddress++);
+            writebyte(code, curaddress++, ofp);
+            writebyte(arg1, curaddress++, ofp);
             if (global_options.generate_list_file)
             {
                 if (global_options.single_byte_list)
@@ -1020,9 +1024,9 @@ int main(int argc, const char** argv)
             code = opcodes[i].code;
             lowbyte = (0xFF & arg1);
             highbyte = (0xFF & (arg1 >> 8));
-            writebyte(code, curaddress++);
-            writebyte(lowbyte, curaddress++);
-            writebyte(highbyte, curaddress++);
+            writebyte(code, curaddress++, ofp);
+            writebyte(lowbyte, curaddress++, ofp);
+            writebyte(highbyte, curaddress++, ofp);
             if (global_options.generate_list_file)
             {
                 if (global_options.single_byte_list)
@@ -1058,7 +1062,7 @@ int main(int argc, const char** argv)
                 exit(-1);
             }
             code = opcodes[i].code + (arg1 << 1);
-            writebyte(code, curaddress++);
+            writebyte(code, curaddress++, ofp);
             if (global_options.generate_list_file)
                 fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
                         (lineaddress & 0xFF), code, singlespacepad, line);
@@ -1071,7 +1075,7 @@ int main(int argc, const char** argv)
         }
     }
     /* signal to close off output file */
-    writebyte(-1, -1);
+    writebyte(-1, -1, ofp);
     /* write symbol table to global_options.listfile */
     if (global_options.generate_list_file)
     {
