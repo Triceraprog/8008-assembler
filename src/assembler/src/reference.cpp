@@ -554,7 +554,7 @@ int main(int argc, const char** argv)
 {
     char singlespacepad[9]; /* this is some extra padding if we use single space list file */
     int arg1, val, datalist[80], *ptr;
-    int i, n, line_count, args, lineaddress, code;
+    int i, n, args, lineaddress, code;
     int highbyte, lowbyte, maxport;
 
     try
@@ -580,311 +580,319 @@ int main(int argc, const char** argv)
         strcpy(singlespacepad, "        ");
 
     /* First pass, just parse through line, keep track of address, and build a symbol table */
-    if (global_options.debug || global_options.verbose)
     {
-        printf("Pass number One:  Read and Define Symbols\n");
-    }
-
-    write_listing_header(lfp);
-
-    line_count = 0;
-
-    int current_address = 0;
-    for (std::string input_line; std::getline(files.input_stream, input_line);)
-    {
-        lineaddress = current_address;
-
-        line_count++;
-        if (global_options.verbose || global_options.debug)
+        if (global_options.debug || global_options.verbose)
         {
-            std::cout << "     0x" << std::hex << std::uppercase << current_address << " ";
-            std::cout << "\"" << input_line << "\"\n";
-        }
-        /* this function breaks line into separate parts */
-        LineTokenizer tokens = parse_line(input_line, line_count);
-
-        if (global_options.debug)
-        {
-            tokens.debug_print();
+            printf("Pass number One:  Read and Define Symbols\n");
         }
 
-        if (!tokens.label.empty())
+        write_listing_header(lfp);
+
+        int line_count = 0;
+
+        int current_address = 0;
+        for (std::string input_line; std::getline(files.input_stream, input_line);)
         {
-            /* Check if the label was already defined. */
-            if (auto symbol_value = symbol_table.get_symbol_value(tokens.label);
-                std::get<0>(symbol_value))
+            lineaddress = current_address;
+
+            line_count++;
+            if (global_options.verbose || global_options.debug)
             {
-                std::cerr << " in line " << line_count << " " << input_line;
-                std::cerr << " label " << tokens.label;
-                std::cerr << " already defined as " << std::get<1>(symbol_value) << "\n";
-                exit(-1);
+                std::cout << "     0x" << std::hex << std::uppercase << current_address << " ";
+                std::cout << "\"" << input_line << "\"\n";
+            }
+            /* this function breaks line into separate parts */
+            LineTokenizer tokens = parse_line(input_line, line_count);
+
+            if (global_options.debug)
+            {
+                tokens.debug_print();
             }
 
-            /* Or define it. */
-            if (ci_equals(tokens.opcode, "equ") || ci_equals(tokens.opcode, "org"))
+            if (!tokens.label.empty())
             {
-                val = evaluate_argument(symbol_table, line_count, tokens.arg1);
+                /* Check if the label was already defined. */
+                if (auto symbol_value = symbol_table.get_symbol_value(tokens.label);
+                    std::get<0>(symbol_value))
+                {
+                    std::cerr << " in line " << line_count << " " << input_line;
+                    std::cerr << " label " << tokens.label;
+                    std::cerr << " already defined as " << std::get<1>(symbol_value) << "\n";
+                    exit(-1);
+                }
+
+                /* Or define it. */
+                if (ci_equals(tokens.opcode, "equ") || ci_equals(tokens.opcode, "org"))
+                {
+                    val = evaluate_argument(symbol_table, line_count, tokens.arg1);
+                }
+                else
+                {
+                    val = current_address;
+                }
+
+                if (global_options.debug)
+                {
+                    std::cout << "at address=" << current_address;
+                    std::cout << std::hex << std::uppercase << "=" << current_address;
+                    std::cout << " defining " << tokens.label << " = " << std::dec << val;
+                    std::cout << " =0x" << std::hex << std::uppercase << val << "\n";
+                }
+
+                symbol_table.define_symbol(tokens.label, val);
+            }
+
+            if (tokens.opcode.empty() || ci_equals(tokens.opcode, "equ") ||
+                ci_equals(tokens.opcode, "end"))
+            {
+                continue;
+            }
+
+            if (ci_equals(tokens.opcode, "cpu"))
+            {
+                if ((!ci_equals(tokens.arg1, "8008")) && (!ci_equals(tokens.arg1, "i8008")))
+                {
+                    std::cerr << " in line " << line_count << " " << input_line;
+                    std::cerr << " cpu only allowed is \"8008\" or \"i8008\"\n";
+                    exit(-1);
+                }
+                continue;
+            }
+
+            if (ci_equals(tokens.opcode, "org"))
+            {
+                if ((current_address = evaluate_argument(symbol_table, line_count, tokens.arg1)) ==
+                    -1)
+                {
+                    std::cerr << " in line " << line_count << " " << input_line;
+                    std::cerr << " can't evaluate argument " << tokens.arg1 << "\n";
+                    exit(-1);
+                }
+            }
+            else if (ci_equals(tokens.opcode, "data"))
+            {
+                n = finddata(symbol_table, line_count, input_line.c_str(), datalist);
+                if (global_options.debug)
+                {
+                    printf("got %d items in data list\n", n);
+                }
+                /* a negative number denotes that much space to save, but not specifying data */
+                /* if so, just change sign to positive */
+                if (n < 0)
+                    n = 0 - n;
+                current_address += n;
+                continue;
+            }
+            else if ((i = find_opcode(tokens.opcode)) != -1)
+            {
+                /* found the opcode */
+                if (opcodes[i].rule == 0)
+                {
+                    current_address += 1;
+                }
+                else if (opcodes[i].rule == 1)
+                {
+                    current_address += 2;
+                }
+                else if (opcodes[i].rule == 2)
+                {
+                    current_address += 3;
+                }
+                else if (opcodes[i].rule == 3)
+                {
+                    current_address += 1;
+                }
             }
             else
             {
-                val = current_address;
-            }
-
-            if (global_options.debug)
-            {
-                std::cout << "at address=" << current_address;
-                std::cout << std::hex << std::uppercase << "=" << current_address;
-                std::cout << " defining " << tokens.label << " = " << std::dec << val;
-                std::cout << " =0x" << std::hex << std::uppercase << val << "\n";
-            }
-
-            symbol_table.define_symbol(tokens.label, val);
-        }
-
-        if (tokens.opcode.empty() || ci_equals(tokens.opcode, "equ") ||
-            ci_equals(tokens.opcode, "end"))
-        {
-            continue;
-        }
-
-        if (ci_equals(tokens.opcode, "cpu"))
-        {
-            if ((!ci_equals(tokens.arg1, "8008")) && (!ci_equals(tokens.arg1, "i8008")))
-            {
                 std::cerr << " in line " << line_count << " " << input_line;
-                std::cerr << " cpu only allowed is \"8008\" or \"i8008\"\n";
+                std::cerr << " undefined opcode " << tokens.opcode << "\n";
                 exit(-1);
             }
-            continue;
-        }
-
-        if (ci_equals(tokens.opcode, "org"))
-        {
-            if ((current_address = evaluate_argument(symbol_table, line_count, tokens.arg1)) == -1)
-            {
-                std::cerr << " in line " << line_count << " " << input_line;
-                std::cerr << " can't evaluate argument " << tokens.arg1 << "\n";
-                exit(-1);
-            }
-        }
-        else if (ci_equals(tokens.opcode, "data"))
-        {
-            n = finddata(symbol_table, line_count, input_line.c_str(), datalist);
-            if (global_options.debug)
-            {
-                printf("got %d items in data list\n", n);
-            }
-            /* a negative number denotes that much space to save, but not specifying data */
-            /* if so, just change sign to positive */
-            if (n < 0)
-                n = 0 - n;
-            current_address += n;
-            continue;
-        }
-        else if ((i = find_opcode(tokens.opcode)) != -1)
-        {
-            /* found the opcode */
-            if (opcodes[i].rule == 0)
-            {
-                current_address += 1;
-            }
-            else if (opcodes[i].rule == 1)
-            {
-                current_address += 2;
-            }
-            else if (opcodes[i].rule == 2)
-            {
-                current_address += 3;
-            }
-            else if (opcodes[i].rule == 3)
-            {
-                current_address += 1;
-            }
-        }
-        else
-        {
-            std::cerr << " in line " << line_count << " " << input_line;
-            std::cerr << " undefined opcode " << tokens.opcode << "\n";
-            exit(-1);
         }
     }
 
     /* Symbols are defined. Second pass. */
 
-    if (global_options.verbose || global_options.debug)
     {
-        std::cout << "Pass number Two:  Re-read and assemble codes\n";
-    }
-
-    line_count = 0;
-    current_address = 0;
-
-    stream_rewind(files.input_stream);
-    for (std::string input_line; std::getline(files.input_stream, input_line);)
-    {
-        lineaddress = current_address;
-        line_count++;
 
         if (global_options.verbose || global_options.debug)
         {
-            printf("     0x%X \"%s\"\n", current_address, input_line.c_str());
+            std::cout << "Pass number Two:  Re-read and assemble codes\n";
         }
 
-        LineTokenizer tokens = parse_line(input_line, line_count);
-        args = tokens.arg_count;
+        int line_count = 0;
+        int current_address = 0;
 
-        if (tokens.opcode.empty())
+        stream_rewind(files.input_stream);
+        for (std::string input_line; std::getline(files.input_stream, input_line);)
         {
-            /* Must just be a comment line (or label only) */
-            if (global_options.generate_list_file)
+            lineaddress = current_address;
+            line_count++;
+
+            if (global_options.verbose || global_options.debug)
             {
-                fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
-                        input_line.c_str());
+                printf("     0x%X \"%s\"\n", current_address, input_line.c_str());
             }
-            continue;
-        }
 
-        /* Check if this opcode is one of the pseudo ops. */
-        if (ci_equals(tokens.opcode, "equ"))
-        {
-            if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
-                        input_line.c_str());
-            continue;
-        }
-        if (ci_equals(tokens.opcode, "cpu"))
-        {
-            if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
-                        input_line.c_str());
-            continue;
-        }
+            LineTokenizer tokens = parse_line(input_line, line_count);
+            args = tokens.arg_count;
 
-        if (ci_equals(tokens.opcode, "org"))
-        {
-            if ((current_address = evaluate_argument(symbol_table, line_count, tokens.arg1)) == -1)
+            if (tokens.opcode.empty())
             {
-                fprintf(stderr, " in input_line.c_str() %d %s can't evaluate argument %s\n",
-                        line_count, input_line.c_str(), tokens.arg1.c_str());
-                exit(-1);
-            }
-            if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
-                        input_line.c_str());
-            continue;
-        }
-        if (ci_equals(tokens.opcode, "end"))
-        {
-            if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
-                        input_line.c_str());
-            /* could break here, but rather than break, */
-            /* we will go ahead and check for more with a continue */
-            continue;
-        }
-        else if (ci_equals(tokens.opcode, "data"))
-        {
-            n = finddata(symbol_table, line_count, input_line.c_str(), datalist);
-            /* if n is negative, that number of bytes are just reserved */
-            if (n < 0)
-            {
+                /* Must just be a comment line (or label only) */
                 if (global_options.generate_list_file)
-                    fprintf(lfp, "%4d %02o-%03o     %s%s\n", line_count,
-                            ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), singlespacepad,
+                {
+                    fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
                             input_line.c_str());
-                current_address += 0 - n;
+                }
                 continue;
             }
-            for (i = 0; i < n; i++)
-                writebyte(datalist[i], current_address++, ofp);
-            if (global_options.generate_list_file)
+
+            /* Check if this opcode is one of the pseudo ops. */
+            if (ci_equals(tokens.opcode, "equ"))
             {
-                if (global_options.single_byte_list)
+                if (global_options.generate_list_file)
+                    fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
+                            input_line.c_str());
+                continue;
+            }
+            if (ci_equals(tokens.opcode, "cpu"))
+            {
+                if (global_options.generate_list_file)
+                    fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
+                            input_line.c_str());
+                continue;
+            }
+
+            if (ci_equals(tokens.opcode, "org"))
+            {
+                if ((current_address = evaluate_argument(symbol_table, line_count, tokens.arg1)) ==
+                    -1)
                 {
-                    fprintf(lfp, "%4d %02o-%03o %03o %s\n", line_count, ((lineaddress >> 8) & 0xFF),
-                            (lineaddress & 0xFF), datalist[0], input_line.c_str());
-                    for (i = 1; i < n; i++)
-                    {
-                        fprintf(lfp, "%     %02o-%03o %03o\n", line_count,
-                                (((lineaddress + i) >> 8) & 0xFF), ((lineaddress + i) & 0xFF),
-                                datalist[i]);
-                    }
+                    fprintf(stderr, " in input_line.c_str() %d %s can't evaluate argument %s\n",
+                            line_count, input_line.c_str(), tokens.arg1.c_str());
+                    exit(-1);
                 }
-                else
+                if (global_options.generate_list_file)
+                    fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
+                            input_line.c_str());
+                continue;
+            }
+            if (ci_equals(tokens.opcode, "end"))
+            {
+                if (global_options.generate_list_file)
+                    fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
+                            input_line.c_str());
+                /* could break here, but rather than break, */
+                /* we will go ahead and check for more with a continue */
+                continue;
+            }
+            else if (ci_equals(tokens.opcode, "data"))
+            {
+                n = finddata(symbol_table, line_count, input_line.c_str(), datalist);
+                /* if n is negative, that number of bytes are just reserved */
+                if (n < 0)
                 {
-                    fprintf(lfp, "%4d %02o-%03o ", line_count, ((lineaddress >> 8) & 0xFF),
-                            (lineaddress & 0xFF));
-                    if (n == 1)
-                        fprintf(lfp, "%03o          %s\n", datalist[0], input_line.c_str());
-                    else if (n == 2)
-                        fprintf(lfp, "%03o %03o      %s\n", datalist[0], datalist[1],
+                    if (global_options.generate_list_file)
+                        fprintf(lfp, "%4d %02o-%03o     %s%s\n", line_count,
+                                ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), singlespacepad,
                                 input_line.c_str());
-                    else if (n > 2)
+                    current_address += 0 - n;
+                    continue;
+                }
+                for (i = 0; i < n; i++)
+                    writebyte(datalist[i], current_address++, ofp);
+                if (global_options.generate_list_file)
+                {
+                    if (global_options.single_byte_list)
                     {
-                        fprintf(lfp, "%03o %03o %03o  %s\n", datalist[0], datalist[1], datalist[2],
+                        fprintf(lfp, "%4d %02o-%03o %03o %s\n", line_count,
+                                ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), datalist[0],
                                 input_line.c_str());
-                        ptr = datalist + 3;
-                        n -= 3;
-                        lineaddress += 3;
-                        while (n > 0)
+                        for (i = 1; i < n; i++)
                         {
-                            /*	    fprintf(lfp,"            "); */
-                            fprintf(lfp, "     %02o-%03o ", ((lineaddress >> 8) & 0xFF),
-                                    (lineaddress & 0xFF));
-                            if (n > 2)
+                            fprintf(lfp, "%     %02o-%03o %03o\n", line_count,
+                                    (((lineaddress + i) >> 8) & 0xFF), ((lineaddress + i) & 0xFF),
+                                    datalist[i]);
+                        }
+                    }
+                    else
+                    {
+                        fprintf(lfp, "%4d %02o-%03o ", line_count, ((lineaddress >> 8) & 0xFF),
+                                (lineaddress & 0xFF));
+                        if (n == 1)
+                            fprintf(lfp, "%03o          %s\n", datalist[0], input_line.c_str());
+                        else if (n == 2)
+                            fprintf(lfp, "%03o %03o      %s\n", datalist[0], datalist[1],
+                                    input_line.c_str());
+                        else if (n > 2)
+                        {
+                            fprintf(lfp, "%03o %03o %03o  %s\n", datalist[0], datalist[1],
+                                    datalist[2], input_line.c_str());
+                            ptr = datalist + 3;
+                            n -= 3;
+                            lineaddress += 3;
+                            while (n > 0)
                             {
-                                fprintf(lfp, "%03o %03o %03o\n", ptr[0], ptr[1], ptr[2]);
-                                ptr += 3;
-                                n -= 3;
-                                lineaddress += 3;
-                            }
-                            else
-                            {
-                                for (i = 0; i < n; i++)
+                                /*	    fprintf(lfp,"            "); */
+                                fprintf(lfp, "     %02o-%03o ", ((lineaddress >> 8) & 0xFF),
+                                        (lineaddress & 0xFF));
+                                if (n > 2)
                                 {
-                                    fprintf(lfp, "%03o ", ptr[0]);
-                                    ptr++;
+                                    fprintf(lfp, "%03o %03o %03o\n", ptr[0], ptr[1], ptr[2]);
+                                    ptr += 3;
+                                    n -= 3;
+                                    lineaddress += 3;
                                 }
-                                n = 0;
-                                fprintf(lfp, "\n");
+                                else
+                                {
+                                    for (i = 0; i < n; i++)
+                                    {
+                                        fprintf(lfp, "%03o ", ptr[0]);
+                                        ptr++;
+                                    }
+                                    n = 0;
+                                    fprintf(lfp, "\n");
+                                }
                             }
                         }
                     }
                 }
+                continue;
             }
-            continue;
-        }
-        /*
+            /*
      *
      * Now we should have an opcode.
      *
      */
-        else if ((i = find_opcode(tokens.opcode)) == -1)
-        {
-            fprintf(stderr, " in line %d %s undefined opcode %s\n", line_count, input_line.c_str(),
-                    tokens.opcode.c_str());
-            exit(-1);
-        }
-        /* found the opcode */
-
-        /* check that we have right number of arguments */
-        if (((opcodes[i].rule == 0) && (args != 0)) || ((opcodes[i].rule == 1) && (args != 1)) ||
-            ((opcodes[i].rule == 2) && (args != 1)) || ((opcodes[i].rule == 3) && (args != 1)))
-        {
-            fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n", line_count,
-                    input_line.c_str(), args);
-            exit(-1);
-        }
-        if (args == 1)
-        {
-            if ((arg1 = evaluate_argument(symbol_table, line_count, tokens.arg1)) == -1)
+            else if ((i = find_opcode(tokens.opcode)) == -1)
             {
-                fprintf(stderr, " in line %d %s can't evaluate argument %s\n", line_count,
-                        input_line.c_str(), tokens.arg1.c_str());
+                fprintf(stderr, " in line %d %s undefined opcode %s\n", line_count,
+                        input_line.c_str(), tokens.opcode.c_str());
                 exit(-1);
             }
-        }
-        /*
+            /* found the opcode */
+
+            /* check that we have right number of arguments */
+            if (((opcodes[i].rule == 0) && (args != 0)) ||
+                ((opcodes[i].rule == 1) && (args != 1)) ||
+                ((opcodes[i].rule == 2) && (args != 1)) || ((opcodes[i].rule == 3) && (args != 1)))
+            {
+                fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n", line_count,
+                        input_line.c_str(), args);
+                exit(-1);
+            }
+            if (args == 1)
+            {
+                if ((arg1 = evaluate_argument(symbol_table, line_count, tokens.arg1)) == -1)
+                {
+                    fprintf(stderr, " in line %d %s can't evaluate argument %s\n", line_count,
+                            input_line.c_str(), tokens.arg1.c_str());
+                    exit(-1);
+                }
+            }
+            /*
      *
      * Now, each opcode, is categorized into different
      * "rules" which states how arguments are combined
@@ -892,109 +900,115 @@ int main(int argc, const char** argv)
      *
      */
 
-        if (opcodes[i].rule == 0)
-        {
-            /* single byte, no arguments */
-            writebyte(opcodes[i].code, current_address++, ofp);
-            if (global_options.generate_list_file)
-                fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", line_count, ((lineaddress >> 8) & 0xFF),
-                        (lineaddress & 0xFF), opcodes[i].code, singlespacepad, input_line.c_str());
-        }
-        else if (opcodes[i].rule == 1)
-        {
-            /* single byte, must follow */
-            if ((arg1 > 255) || (arg1 < 0))
+            if (opcodes[i].rule == 0)
             {
-                fprintf(stderr, " in line %d %s expected argument 0-255\n", line_count,
-                        input_line.c_str());
-                fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
-                exit(-1);
+                /* single byte, no arguments */
+                writebyte(opcodes[i].code, current_address++, ofp);
+                if (global_options.generate_list_file)
+                    fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", line_count,
+                            ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), opcodes[i].code,
+                            singlespacepad, input_line.c_str());
             }
-            code = opcodes[i].code;
-            writebyte(code, current_address++, ofp);
-            writebyte(arg1, current_address++, ofp);
-            if (global_options.generate_list_file)
+            else if (opcodes[i].rule == 1)
             {
-                if (global_options.single_byte_list)
+                /* single byte, must follow */
+                if ((arg1 > 255) || (arg1 < 0))
                 {
-                    fprintf(lfp, "%4d %02o-%03o %03o %s\n", line_count, ((lineaddress >> 8) & 0xFF),
-                            (lineaddress & 0xFF), code, input_line.c_str());
-                    lineaddress++;
-                    fprintf(lfp, "     %02o-%03o %03o\n", (((lineaddress) >> 8) & 0xFF),
-                            ((lineaddress) &0xFF), arg1);
-                }
-                else
-                {
-                    fprintf(lfp, "%4d %02o-%03o %03o %03o     %s\n", line_count,
-                            ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code, arg1,
+                    fprintf(stderr, " in line %d %s expected argument 0-255\n", line_count,
                             input_line.c_str());
+                    fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
+                    exit(-1);
                 }
-            }
-        }
-        else if (opcodes[i].rule == 2)
-        {
-            /* two byte address to follow */
-            if ((arg1 > 1024 * 16) || (arg1 < 0))
-            {
-                fprintf(stderr, " in input_line.c_str() %d %s expected argument 0-%d\n", line_count,
-                        input_line.c_str(), 1024 * 16);
-                fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
-                exit(-1);
-            }
-            code = opcodes[i].code;
-            lowbyte = (0xFF & arg1);
-            highbyte = (0xFF & (arg1 >> 8));
-            writebyte(code, current_address++, ofp);
-            writebyte(lowbyte, current_address++, ofp);
-            writebyte(highbyte, current_address++, ofp);
-            if (global_options.generate_list_file)
-            {
-                if (global_options.single_byte_list)
+                code = opcodes[i].code;
+                writebyte(code, current_address++, ofp);
+                writebyte(arg1, current_address++, ofp);
+                if (global_options.generate_list_file)
                 {
-                    fprintf(lfp, "%4d %02o-%03o %03o %s\n", line_count, ((lineaddress >> 8) & 0xFF),
-                            (lineaddress & 0xFF), code, input_line.c_str());
-                    lineaddress++;
-                    fprintf(lfp, "     %02o-%03o %03o\n", ((lineaddress >> 8) & 0xFF),
-                            (lineaddress & 0xFF), lowbyte);
-                    lineaddress++;
-                    fprintf(lfp, "     %02o-%03o %03o\n", ((lineaddress >> 8) & 0xFF),
-                            (lineaddress & 0xFF), highbyte);
+                    if (global_options.single_byte_list)
+                    {
+                        fprintf(lfp, "%4d %02o-%03o %03o %s\n", line_count,
+                                ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code,
+                                input_line.c_str());
+                        lineaddress++;
+                        fprintf(lfp, "     %02o-%03o %03o\n", (((lineaddress) >> 8) & 0xFF),
+                                ((lineaddress) &0xFF), arg1);
+                    }
+                    else
+                    {
+                        fprintf(lfp, "%4d %02o-%03o %03o %03o     %s\n", line_count,
+                                ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code, arg1,
+                                input_line.c_str());
+                    }
                 }
+            }
+            else if (opcodes[i].rule == 2)
+            {
+                /* two byte address to follow */
+                if ((arg1 > 1024 * 16) || (arg1 < 0))
+                {
+                    fprintf(stderr, " in input_line.c_str() %d %s expected argument 0-%d\n",
+                            line_count, input_line.c_str(), 1024 * 16);
+                    fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
+                    exit(-1);
+                }
+                code = opcodes[i].code;
+                lowbyte = (0xFF & arg1);
+                highbyte = (0xFF & (arg1 >> 8));
+                writebyte(code, current_address++, ofp);
+                writebyte(lowbyte, current_address++, ofp);
+                writebyte(highbyte, current_address++, ofp);
+                if (global_options.generate_list_file)
+                {
+                    if (global_options.single_byte_list)
+                    {
+                        fprintf(lfp, "%4d %02o-%03o %03o %s\n", line_count,
+                                ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code,
+                                input_line.c_str());
+                        lineaddress++;
+                        fprintf(lfp, "     %02o-%03o %03o\n", ((lineaddress >> 8) & 0xFF),
+                                (lineaddress & 0xFF), lowbyte);
+                        lineaddress++;
+                        fprintf(lfp, "     %02o-%03o %03o\n", ((lineaddress >> 8) & 0xFF),
+                                (lineaddress & 0xFF), highbyte);
+                    }
+                    else
+                    {
+                        fprintf(lfp, "%4d %02o-%03o %03o %03o %03o %s\n", line_count,
+                                ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code, lowbyte,
+                                highbyte, input_line.c_str());
+                    }
+                }
+            }
+            else if (opcodes[i].rule == 3)
+            {
+                /* have an input or output instruction */
+                if (opcodes[i].mnemonic[0] == 'i')
+                    maxport = 7;
                 else
+                    maxport = 23;
+                if ((arg1 > maxport) || (arg1 < 0))
                 {
-                    fprintf(lfp, "%4d %02o-%03o %03o %03o %03o %s\n", line_count,
-                            ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code, lowbyte,
-                            highbyte, input_line.c_str());
+                    fprintf(stderr, " in input_line.c_str() %d %s expected port 0-%d\n", line_count,
+                            input_line.c_str(), maxport);
+                    fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
+                    exit(-1);
                 }
+                code = opcodes[i].code + (arg1 << 1);
+                writebyte(code, current_address++, ofp);
+                if (global_options.generate_list_file)
+                    fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", line_count,
+                            ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code, singlespacepad,
+                            input_line.c_str());
             }
-        }
-        else if (opcodes[i].rule == 3)
-        {
-            /* have an input or output instruction */
-            if (opcodes[i].mnemonic[0] == 'i')
-                maxport = 7;
             else
-                maxport = 23;
-            if ((arg1 > maxport) || (arg1 < 0))
             {
-                fprintf(stderr, " in input_line.c_str() %d %s expected port 0-%d\n", line_count,
-                        input_line.c_str(), maxport);
-                fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
+                fprintf(stderr, " in input_line.c_str() %d %s can't comprehend rule %d\n",
+                        line_count, input_line.c_str(), opcodes[i].rule);
                 exit(-1);
             }
-            code = opcodes[i].code + (arg1 << 1);
-            writebyte(code, current_address++, ofp);
-            if (global_options.generate_list_file)
-                fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", line_count, ((lineaddress >> 8) & 0xFF),
-                        (lineaddress & 0xFF), code, singlespacepad, input_line.c_str());
-        }
-        else
-        {
-            fprintf(stderr, " in input_line.c_str() %d %s can't comprehend rule %d\n", line_count,
-                    input_line.c_str(), opcodes[i].rule);
-            exit(-1);
         }
     }
+
     /* signal to close off output file */
     writebyte(-1, -1, ofp);
     /* write symbol table to global_options.listfile */
