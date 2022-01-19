@@ -13,6 +13,7 @@ set(ASSEMBLER_LIB_FILES
         src/options.cpp src/options.h
         src/files.cpp src/files.h
         src/symbol_table.cpp src/symbol_table.h
-        src/line_tokenizer.cpp src/line_tokenizer.h)
+        src/line_tokenizer.cpp src/line_tokenizer.h
+        src/utils.cpp src/utils.h)
 
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})

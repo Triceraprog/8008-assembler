@@ -1,4 +1,5 @@
 #include "line_tokenizer.h"
+#include "utils.h"
 
 #include <regex>
 
@@ -56,7 +57,7 @@ void LineTokenizer::adjust_label()
     {
         label.resize(label.size() - 1);
     }
-    else if (strcasecmp(label.c_str(), "equ") == 0)
+    else if (ci_equals(label, "equ"))
     {
         warning_on_label = true;
     }

@@ -2,6 +2,7 @@
 #include "line_tokenizer.h"
 #include "options.h"
 #include "symbol_table.h"
+#include "utils.h"
 
 #include <cctype>
 #include <cstdio>
