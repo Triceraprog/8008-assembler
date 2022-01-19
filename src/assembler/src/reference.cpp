@@ -1,11 +1,11 @@
 #include "options.h"
+#include "files.h"
 
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <iostream>
 
 /* this is a lot of symbols, but needed for SCELBAL */
 #define MAXSYMBOLS 1000
@@ -551,82 +551,8 @@ int finddata(char* line, int* outdata)
     return (n);
 }
 
-class Files
-{
-public:
-    explicit Files(const Options& options)
-    {
-        set_output_filenames(options);
-        open_files(options);
-    }
-
-    ~Files() {}
-
-    FILE *ifp, *ofp, *lfp;
-
-private:
-    void set_output_filenames(const Options& options)
-    {
-        const auto* output_filename_extension =
-                global_options.generate_binary_file ? ".bin" : ".hex";
-        outfilename = global_options.input_filename_base + output_filename_extension;
-        listfilename = global_options.input_filename_base + ".lst";
-        input_filename = global_options.input_filename;
-
-        if (global_options.debug)
-        {
-            std::cout << "filebase=" << global_options.input_filename_base << " ";
-            std::cout << "infile=" << input_filename << " ";
-            std::cout << "outfile=" << outfilename << " ";
-            std::cout << "listfile=" << listfilename << "\n";
-        }
-    }
-
-    void open_files(const Options& options)
-    {
-        if ((ifp = fopen(input_filename.c_str(), "rt")) == nullptr)
-        {
-            fprintf(stderr, "Can't open %s as input file\n", global_options.input_filename.c_str());
-            exit(-1);
-        }
-        if (options.generate_binary_file)
-        {
-            if ((ofp = fopen(outfilename.c_str(), "wb")) == nullptr)
-            {
-                fprintf(stderr, "Can't open %s as output file\n", outfilename.c_str());
-                exit(-1);
-            }
-        }
-        else
-        {
-            if ((ofp = fopen(outfilename.c_str(), "wt")) == nullptr)
-            {
-                fprintf(stderr, "Can't open %s as output file\n", outfilename.c_str());
-                exit(-1);
-            }
-        }
-        if (options.generate_list_file)
-        {
-            if ((lfp = fopen(listfilename.c_str(), "wt")) == nullptr)
-            {
-                fprintf(stderr, "Can't open %s as input file\n", listfilename.c_str());
-                exit(-1);
-            }
-        }
-        if (options.debug)
-        {
-            printf("All files were opened.\n");
-        }
-    }
-
-    std::string outfilename;
-    std::string listfilename;
-    std::string input_filename;
-};
-
 int main(int argc, const char** argv)
 {
-
     char line[100], cleanline[100], label[20];
     char opcode[80], arg1str[20], arg2str[20], c, *cptr;
     char singlespacepad[9]; /* this is some extra padding if we use single space list file */
