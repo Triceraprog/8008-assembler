@@ -12,8 +12,6 @@
 #include <iostream>
 #include <regex>
 
-int linecount;
-
 Options global_options;
 
 struct
@@ -109,7 +107,7 @@ std::string clean_line(const std::string& input_line)
     return clean;
 }
 
-LineTokenizer parse_line(const std::string& line)
+LineTokenizer parse_line(const std::string& line, int line_count)
 {
     using namespace std::string_literals;
 
@@ -119,13 +117,13 @@ LineTokenizer parse_line(const std::string& line)
 
     if (tokens.warning_on_label)
     {
-        std::cerr << "WARNING: in line " << linecount << " " << cleaned_line << " label "
+        std::cerr << "WARNING: in line " << line_count << " " << cleaned_line << " label "
                   << tokens.label << " lacking colon, and not 'equ' pseudo-op.\n";
     }
 
     if ((tokens.arg_count > 2) && (!ci_equals(tokens.opcode, "data")))
     {
-        std::cerr << "WARNING: extra text on line " << linecount << " " << line << "\n";
+        std::cerr << "WARNING: extra text on line " << line_count << " " << line << "\n";
     }
 
     if (global_options.debug)
@@ -152,7 +150,7 @@ int find_opcode(std::string_view str)
     return -1;
 }
 
-int evaluate_argument(const SymbolTable& symbol_table, std::string_view arg)
+int evaluate_argument(const SymbolTable& symbol_table, int line_count, std::string_view arg)
 {
     int i, n, j, k;
     char part[4][20], operation[3], extra[80];
@@ -171,12 +169,12 @@ int evaluate_argument(const SymbolTable& symbol_table, std::string_view arg)
 
     if (strncmp(arg.data(), "\\HB\\", 4) == 0)
     {
-        i = evaluate_argument(symbol_table, arg.data() + 4);
+        i = evaluate_argument(symbol_table, line_count, arg.data() + 4);
         return ((i >> 8) & 0xFF);
     }
     if (strncmp(arg.data(), "\\LB\\", 4) == 0)
     {
-        i = evaluate_argument(symbol_table, arg.data() + 4);
+        i = evaluate_argument(symbol_table, line_count, arg.data() + 4);
         return (i & 0xFF);
     }
 
@@ -197,7 +195,7 @@ int evaluate_argument(const SymbolTable& symbol_table, std::string_view arg)
 
     if ((n % 2) == 0)
     {
-        fprintf(stderr, "line %d can't evaluate last arg in %s\n", linecount, arg);
+        fprintf(stderr, "line %d can't evaluate last arg in %s\n", line_count, arg);
         exit(-1);
     }
 
@@ -297,7 +295,8 @@ int evaluate_argument(const SymbolTable& symbol_table, std::string_view arg)
                 sum = sum * 256 + val;
             else
             {
-                fprintf(stderr, "in line %d unknown operation '%c'\n", linecount, operation[j - 1]);
+                fprintf(stderr, "in line %d unknown operation '%c'\n", line_count,
+                        operation[j - 1]);
                 exit(-1);
             }
         }
@@ -394,7 +393,7 @@ void writebyte(int data, int address, FILE* ofp)
     }
 }
 
-int finddata(const SymbolTable& symbol_table, const char* line, int* outdata)
+int finddata(const SymbolTable& symbol_table, int line_count, const char* line, int* outdata)
 {
     const char* ptr;
     char c;
@@ -468,7 +467,7 @@ int finddata(const SymbolTable& symbol_table, const char* line, int* outdata)
                 }
                 else
                 {
-                    fprintf(stderr, " in line %d %s unknown escape sequence \\%c\n", linecount,
+                    fprintf(stderr, " in line %d %s unknown escape sequence \\%c\n", line_count,
                             line, *ptr);
                     exit(-1);
                 }
@@ -507,13 +506,13 @@ int finddata(const SymbolTable& symbol_table, const char* line, int* outdata)
                    arg[12]);
         if (n > 12)
         {
-            fprintf(stderr, " in line %d %s max length is 12 bytes.\n", linecount, line);
+            fprintf(stderr, " in line %d %s max length is 12 bytes.\n", line_count, line);
             fprintf(stderr, " Use a second line for more data\n");
             exit(-1);
         }
         for (i = 0; i < n; i++)
         {
-            *(outdata++) = evaluate_argument(symbol_table, arg[i]);
+            *(outdata++) = evaluate_argument(symbol_table, line_count, arg[i]);
         }
     }
     return (n);
@@ -555,7 +554,7 @@ int main(int argc, const char** argv)
 {
     char singlespacepad[9]; /* this is some extra padding if we use single space list file */
     int arg1, val, datalist[80], *ptr;
-    int i, n, linecount, args, lineaddress, code;
+    int i, n, line_count, args, lineaddress, code;
     int highbyte, lowbyte, maxport;
 
     try
@@ -580,13 +579,7 @@ int main(int argc, const char** argv)
     else
         strcpy(singlespacepad, "        ");
 
-    /*
-   *
-   *  First pass, just parse through line, keep track of
-   *  address, and build a symbol table
-   *
-   */
-
+    /* First pass, just parse through line, keep track of address, and build a symbol table */
     if (global_options.debug || global_options.verbose)
     {
         printf("Pass number One:  Read and Define Symbols\n");
@@ -594,21 +587,21 @@ int main(int argc, const char** argv)
 
     write_listing_header(lfp);
 
-    linecount = 0;
+    line_count = 0;
 
     int current_address = 0;
     for (std::string input_line; std::getline(files.input_stream, input_line);)
     {
         lineaddress = current_address;
 
-        linecount++;
+        line_count++;
         if (global_options.verbose || global_options.debug)
         {
             std::cout << "     0x" << std::hex << std::uppercase << current_address << " ";
             std::cout << "\"" << input_line << "\"\n";
         }
         /* this function breaks line into separate parts */
-        LineTokenizer tokens = parse_line(input_line);
+        LineTokenizer tokens = parse_line(input_line, line_count);
 
         if (global_options.debug)
         {
@@ -621,7 +614,7 @@ int main(int argc, const char** argv)
             if (auto symbol_value = symbol_table.get_symbol_value(tokens.label);
                 std::get<0>(symbol_value))
             {
-                std::cerr << " in line " << linecount << " " << input_line;
+                std::cerr << " in line " << line_count << " " << input_line;
                 std::cerr << " label " << tokens.label;
                 std::cerr << " already defined as " << std::get<1>(symbol_value) << "\n";
                 exit(-1);
@@ -630,7 +623,7 @@ int main(int argc, const char** argv)
             /* Or define it. */
             if (ci_equals(tokens.opcode, "equ") || ci_equals(tokens.opcode, "org"))
             {
-                val = evaluate_argument(symbol_table, tokens.arg1);
+                val = evaluate_argument(symbol_table, line_count, tokens.arg1);
             }
             else
             {
@@ -658,7 +651,7 @@ int main(int argc, const char** argv)
         {
             if ((!ci_equals(tokens.arg1, "8008")) && (!ci_equals(tokens.arg1, "i8008")))
             {
-                std::cerr << " in line " << linecount << " " << input_line;
+                std::cerr << " in line " << line_count << " " << input_line;
                 std::cerr << " cpu only allowed is \"8008\" or \"i8008\"\n";
                 exit(-1);
             }
@@ -667,16 +660,16 @@ int main(int argc, const char** argv)
 
         if (ci_equals(tokens.opcode, "org"))
         {
-            if ((current_address = evaluate_argument(symbol_table, tokens.arg1)) == -1)
+            if ((current_address = evaluate_argument(symbol_table, line_count, tokens.arg1)) == -1)
             {
-                std::cerr << " in line " << linecount << " " << input_line;
+                std::cerr << " in line " << line_count << " " << input_line;
                 std::cerr << " can't evaluate argument " << tokens.arg1 << "\n";
                 exit(-1);
             }
         }
         else if (ci_equals(tokens.opcode, "data"))
         {
-            n = finddata(symbol_table, input_line.c_str(), datalist);
+            n = finddata(symbol_table, line_count, input_line.c_str(), datalist);
             if (global_options.debug)
             {
                 printf("got %d items in data list\n", n);
@@ -710,7 +703,7 @@ int main(int argc, const char** argv)
         }
         else
         {
-            std::cerr << " in line " << linecount << " " << input_line;
+            std::cerr << " in line " << line_count << " " << input_line;
             std::cerr << " undefined opcode " << tokens.opcode << "\n";
             exit(-1);
         }
@@ -723,21 +716,21 @@ int main(int argc, const char** argv)
         std::cout << "Pass number Two:  Re-read and assemble codes\n";
     }
 
-    linecount = 0;
+    line_count = 0;
     current_address = 0;
 
     stream_rewind(files.input_stream);
     for (std::string input_line; std::getline(files.input_stream, input_line);)
     {
         lineaddress = current_address;
-        linecount++;
+        line_count++;
 
         if (global_options.verbose || global_options.debug)
         {
             printf("     0x%X \"%s\"\n", current_address, input_line.c_str());
         }
 
-        LineTokenizer tokens = parse_line(input_line);
+        LineTokenizer tokens = parse_line(input_line, line_count);
         args = tokens.arg_count;
 
         if (tokens.opcode.empty())
@@ -745,7 +738,7 @@ int main(int argc, const char** argv)
             /* Must just be a comment line (or label only) */
             if (global_options.generate_list_file)
             {
-                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
+                fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
                         input_line.c_str());
             }
             continue;
@@ -755,35 +748,35 @@ int main(int argc, const char** argv)
         if (ci_equals(tokens.opcode, "equ"))
         {
             if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
+                fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
                         input_line.c_str());
             continue;
         }
         if (ci_equals(tokens.opcode, "cpu"))
         {
             if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
+                fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
                         input_line.c_str());
             continue;
         }
 
         if (ci_equals(tokens.opcode, "org"))
         {
-            if ((current_address = evaluate_argument(symbol_table, tokens.arg1)) == -1)
+            if ((current_address = evaluate_argument(symbol_table, line_count, tokens.arg1)) == -1)
             {
                 fprintf(stderr, " in input_line.c_str() %d %s can't evaluate argument %s\n",
-                        linecount, input_line.c_str(), tokens.arg1.c_str());
+                        line_count, input_line.c_str(), tokens.arg1.c_str());
                 exit(-1);
             }
             if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
+                fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
                         input_line.c_str());
             continue;
         }
         if (ci_equals(tokens.opcode, "end"))
         {
             if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
+                fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
                         input_line.c_str());
             /* could break here, but rather than break, */
             /* we will go ahead and check for more with a continue */
@@ -791,13 +784,14 @@ int main(int argc, const char** argv)
         }
         else if (ci_equals(tokens.opcode, "data"))
         {
-            n = finddata(symbol_table, input_line.c_str(), datalist);
+            n = finddata(symbol_table, line_count, input_line.c_str(), datalist);
             /* if n is negative, that number of bytes are just reserved */
             if (n < 0)
             {
                 if (global_options.generate_list_file)
-                    fprintf(lfp, "%4d %02o-%03o     %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
-                            (lineaddress & 0xFF), singlespacepad, input_line.c_str());
+                    fprintf(lfp, "%4d %02o-%03o     %s%s\n", line_count,
+                            ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), singlespacepad,
+                            input_line.c_str());
                 current_address += 0 - n;
                 continue;
             }
@@ -807,18 +801,18 @@ int main(int argc, const char** argv)
             {
                 if (global_options.single_byte_list)
                 {
-                    fprintf(lfp, "%4d %02o-%03o %03o %s\n", linecount, ((lineaddress >> 8) & 0xFF),
+                    fprintf(lfp, "%4d %02o-%03o %03o %s\n", line_count, ((lineaddress >> 8) & 0xFF),
                             (lineaddress & 0xFF), datalist[0], input_line.c_str());
                     for (i = 1; i < n; i++)
                     {
-                        fprintf(lfp, "%     %02o-%03o %03o\n", linecount,
+                        fprintf(lfp, "%     %02o-%03o %03o\n", line_count,
                                 (((lineaddress + i) >> 8) & 0xFF), ((lineaddress + i) & 0xFF),
                                 datalist[i]);
                     }
                 }
                 else
                 {
-                    fprintf(lfp, "%4d %02o-%03o ", linecount, ((lineaddress >> 8) & 0xFF),
+                    fprintf(lfp, "%4d %02o-%03o ", line_count, ((lineaddress >> 8) & 0xFF),
                             (lineaddress & 0xFF));
                     if (n == 1)
                         fprintf(lfp, "%03o          %s\n", datalist[0], input_line.c_str());
@@ -867,7 +861,7 @@ int main(int argc, const char** argv)
      */
         else if ((i = find_opcode(tokens.opcode)) == -1)
         {
-            fprintf(stderr, " in line %d %s undefined opcode %s\n", linecount, input_line.c_str(),
+            fprintf(stderr, " in line %d %s undefined opcode %s\n", line_count, input_line.c_str(),
                     tokens.opcode.c_str());
             exit(-1);
         }
@@ -877,15 +871,15 @@ int main(int argc, const char** argv)
         if (((opcodes[i].rule == 0) && (args != 0)) || ((opcodes[i].rule == 1) && (args != 1)) ||
             ((opcodes[i].rule == 2) && (args != 1)) || ((opcodes[i].rule == 3) && (args != 1)))
         {
-            fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n", linecount,
+            fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n", line_count,
                     input_line.c_str(), args);
             exit(-1);
         }
         if (args == 1)
         {
-            if ((arg1 = evaluate_argument(symbol_table, tokens.arg1)) == -1)
+            if ((arg1 = evaluate_argument(symbol_table, line_count, tokens.arg1)) == -1)
             {
-                fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount,
+                fprintf(stderr, " in line %d %s can't evaluate argument %s\n", line_count,
                         input_line.c_str(), tokens.arg1.c_str());
                 exit(-1);
             }
@@ -903,7 +897,7 @@ int main(int argc, const char** argv)
             /* single byte, no arguments */
             writebyte(opcodes[i].code, current_address++, ofp);
             if (global_options.generate_list_file)
-                fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
+                fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", line_count, ((lineaddress >> 8) & 0xFF),
                         (lineaddress & 0xFF), opcodes[i].code, singlespacepad, input_line.c_str());
         }
         else if (opcodes[i].rule == 1)
@@ -911,7 +905,7 @@ int main(int argc, const char** argv)
             /* single byte, must follow */
             if ((arg1 > 255) || (arg1 < 0))
             {
-                fprintf(stderr, " in line %d %s expected argument 0-255\n", linecount,
+                fprintf(stderr, " in line %d %s expected argument 0-255\n", line_count,
                         input_line.c_str());
                 fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                 exit(-1);
@@ -923,7 +917,7 @@ int main(int argc, const char** argv)
             {
                 if (global_options.single_byte_list)
                 {
-                    fprintf(lfp, "%4d %02o-%03o %03o %s\n", linecount, ((lineaddress >> 8) & 0xFF),
+                    fprintf(lfp, "%4d %02o-%03o %03o %s\n", line_count, ((lineaddress >> 8) & 0xFF),
                             (lineaddress & 0xFF), code, input_line.c_str());
                     lineaddress++;
                     fprintf(lfp, "     %02o-%03o %03o\n", (((lineaddress) >> 8) & 0xFF),
@@ -931,7 +925,7 @@ int main(int argc, const char** argv)
                 }
                 else
                 {
-                    fprintf(lfp, "%4d %02o-%03o %03o %03o     %s\n", linecount,
+                    fprintf(lfp, "%4d %02o-%03o %03o %03o     %s\n", line_count,
                             ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code, arg1,
                             input_line.c_str());
                 }
@@ -942,7 +936,7 @@ int main(int argc, const char** argv)
             /* two byte address to follow */
             if ((arg1 > 1024 * 16) || (arg1 < 0))
             {
-                fprintf(stderr, " in input_line.c_str() %d %s expected argument 0-%d\n", linecount,
+                fprintf(stderr, " in input_line.c_str() %d %s expected argument 0-%d\n", line_count,
                         input_line.c_str(), 1024 * 16);
                 fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                 exit(-1);
@@ -957,7 +951,7 @@ int main(int argc, const char** argv)
             {
                 if (global_options.single_byte_list)
                 {
-                    fprintf(lfp, "%4d %02o-%03o %03o %s\n", linecount, ((lineaddress >> 8) & 0xFF),
+                    fprintf(lfp, "%4d %02o-%03o %03o %s\n", line_count, ((lineaddress >> 8) & 0xFF),
                             (lineaddress & 0xFF), code, input_line.c_str());
                     lineaddress++;
                     fprintf(lfp, "     %02o-%03o %03o\n", ((lineaddress >> 8) & 0xFF),
@@ -968,7 +962,7 @@ int main(int argc, const char** argv)
                 }
                 else
                 {
-                    fprintf(lfp, "%4d %02o-%03o %03o %03o %03o %s\n", linecount,
+                    fprintf(lfp, "%4d %02o-%03o %03o %03o %03o %s\n", line_count,
                             ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code, lowbyte,
                             highbyte, input_line.c_str());
                 }
@@ -983,7 +977,7 @@ int main(int argc, const char** argv)
                 maxport = 23;
             if ((arg1 > maxport) || (arg1 < 0))
             {
-                fprintf(stderr, " in input_line.c_str() %d %s expected port 0-%d\n", linecount,
+                fprintf(stderr, " in input_line.c_str() %d %s expected port 0-%d\n", line_count,
                         input_line.c_str(), maxport);
                 fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                 exit(-1);
@@ -991,12 +985,12 @@ int main(int argc, const char** argv)
             code = opcodes[i].code + (arg1 << 1);
             writebyte(code, current_address++, ofp);
             if (global_options.generate_list_file)
-                fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
+                fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", line_count, ((lineaddress >> 8) & 0xFF),
                         (lineaddress & 0xFF), code, singlespacepad, input_line.c_str());
         }
         else
         {
-            fprintf(stderr, " in input_line.c_str() %d %s can't comprehend rule %d\n", linecount,
+            fprintf(stderr, " in input_line.c_str() %d %s can't comprehend rule %d\n", line_count,
                     input_line.c_str(), opcodes[i].rule);
             exit(-1);
         }
