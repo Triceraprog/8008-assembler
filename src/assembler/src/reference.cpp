@@ -1,8 +1,8 @@
 #include "files.h"
 #include "options.h"
 #include "symbol_table.h"
+#include "line_tokenizer.h"
 
-#include <cassert>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -90,160 +90,58 @@ struct
  *  3:output port number follows
  */
 
-/*
- *
- *  This will take the input line, clean it up, remove
- *  comments, then break it into label (if exists) opcode, and
- *  arguments.
- *
- */
-
-std::regex label_scan{R"(([\w|\\#]+))"};
-
-void parse_label_line(const std::string& line, char* label, char* opcode, char* arg1, char* arg2,
-                      char* extrastuff, int* args)
+std::string clean_line(const std::string& input_line)
 {
-    /* There is a label in column 0 */
-    auto begin = std::sregex_iterator(line.begin(), line.end(), label_scan);
-    auto end = std::sregex_iterator();
+    using namespace std::string_literals;
 
-    std::vector<std::string> parsed;
-    std::ranges::transform(begin, end, std::back_inserter(parsed),
-                           [](const auto& elt) { return elt.str(); });
+    std::string clean{input_line};
 
-    assert(!parsed.empty());
-    *args = static_cast<int>(parsed.size()) - 2;
-
-    std::string new_label, new_opcode, new_arg1, new_arg2, new_extra_stuff;
-    switch (parsed.size())
+    auto pos = clean.find_first_of(";/\n\x0a"s);
+    if (pos != std::string::npos)
     {
-        case 5:
-            new_extra_stuff = parsed[4];
-        case 4:
-            new_arg2 = parsed[3];
-        case 3:
-            new_arg1 = parsed[2];
-        case 2:
-            new_opcode = parsed[1];
-        case 1:
-            new_label = parsed[0];
+        clean.resize(std::max(0, static_cast<int>(pos - 1)));
     }
 
-    const char last_label_char = new_label.back();
-    if (last_label_char == ':' || last_label_char == ',')
-    {
-        new_label.resize(new_label.size() - 1);
-    }
-    else if (strcasecmp(new_label.c_str(), "equ") == 0)
-    {
-        std::cerr << "WARNING: in line " << linecount << " " << line << " label " << new_label
-                  << " lacking colon, and not 'equ' pseudo-op.\n";
-    }
+    std::ranges::replace_if(
+            clean, [](const auto c) { return c == ','; }, ' ');
 
-    strcpy(label, new_label.c_str());
-    strcpy(opcode, new_opcode.c_str());
-    strcpy(arg1, new_arg1.c_str());
-    strcpy(arg2, new_arg2.c_str());
-    strcpy(extrastuff, new_extra_stuff.c_str());
-}
-
-void parse_no_label_line(const std::string& line, char* label, char* opcode, char* arg1, char* arg2,
-                         char* extrastuff, int* args)
-{
-    auto begin = std::sregex_iterator(line.begin(), line.end(), label_scan);
-    auto end = std::sregex_iterator();
-
-    std::vector<std::string> parsed;
-    std::ranges::transform(begin, end, std::back_inserter(parsed),
-                           [](const auto& elt) { return elt.str(); });
-
-    *args = static_cast<int>(parsed.size()) - 1;
-
-    std::string new_label, new_opcode, new_arg1, new_arg2, new_extra_stuff;
-    if (*args >= 0)
-    {
-        switch (parsed.size())
-        {
-            case 8:
-            case 7:
-            case 6:
-            case 5:
-            case 4:
-                new_extra_stuff = parsed[3];
-            case 3:
-                new_arg2 = parsed[2];
-            case 2:
-                new_arg1 = parsed[1];
-            case 1:
-                new_opcode = parsed[0];
-        }
-    }
-
-    strcpy(label, new_label.c_str());
-    strcpy(opcode, new_opcode.c_str());
-    strcpy(arg1, new_arg1.c_str());
-    strcpy(arg2, new_arg2.c_str());
-    strcpy(extrastuff, new_extra_stuff.c_str());
+    return clean;
 }
 
 void parse_line(const char* line, char* label, char* opcode, char* arg1, char* arg2, int* args)
 {
     using namespace std::string_literals;
 
-    int i;
-    std::string new_cleanline{line};
-    char cleanline[100];
-    char extrastuff[100], c;
+    std::string cleaned_line = clean_line(line);
 
-    /* first clean line up a bit */
-    strcpy(cleanline, line);
-    for (i = 0; i < strlen(line); i++)
+    const LineTokenizer tokenizer(cleaned_line);
+    *args = static_cast<int>(tokenizer.arg_count);
+
+    if (tokenizer.warning_on_label)
     {
-        c = line[i];
-        if ((c == ';') || (c == '/') || (c == 0x0A) || (c == '\n'))
-        {
-            cleanline[i] = 0;
-            break;
-        }
-        /* if comma separates arguments, change to whitespace */
-
-        if (c == ',')
-            cleanline[i] = ' ';
-        else
-            cleanline[i] = c;
+        std::cerr << "WARNING: in line " << linecount << " " << cleaned_line << " label "
+                  << tokenizer.label << " lacking colon, and not 'equ' pseudo-op.\n";
     }
 
-    /* Cut at first end of line characters */
-    /* TODO: Warning, it considers '/' as an end of line, which does not allow its usage as a char */
-    auto pos = new_cleanline.find_first_of(";/\n\x0a"s);
-    if (pos != std::string::npos)
-    {
-        new_cleanline.resize(std::max(0, static_cast<int>(pos - 1)));
-    }
+    label[0] = opcode[0] = arg1[0] = arg2[0] = 0;
+    strcpy(label, tokenizer.label.c_str());
+    strcpy(opcode, tokenizer.opcode.c_str());
+    strcpy(arg1, tokenizer.arg1.c_str());
+    strcpy(arg2, tokenizer.arg2.c_str());
 
-    std::ranges::replace_if(
-            new_cleanline, [](const auto c) { return c == ','; }, ' ');
-
-    label[0] = opcode[0] = arg1[0] = arg2[0] = extrastuff[0] = 0;
-    c = cleanline[0];
-
-    if ((c != ' ') && (c != '\t') && (c != 0x00))
+    if ((tokenizer.arg_count > 2) && (strcasecmp(opcode, "data") != 0))
     {
-        parse_label_line(new_cleanline, label, opcode, arg1, arg2, extrastuff, args);
-    }
-    else
-    {
-        parse_no_label_line(new_cleanline, label, opcode, arg1, arg2, extrastuff, args);
-    }
-
-    if ((*args > 2) && (strcasecmp(opcode, "data") != 0))
-    {
-        printf("WARNING: extra text on line %d %s\n", linecount, line);
+        std::cerr << "WARNING: extra text on line " << linecount << " " << line << "\n";
     }
 
     if (global_options.debug)
-        printf("label=<%s> opcode=<%s> args=%d arg1=<%s> arg2=<%s> extra=<%s>\n", label, opcode,
-               *args, arg1, arg2, extrastuff);
+    {
+        std::cout << "label=<" << label << "> ";
+        std::cout << "opcode=<" << opcode << "> ";
+        std::cout << "args=<" << args << "> ";
+        std::cout << "arg1=<" << arg1 << "> ";
+        std::cout << "arg2=<" << arg2 << ">\n";
+    }
 }
 
 int findopcode(char* str)
