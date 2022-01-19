@@ -1,7 +1,7 @@
 #include "files.h"
+#include "line_tokenizer.h"
 #include "options.h"
 #include "symbol_table.h"
-#include "line_tokenizer.h"
 
 #include <cctype>
 #include <cstdio>
@@ -509,20 +509,39 @@ int finddata(const SymbolTable& symbol_table, char* line, int* outdata)
     return (n);
 }
 
+void write_listing_header(FILE* lfp)
+{
+    std::time_t result = std::time(nullptr);
+    std::string compile_time{std::asctime(std::localtime(&result))};
+
+    fprintf(lfp, "AS8 assembler for intel 8008, t.e.jones Version 1.0\n");
+    fprintf(lfp, "Options: listfile=%d debug=%d ", global_options.generate_list_file,
+            global_options.debug);
+    fprintf(lfp, "binaryout=%d singlelist=%d\n", global_options.generate_binary_file,
+            global_options.single_byte_list);
+    fprintf(lfp, "octalnums=%d markascii=%d\n", global_options.input_num_as_octal,
+            global_options.mark_8_ascii);
+    fprintf(lfp, "Infile=%s\n", global_options.input_filename.c_str());
+    fprintf(lfp, "Assembly Performed: %s\n\n", compile_time.c_str());
+    if (global_options.single_byte_list)
+    {
+        fprintf(lfp, "Line Addr.  DAT Source Line\n");
+        fprintf(lfp, "---- ------ --- ----------------------------------\n");
+    }
+    else
+    {
+        fprintf(lfp, "Line Addr.  CodeBytes   Source Line\n");
+        fprintf(lfp, "---- ------ ----------- ----------------------------------\n");
+    }
+}
 int main(int argc, const char** argv)
 {
     char line[100], label[20];
-    char opcode[80], arg1str[20], arg2str[20], c, *cptr;
+    char opcode[80], arg1str[20], arg2str[20];
     char singlespacepad[9]; /* this is some extra padding if we use single space list file */
-    int arg1, arg2, val, datalist[80], *ptr;
-    int i, j, n, linecount, args, curaddress, lineaddress, code;
+    int arg1, val, datalist[80], *ptr;
+    int i, n, linecount, args, lineaddress, code;
     int highbyte, lowbyte, maxport;
-    /* all this just for a time */
-    struct tm* timetm;
-    time_t timet;
-    time(&timet);
-    timetm = localtime(&timet);
-    cptr = asctime(timetm);
 
     try
     {
@@ -555,38 +574,24 @@ int main(int argc, const char** argv)
    */
 
     if (global_options.debug || global_options.verbose)
+    {
         printf("Pass number One:  Read and Define Symbols\n");
-    linecount = 0;
-    curaddress = 0;
-    fprintf(lfp, "AS8 assembler for intel 8008, t.e.jones Version 1.0\n");
-    fprintf(lfp, "Options: listfile=%d debug=%d ", global_options.generate_list_file,
-            global_options.debug);
-    fprintf(lfp, "binaryout=%d singlelist=%d\n", global_options.generate_binary_file,
-            global_options.single_byte_list);
-    fprintf(lfp, "octalnums=%d markascii=%d\n", global_options.input_num_as_octal,
-            global_options.mark_8_ascii);
-    fprintf(lfp, "Infile=%s\n", global_options.input_filename.c_str());
-    fprintf(lfp, "Assembly Performed: %s\n\n", cptr);
-    if (global_options.single_byte_list)
-    {
-        fprintf(lfp, "Line Addr.  DAT Source Line\n");
-        fprintf(lfp, "---- ------ --- ----------------------------------\n");
-    }
-    else
-    {
-        fprintf(lfp, "Line Addr.  CodeBytes   Source Line\n");
-        fprintf(lfp, "---- ------ ----------- ----------------------------------\n");
     }
 
+    write_listing_header(lfp);
+
+    linecount = 0;
+
+    int current_address = 0;
     while (fgets(line, 100, ifp))
     {
-        lineaddress = curaddress;
+        lineaddress = current_address;
         /* remove \n at end of line */
         if (strlen(line) > 0)
             line[strlen(line) - 1] = 0;
         linecount++;
         if (global_options.verbose || global_options.debug)
-            printf("     0x%X \"%s\"\n", curaddress, line);
+            printf("     0x%X \"%s\"\n", current_address, line);
         /* this function breaks line into separate parts */
         parse_line(line, label, opcode, arg1str, arg2str, &args);
         if (global_options.debug)
@@ -604,10 +609,10 @@ int main(int argc, const char** argv)
             if ((strcasecmp(opcode, "equ") == 0) || (strcasecmp(opcode, "org") == 0))
                 val = evaluateargument(symbol_table, arg1str);
             else
-                val = curaddress;
+                val = current_address;
             if (global_options.debug)
-                printf("at address=%d=%X defining %s = %d =0x%X\n", curaddress, curaddress, label,
-                       val, val);
+                printf("at address=%d=%X defining %s = %d =0x%X\n", current_address,
+                       current_address, label, val, val);
             symbol_table.define_symbol(label, val);
         }
 
@@ -629,7 +634,7 @@ int main(int argc, const char** argv)
 
         if (strcasecmp(opcode, "org") == 0)
         {
-            if ((curaddress = evaluateargument(symbol_table, arg1str)) == -1)
+            if ((current_address = evaluateargument(symbol_table, arg1str)) == -1)
             {
                 fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount, line,
                         arg1str);
@@ -649,7 +654,7 @@ int main(int argc, const char** argv)
             /* if so, just change sign to positive */
             if (n < 0)
                 n = 0 - n;
-            curaddress += n;
+            current_address += n;
             continue;
         }
         /*
@@ -661,13 +666,13 @@ int main(int argc, const char** argv)
         {
             /* found the opcode */
             if (opcodes[i].rule == 0)
-                curaddress += 1;
+                current_address += 1;
             else if (opcodes[i].rule == 1)
-                curaddress += 2;
+                current_address += 2;
             else if (opcodes[i].rule == 2)
-                curaddress += 3;
+                current_address += 3;
             else if (opcodes[i].rule == 3)
-                curaddress += 1;
+                current_address += 1;
         }
         else
         {
@@ -686,16 +691,16 @@ int main(int argc, const char** argv)
         printf("Pass number Two:  Re-read and assemble codes\n");
     rewind(ifp);
     linecount = 0;
-    curaddress = 0;
+    current_address = 0;
 
     while (fgets(line, 100, ifp))
     {
-        lineaddress = curaddress;
+        lineaddress = current_address;
         if (strlen(line) > 0)
             line[strlen(line) - 1] = 0;
         linecount++;
         if (global_options.verbose || global_options.debug)
-            printf("     0x%X \"%s\"\n", curaddress, line);
+            printf("     0x%X \"%s\"\n", current_address, line);
         /* this function breaks line into separate parts */
         parse_line(line, label, opcode, arg1str, arg2str, &args);
 
@@ -727,7 +732,7 @@ int main(int argc, const char** argv)
         }
         if (strcasecmp(opcode, "org") == 0)
         {
-            if ((curaddress = evaluateargument(symbol_table, arg1str)) == -1)
+            if ((current_address = evaluateargument(symbol_table, arg1str)) == -1)
             {
                 fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount, line,
                         arg1str);
@@ -754,11 +759,11 @@ int main(int argc, const char** argv)
                 if (global_options.generate_list_file)
                     fprintf(lfp, "%4d %02o-%03o     %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
                             (lineaddress & 0xFF), singlespacepad, line);
-                curaddress += 0 - n;
+                current_address += 0 - n;
                 continue;
             }
             for (i = 0; i < n; i++)
-                writebyte(datalist[i], curaddress++, ofp);
+                writebyte(datalist[i], current_address++, ofp);
             if (global_options.generate_list_file)
             {
                 if (global_options.single_byte_list)
@@ -855,7 +860,7 @@ int main(int argc, const char** argv)
         if (opcodes[i].rule == 0)
         {
             /* single byte, no arguments */
-            writebyte(opcodes[i].code, curaddress++, ofp);
+            writebyte(opcodes[i].code, current_address++, ofp);
             if (global_options.generate_list_file)
                 fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
                         (lineaddress & 0xFF), opcodes[i].code, singlespacepad, line);
@@ -870,8 +875,8 @@ int main(int argc, const char** argv)
                 exit(-1);
             }
             code = opcodes[i].code;
-            writebyte(code, curaddress++, ofp);
-            writebyte(arg1, curaddress++, ofp);
+            writebyte(code, current_address++, ofp);
+            writebyte(arg1, current_address++, ofp);
             if (global_options.generate_list_file)
             {
                 if (global_options.single_byte_list)
@@ -902,9 +907,9 @@ int main(int argc, const char** argv)
             code = opcodes[i].code;
             lowbyte = (0xFF & arg1);
             highbyte = (0xFF & (arg1 >> 8));
-            writebyte(code, curaddress++, ofp);
-            writebyte(lowbyte, curaddress++, ofp);
-            writebyte(highbyte, curaddress++, ofp);
+            writebyte(code, current_address++, ofp);
+            writebyte(lowbyte, current_address++, ofp);
+            writebyte(highbyte, current_address++, ofp);
             if (global_options.generate_list_file)
             {
                 if (global_options.single_byte_list)
@@ -940,7 +945,7 @@ int main(int argc, const char** argv)
                 exit(-1);
             }
             code = opcodes[i].code + (arg1 << 1);
-            writebyte(code, curaddress++, ofp);
+            writebyte(code, current_address++, ofp);
             if (global_options.generate_list_file)
                 fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
                         (lineaddress & 0xFF), code, singlespacepad, line);
