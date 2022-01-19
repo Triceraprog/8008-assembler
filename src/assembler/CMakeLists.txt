@@ -11,6 +11,7 @@ set(ASSEMBLER_TEST_NAME ${ASSEMBLER_LIB_NAME}_tests)
 set(ASSEMBLER_LIB_FILES
         src/reference.cpp
         src/options.cpp src/options.h
-        src/files.cpp src/files.h)
+        src/files.cpp src/files.h
+        src/symbol_table.cpp src/symbol_table.h)
 
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})

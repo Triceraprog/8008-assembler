@@ -1,49 +1,12 @@
 #include "files.h"
 #include "options.h"
+#include "symbol_table.h"
 
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <tuple>
-
-const size_t MAXSYMBOLS = 1000;
-
-class SymbolTable
-{
-public:
-    void define_symbol(char* symbol, int value)
-    {
-        symbols[numsymbols].label = std::string{symbol};
-        symbols[numsymbols].value = value;
-        numsymbols++;
-    }
-
-    std::tuple<bool, int> get_symbol_value(const char* symbol) const
-    {
-        int i;
-        for (i = 0; i < numsymbols; i++)
-        {
-            if (symbols[i].label == std::string{symbol})
-            {
-                return {true, symbols[i].value};
-            }
-        }
-        return {false, 0};
-    }
-
-    struct Symbol
-    {
-        std::string label;
-        int value;
-    };
-
-    Symbol symbols[MAXSYMBOLS];
-    int numsymbols;
-
-private:
-};
 
 int linecount;
 
@@ -1009,18 +972,6 @@ int main(int argc, const char** argv)
     /* write symbol table to global_options.listfile */
     if (global_options.generate_list_file)
     {
-        fprintf(lfp, "Symbol Count: %d\n", symbol_table.numsymbols);
-        fprintf(lfp, "    Symbol  Oct Val  DecVal\n");
-        fprintf(lfp, "    ------  -------  ------\n");
-        for (i = 0; i < symbol_table.numsymbols; i++)
-        {
-            if (symbol_table.symbols[i].value > 255)
-                fprintf(lfp, "%10s   %2o %03o  %5d\n", symbol_table.symbols[i].label.c_str(),
-                        ((symbol_table.symbols[i].value >> 8) & 0xFF),
-                        (symbol_table.symbols[i].value & 0xFF), symbol_table.symbols[i].value);
-            else
-                fprintf(lfp, "%10s      %03o  %5d\n", symbol_table.symbols[i].label.c_str(),
-                        symbol_table.symbols[i].value, symbol_table.symbols[i].value);
-        }
+        symbol_table.list_symbols(lfp);
     }
 }
