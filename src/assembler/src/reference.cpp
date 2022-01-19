@@ -109,7 +109,8 @@ std::string clean_line(const std::string& input_line)
     return clean;
 }
 
-void parse_line(const char* line, char* label, char* opcode, char* arg1, char* arg2, int* args)
+void parse_line(const std::string& line, char* label, char* opcode, char* arg1, char* arg2,
+                int* args)
 {
     using namespace std::string_literals;
 
@@ -386,9 +387,10 @@ void writebyte(int data, int address, FILE* ofp)
     }
 }
 
-int finddata(const SymbolTable& symbol_table, char* line, int* outdata)
+int finddata(const SymbolTable& symbol_table, const char* line, int* outdata)
 {
-    char *ptr, c;
+    const char* ptr;
+    char c;
     char cleanline[80];
     char arg[13][20];
     int i, n, *outptr;
@@ -592,24 +594,29 @@ int main(int argc, const char** argv)
     int current_address = 0;
     for (std::string input_line; std::getline(files.input_stream, input_line);)
     {
-        char line[100];
-        strcpy(line, input_line.c_str());
         lineaddress = current_address;
 
         linecount++;
         if (global_options.verbose || global_options.debug)
-            printf("     0x%X \"%s\"\n", current_address, line);
+        {
+            std::cout << "     0x" << std::hex << std::uppercase << current_address << " ";
+            std::cout << "\"" << input_line << "\"\n";
+        }
         /* this function breaks line into separate parts */
-        parse_line(line, label, opcode, arg1str, arg2str, &args);
+        parse_line(input_line, label, opcode, arg1str, arg2str, &args);
+
         if (global_options.debug)
+        {
             printf("parsed line label=%s opcode=%s arg1str=%s\n", label, opcode, arg1str);
+        }
+
         if (label[0] != 0)
         {
             /* check to make sure not already defined */
             if (auto symbol_value = symbol_table.get_symbol_value(label); std::get<0>(symbol_value))
             {
-                fprintf(stderr, " in line %d %s label %s already defined as %d\n", linecount, line,
-                        label, std::get<1>(symbol_value));
+                fprintf(stderr, " in line %d %s label %s already defined as %d\n", linecount,
+                        input_line.c_str(), label, std::get<1>(symbol_value));
                 exit(-1);
             }
             /* define it */
@@ -633,7 +640,7 @@ int main(int argc, const char** argv)
             if ((strcasecmp(arg1str, "8008") != 0) && (strcasecmp(arg1str, "i8008") != 0))
             {
                 fprintf(stderr, " in line %d %s cpu only allowed is \"8008\" or \"i8008\"\n",
-                        linecount, line);
+                        linecount, input_line.c_str());
                 exit(-1);
             }
             continue;
@@ -643,8 +650,8 @@ int main(int argc, const char** argv)
         {
             if ((current_address = evaluateargument(symbol_table, arg1str)) == -1)
             {
-                fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount, line,
-                        arg1str);
+                fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount,
+                        input_line.c_str(), arg1str);
                 exit(-1);
             }
         }
@@ -654,7 +661,7 @@ int main(int argc, const char** argv)
         }
         else if (strcasecmp(opcode, "data") == 0)
         {
-            n = finddata(symbol_table, line, datalist);
+            n = finddata(symbol_table, input_line.c_str(), datalist);
             if (global_options.debug)
                 printf("got %d items in datalist\n", n);
             /* a negative number denotes that much space to save, but not specifying data */
@@ -683,7 +690,8 @@ int main(int argc, const char** argv)
         }
         else
         {
-            fprintf(stderr, " in line %d %s undefined opcode %s\n", linecount, line, opcode);
+            fprintf(stderr, " in line %d %s undefined opcode %s\n", linecount, input_line.c_str(),
+                    opcode);
             exit(-1);
         }
     }
@@ -703,71 +711,75 @@ int main(int argc, const char** argv)
     stream_rewind(files.input_stream);
     for (std::string input_line; std::getline(files.input_stream, input_line);)
     {
-        char line[100];
-        strcpy(line, input_line.c_str());
         lineaddress = current_address;
         linecount++;
 
         if (global_options.verbose || global_options.debug)
-            printf("     0x%X \"%s\"\n", current_address, line);
+            printf("     0x%X \"%s\"\n", current_address, input_line.c_str());
         /* this function breaks line into separate parts */
-        parse_line(line, label, opcode, arg1str, arg2str, &args);
+        parse_line(input_line, label, opcode, arg1str, arg2str, &args);
 
         if (opcode[0] == 0)
         {
             /* must just be a comment line (or label only) */
             if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad, line);
+                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
+                        input_line.c_str());
             continue;
         }
         /* check if this opcode is one of the pseudoops */
         if (strcasecmp(opcode, "equ") == 0)
         {
             if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad, line);
+                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
+                        input_line.c_str());
             continue;
         }
         if (strcasecmp(opcode, "cpu") == 0)
         {
             if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad, line);
+                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
+                        input_line.c_str());
             continue;
         }
         if (strcasecmp(opcode, "equ") == 0)
         {
             if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad, line);
+                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
+                        input_line.c_str());
             continue;
         }
         if (strcasecmp(opcode, "org") == 0)
         {
             if ((current_address = evaluateargument(symbol_table, arg1str)) == -1)
             {
-                fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount, line,
-                        arg1str);
+                fprintf(stderr, " in input_line.c_str() %d %s can't evaluate argument %s\n",
+                        linecount, input_line.c_str(), arg1str);
                 exit(-1);
             }
             if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad, line);
+                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
+                        input_line.c_str());
             continue;
         }
         if (strcasecmp(opcode, "end") == 0)
         {
             if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad, line);
+                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
+                        input_line.c_str());
             /* could break here, but rather than break, */
             /* we will go ahead and check for more with a continue */
             continue;
         }
         else if (strcasecmp(opcode, "data") == 0)
         {
-            n = finddata(symbol_table, line, datalist);
+            n = finddata(symbol_table, input_line.c_str(), datalist);
             /* if n is negative, that number of bytes are just reserved */
             if (n < 0)
             {
                 if (global_options.generate_list_file)
                     fprintf(lfp, "%4d %02o-%03o     %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
-                            (lineaddress & 0xFF), singlespacepad, line);
+                            (lineaddress & 0xFF), singlespacepad, input_line.c_str());
                 current_address += 0 - n;
                 continue;
             }
@@ -778,7 +790,7 @@ int main(int argc, const char** argv)
                 if (global_options.single_byte_list)
                 {
                     fprintf(lfp, "%4d %02o-%03o %03o %s\n", linecount, ((lineaddress >> 8) & 0xFF),
-                            (lineaddress & 0xFF), datalist[0], line);
+                            (lineaddress & 0xFF), datalist[0], input_line.c_str());
                     for (i = 1; i < n; i++)
                     {
                         fprintf(lfp, "%     %02o-%03o %03o\n", linecount,
@@ -791,13 +803,14 @@ int main(int argc, const char** argv)
                     fprintf(lfp, "%4d %02o-%03o ", linecount, ((lineaddress >> 8) & 0xFF),
                             (lineaddress & 0xFF));
                     if (n == 1)
-                        fprintf(lfp, "%03o          %s\n", datalist[0], line);
+                        fprintf(lfp, "%03o          %s\n", datalist[0], input_line.c_str());
                     else if (n == 2)
-                        fprintf(lfp, "%03o %03o      %s\n", datalist[0], datalist[1], line);
+                        fprintf(lfp, "%03o %03o      %s\n", datalist[0], datalist[1],
+                                input_line.c_str());
                     else if (n > 2)
                     {
                         fprintf(lfp, "%03o %03o %03o  %s\n", datalist[0], datalist[1], datalist[2],
-                                line);
+                                input_line.c_str());
                         ptr = datalist + 3;
                         n -= 3;
                         lineaddress += 3;
@@ -836,7 +849,8 @@ int main(int argc, const char** argv)
      */
         else if ((i = findopcode(opcode)) == -1)
         {
-            fprintf(stderr, " in line %d %s undefined opcode %s\n", linecount, line, opcode);
+            fprintf(stderr, " in line %d %s undefined opcode %s\n", linecount, input_line.c_str(),
+                    opcode);
             exit(-1);
         }
         /* found the opcode */
@@ -845,16 +859,16 @@ int main(int argc, const char** argv)
         if (((opcodes[i].rule == 0) && (args != 0)) || ((opcodes[i].rule == 1) && (args != 1)) ||
             ((opcodes[i].rule == 2) && (args != 1)) || ((opcodes[i].rule == 3) && (args != 1)))
         {
-            fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n", linecount, line,
-                    args);
+            fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n", linecount,
+                    input_line.c_str(), args);
             exit(-1);
         }
         if (args == 1)
         {
             if ((arg1 = evaluateargument(symbol_table, arg1str)) == -1)
             {
-                fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount, line,
-                        arg1str);
+                fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount,
+                        input_line.c_str(), arg1str);
                 exit(-1);
             }
         }
@@ -872,14 +886,15 @@ int main(int argc, const char** argv)
             writebyte(opcodes[i].code, current_address++, ofp);
             if (global_options.generate_list_file)
                 fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
-                        (lineaddress & 0xFF), opcodes[i].code, singlespacepad, line);
+                        (lineaddress & 0xFF), opcodes[i].code, singlespacepad, input_line.c_str());
         }
         else if (opcodes[i].rule == 1)
         {
             /* single byte, must follow */
             if ((arg1 > 255) || (arg1 < 0))
             {
-                fprintf(stderr, " in line %d %s expected argument 0-255\n", linecount, line);
+                fprintf(stderr, " in line %d %s expected argument 0-255\n", linecount,
+                        input_line.c_str());
                 fprintf(stderr, "    instead got %s=%d\n", arg1str, arg1);
                 exit(-1);
             }
@@ -891,7 +906,7 @@ int main(int argc, const char** argv)
                 if (global_options.single_byte_list)
                 {
                     fprintf(lfp, "%4d %02o-%03o %03o %s\n", linecount, ((lineaddress >> 8) & 0xFF),
-                            (lineaddress & 0xFF), code, line);
+                            (lineaddress & 0xFF), code, input_line.c_str());
                     lineaddress++;
                     fprintf(lfp, "     %02o-%03o %03o\n", (((lineaddress) >> 8) & 0xFF),
                             ((lineaddress) &0xFF), arg1);
@@ -899,7 +914,8 @@ int main(int argc, const char** argv)
                 else
                 {
                     fprintf(lfp, "%4d %02o-%03o %03o %03o     %s\n", linecount,
-                            ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code, arg1, line);
+                            ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code, arg1,
+                            input_line.c_str());
                 }
             }
         }
@@ -908,8 +924,8 @@ int main(int argc, const char** argv)
             /* two byte address to follow */
             if ((arg1 > 1024 * 16) || (arg1 < 0))
             {
-                fprintf(stderr, " in line %d %s expected argument 0-%d\n", linecount, line,
-                        1024 * 16);
+                fprintf(stderr, " in input_line.c_str() %d %s expected argument 0-%d\n", linecount,
+                        input_line.c_str(), 1024 * 16);
                 fprintf(stderr, "    instead got %s=%d\n", arg1str, arg1);
                 exit(-1);
             }
@@ -924,7 +940,7 @@ int main(int argc, const char** argv)
                 if (global_options.single_byte_list)
                 {
                     fprintf(lfp, "%4d %02o-%03o %03o %s\n", linecount, ((lineaddress >> 8) & 0xFF),
-                            (lineaddress & 0xFF), code, line);
+                            (lineaddress & 0xFF), code, input_line.c_str());
                     lineaddress++;
                     fprintf(lfp, "     %02o-%03o %03o\n", ((lineaddress >> 8) & 0xFF),
                             (lineaddress & 0xFF), lowbyte);
@@ -936,7 +952,7 @@ int main(int argc, const char** argv)
                 {
                     fprintf(lfp, "%4d %02o-%03o %03o %03o %03o %s\n", linecount,
                             ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code, lowbyte,
-                            highbyte, line);
+                            highbyte, input_line.c_str());
                 }
             }
         }
@@ -949,7 +965,8 @@ int main(int argc, const char** argv)
                 maxport = 23;
             if ((arg1 > maxport) || (arg1 < 0))
             {
-                fprintf(stderr, " in line %d %s expected port 0-%d\n", linecount, line, maxport);
+                fprintf(stderr, " in input_line.c_str() %d %s expected port 0-%d\n", linecount,
+                        input_line.c_str(), maxport);
                 fprintf(stderr, "    instead got %s=%d\n", arg1str, arg1);
                 exit(-1);
             }
@@ -957,12 +974,12 @@ int main(int argc, const char** argv)
             writebyte(code, current_address++, ofp);
             if (global_options.generate_list_file)
                 fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", linecount, ((lineaddress >> 8) & 0xFF),
-                        (lineaddress & 0xFF), code, singlespacepad, line);
+                        (lineaddress & 0xFF), code, singlespacepad, input_line.c_str());
         }
         else
         {
-            fprintf(stderr, " in line %d %s can't comprehend rule %d\n", linecount, line,
-                    opcodes[i].rule);
+            fprintf(stderr, " in input_line.c_str() %d %s can't comprehend rule %d\n", linecount,
+                    input_line.c_str(), opcodes[i].rule);
             exit(-1);
         }
     }
