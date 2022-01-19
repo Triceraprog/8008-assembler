@@ -2,11 +2,14 @@
 #include "options.h"
 #include "symbol_table.h"
 
+#include <cassert>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <iostream>
+#include <regex>
 
 int linecount;
 
@@ -95,10 +98,103 @@ struct
  *
  */
 
-void parseline(char* line, char* label, char* opcode, char* arg1, char* arg2, int* args)
+std::regex label_scan{R"(([\w|\\#]+))"};
+
+void parse_label_line(const std::string& line, char* label, char* opcode, char* arg1, char* arg2,
+                      char* extrastuff, int* args)
 {
+    /* There is a label in column 0 */
+    auto begin = std::sregex_iterator(line.begin(), line.end(), label_scan);
+    auto end = std::sregex_iterator();
+
+    std::vector<std::string> parsed;
+    std::ranges::transform(begin, end, std::back_inserter(parsed),
+                           [](const auto& elt) { return elt.str(); });
+
+    assert(!parsed.empty());
+    *args = static_cast<int>(parsed.size()) - 2;
+
+    std::string new_label, new_opcode, new_arg1, new_arg2, new_extra_stuff;
+    switch (parsed.size())
+    {
+        case 5:
+            new_extra_stuff = parsed[4];
+        case 4:
+            new_arg2 = parsed[3];
+        case 3:
+            new_arg1 = parsed[2];
+        case 2:
+            new_opcode = parsed[1];
+        case 1:
+            new_label = parsed[0];
+    }
+
+    const char last_label_char = new_label.back();
+    if (last_label_char == ':' || last_label_char == ',')
+    {
+        new_label.resize(new_label.size() - 1);
+    }
+    else if (strcasecmp(new_label.c_str(), "equ") == 0)
+    {
+        std::cerr << "WARNING: in line " << linecount << " " << line << " label " << new_label
+                  << " lacking colon, and not 'equ' pseudo-op.\n";
+    }
+
+    strcpy(label, new_label.c_str());
+    strcpy(opcode, new_opcode.c_str());
+    strcpy(arg1, new_arg1.c_str());
+    strcpy(arg2, new_arg2.c_str());
+    strcpy(extrastuff, new_extra_stuff.c_str());
+}
+
+void parse_no_label_line(const std::string& line, char* label, char* opcode, char* arg1, char* arg2,
+                         char* extrastuff, int* args)
+{
+    auto begin = std::sregex_iterator(line.begin(), line.end(), label_scan);
+    auto end = std::sregex_iterator();
+
+    std::vector<std::string> parsed;
+    std::ranges::transform(begin, end, std::back_inserter(parsed),
+                           [](const auto& elt) { return elt.str(); });
+
+    *args = static_cast<int>(parsed.size()) - 1;
+
+    std::string new_label, new_opcode, new_arg1, new_arg2, new_extra_stuff;
+    if (*args >= 0)
+    {
+        switch (parsed.size())
+        {
+            case 8:
+            case 7:
+            case 6:
+            case 5:
+            case 4:
+                new_extra_stuff = parsed[3];
+            case 3:
+                new_arg2 = parsed[2];
+            case 2:
+                new_arg1 = parsed[1];
+            case 1:
+                new_opcode = parsed[0];
+        }
+    }
+
+    strcpy(label, new_label.c_str());
+    strcpy(opcode, new_opcode.c_str());
+    strcpy(arg1, new_arg1.c_str());
+    strcpy(arg2, new_arg2.c_str());
+    strcpy(extrastuff, new_extra_stuff.c_str());
+}
+
+void parse_line(const char* line, char* label, char* opcode, char* arg1, char* arg2, int* args)
+{
+    using namespace std::string_literals;
+
     int i;
-    char cleanline[100], extrastuff[100], c;
+    std::string new_cleanline{line};
+    char cleanline[100];
+    char extrastuff[100], c;
+
     /* first clean line up a bit */
     strcpy(cleanline, line);
     for (i = 0; i < strlen(line); i++)
@@ -116,37 +212,30 @@ void parseline(char* line, char* label, char* opcode, char* arg1, char* arg2, in
         else
             cleanline[i] = c;
     }
+
+    /* Cut at first end of line characters */
+    /* TODO: Warning, it considers '/' as an end of line, which does not allow its usage as a char */
+    auto pos = new_cleanline.find_first_of(";/\n\x0a"s);
+    if (pos != std::string::npos)
+    {
+        new_cleanline.resize(std::max(0, static_cast<int>(pos - 1)));
+    }
+
+    std::ranges::replace_if(
+            new_cleanline, [](const auto c) { return c == ','; }, ' ');
+
     label[0] = opcode[0] = arg1[0] = arg2[0] = extrastuff[0] = 0;
     c = cleanline[0];
+
     if ((c != ' ') && (c != '\t') && (c != 0x00))
     {
-        /* this is a label in column 0 */
-        *args = sscanf(cleanline, "%s %s %s %s %s", label, opcode, arg1, arg2, extrastuff) - 2;
-        if (*args == -1)
-            opcode[0] = 0;
-
-        if ((label[strlen(label) - 1] == ':') || (label[strlen(label) - 1] == ','))
-            label[strlen(label) - 1] = 0; /* remove colon */
-        else if (strcasecmp(label, "equ") != 0)
-        {
-            /* if label doesn't have colon, should be 'equ' opcode, else Warn */
-            fprintf(stderr,
-                    "WARNING: in line %d %s label %s lacking colon,and not 'equ' pseudoop.\n",
-                    linecount, line, label);
-        }
+        parse_label_line(new_cleanline, label, opcode, arg1, arg2, extrastuff, args);
     }
     else
     {
-        /*  "no label in column 0" */
-        label[0] = 0;
-        *args = sscanf(cleanline, "%s %s %s %s", opcode, arg1, arg2, extrastuff) - 1;
-        if (*args < 0)
-        {
-            /* must just be comment line */
-            opcode[0] = 0;
-            return;
-        }
+        parse_no_label_line(new_cleanline, label, opcode, arg1, arg2, extrastuff, args);
     }
+
     if ((*args > 2) && (strcasecmp(opcode, "data") != 0))
     {
         printf("WARNING: extra text on line %d %s\n", linecount, line);
@@ -524,7 +613,7 @@ int finddata(const SymbolTable& symbol_table, char* line, int* outdata)
 
 int main(int argc, const char** argv)
 {
-    char line[100], cleanline[100], label[20];
+    char line[100], label[20];
     char opcode[80], arg1str[20], arg2str[20], c, *cptr;
     char singlespacepad[9]; /* this is some extra padding if we use single space list file */
     int arg1, arg2, val, datalist[80], *ptr;
@@ -546,21 +635,19 @@ int main(int argc, const char** argv)
         exit(-1);
     }
 
-    if (global_options.single_byte_list)
-        singlespacepad[0] = 0;
-    else
-        strcpy(singlespacepad, "        ");
-
     Files files(global_options);
     FILE* ifp = files.ifp;
     FILE* ofp = files.ofp;
     FILE* lfp = files.lfp;
 
-    /*
-     * Now initialize the symbol table, to get ready for assembly.
-     */
+    /* Initialize the symbol table, to get ready for assembly. */
 
     SymbolTable symbol_table;
+
+    if (global_options.single_byte_list)
+        singlespacepad[0] = 0;
+    else
+        strcpy(singlespacepad, "        ");
 
     /*
    *
@@ -603,7 +690,7 @@ int main(int argc, const char** argv)
         if (global_options.verbose || global_options.debug)
             printf("     0x%X \"%s\"\n", curaddress, line);
         /* this function breaks line into separate parts */
-        parseline(line, label, opcode, arg1str, arg2str, &args);
+        parse_line(line, label, opcode, arg1str, arg2str, &args);
         if (global_options.debug)
             printf("parsed line label=%s opcode=%s arg1str=%s\n", label, opcode, arg1str);
         if (label[0] != 0)
@@ -712,7 +799,7 @@ int main(int argc, const char** argv)
         if (global_options.verbose || global_options.debug)
             printf("     0x%X \"%s\"\n", curaddress, line);
         /* this function breaks line into separate parts */
-        parseline(line, label, opcode, arg1str, arg2str, &args);
+        parse_line(line, label, opcode, arg1str, arg2str, &args);
 
         if (opcode[0] == 0)
         {
