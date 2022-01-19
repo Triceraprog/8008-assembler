@@ -138,7 +138,7 @@ void parse_line(const char* line, char* label, char* opcode, char* arg1, char* a
     {
         std::cout << "label=<" << label << "> ";
         std::cout << "opcode=<" << opcode << "> ";
-        std::cout << "args=<" << args << "> ";
+        std::cout << "args=<" << *args << "> ";
         std::cout << "arg1=<" << arg1 << "> ";
         std::cout << "arg2=<" << arg2 << ">\n";
     }
@@ -534,9 +534,16 @@ void write_listing_header(FILE* lfp)
         fprintf(lfp, "---- ------ ----------- ----------------------------------\n");
     }
 }
+
+void stream_rewind(std::fstream& fstream)
+{
+    fstream.clear();
+    fstream.seekg(std::ios::beg);
+}
+
 int main(int argc, const char** argv)
 {
-    char line[100], label[20];
+    char label[20];
     char opcode[80], arg1str[20], arg2str[20];
     char singlespacepad[9]; /* this is some extra padding if we use single space list file */
     int arg1, val, datalist[80], *ptr;
@@ -553,7 +560,6 @@ int main(int argc, const char** argv)
     }
 
     Files files(global_options);
-    FILE* ifp = files.ifp;
     FILE* ofp = files.ofp;
     FILE* lfp = files.lfp;
 
@@ -583,12 +589,12 @@ int main(int argc, const char** argv)
     linecount = 0;
 
     int current_address = 0;
-    while (fgets(line, 100, ifp))
+    for (std::string input_line; std::getline(files.input_stream, input_line);)
     {
+        char line[100];
+        strcpy(line, input_line.c_str());
         lineaddress = current_address;
-        /* remove \n at end of line */
-        if (strlen(line) > 0)
-            line[strlen(line) - 1] = 0;
+
         linecount++;
         if (global_options.verbose || global_options.debug)
             printf("     0x%X \"%s\"\n", current_address, line);
@@ -689,16 +695,18 @@ int main(int argc, const char** argv)
 
     if (global_options.verbose || global_options.debug)
         printf("Pass number Two:  Re-read and assemble codes\n");
-    rewind(ifp);
+
     linecount = 0;
     current_address = 0;
 
-    while (fgets(line, 100, ifp))
+    stream_rewind(files.input_stream);
+    for (std::string input_line; std::getline(files.input_stream, input_line);)
     {
+        char line[100];
+        strcpy(line, input_line.c_str());
         lineaddress = current_address;
-        if (strlen(line) > 0)
-            line[strlen(line) - 1] = 0;
         linecount++;
+
         if (global_options.verbose || global_options.debug)
             printf("     0x%X \"%s\"\n", current_address, line);
         /* this function breaks line into separate parts */

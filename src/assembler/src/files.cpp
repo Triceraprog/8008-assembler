@@ -2,14 +2,22 @@
 
 #include "options.h"
 
-#include <iostream>
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
+#include <iostream>
 
 Files::Files(const Options& options)
 {
     set_output_filenames(options);
     open_files(options);
+}
+
+Files::~Files()
+{
+    if (input_stream.is_open())
+    {
+        input_stream.close();
+    }
 }
 
 void Files::set_output_filenames(const Options& options)
@@ -30,11 +38,14 @@ void Files::set_output_filenames(const Options& options)
 
 void Files::open_files(const Options& options)
 {
-    if ((ifp = fopen(input_filename.c_str(), "rt")) == nullptr)
+    input_stream.open(input_filename.c_str());
+
+    if (input_stream.fail())
     {
-        fprintf(stderr, "Can't open %s as input file\n", options.input_filename.c_str());
+        std::cerr << "Can't open " << options.input_filename << " as input file\n";
         exit(-1);
     }
+
     if (options.generate_binary_file)
     {
         if ((ofp = fopen(outfilename.c_str(), "wb")) == nullptr)

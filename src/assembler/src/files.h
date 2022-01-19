@@ -2,6 +2,7 @@
 #define INC_8008_ASSEMBLER_FILES_H
 
 #include <string>
+#include <fstream>
 
 class Options;
 
@@ -9,8 +10,10 @@ class Files
 {
 public:
     explicit Files(const Options& options);
+    ~Files();
 
-    FILE *ifp{}, *ofp{}, *lfp{};
+    FILE *ofp{}, *lfp{};
+    std::fstream input_stream;
 
 private:
     void set_output_filenames(const Options& options);
