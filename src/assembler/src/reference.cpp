@@ -109,50 +109,35 @@ std::string clean_line(const std::string& input_line)
     return clean;
 }
 
-LineTokenizer parse_line(const std::string& line, char* label, char* opcode, char* arg1, char* arg2,
-                         int* args)
+LineTokenizer parse_line(const std::string& line)
 {
     using namespace std::string_literals;
 
     std::string cleaned_line = clean_line(line);
 
-    LineTokenizer tokenizer(cleaned_line);
-    *args = static_cast<int>(tokenizer.arg_count);
+    LineTokenizer tokens(cleaned_line);
 
-    if (tokenizer.warning_on_label)
+    if (tokens.warning_on_label)
     {
         std::cerr << "WARNING: in line " << linecount << " " << cleaned_line << " label "
-                  << tokenizer.label << " lacking colon, and not 'equ' pseudo-op.\n";
+                  << tokens.label << " lacking colon, and not 'equ' pseudo-op.\n";
     }
 
-    label[0] = opcode[0] = arg1[0] = arg2[0] = 0;
-    strcpy(label, tokenizer.label.c_str());
-    strcpy(opcode, tokenizer.opcode.c_str());
-    strcpy(arg1, tokenizer.arg1.c_str());
-    strcpy(arg2, tokenizer.arg2.c_str());
-
-    if ((tokenizer.arg_count > 2) && (strcasecmp(opcode, "data") != 0))
+    if ((tokens.arg_count > 2) && (!ci_equals(tokens.opcode, "data")))
     {
         std::cerr << "WARNING: extra text on line " << linecount << " " << line << "\n";
     }
 
     if (global_options.debug)
     {
-        std::cout << "label=<" << label << "> ";
-        std::cout << "opcode=<" << opcode << "> ";
-        std::cout << "args=<" << *args << "> ";
-        std::cout << "arg1=<" << arg1 << "> ";
-        std::cout << "arg2=<" << arg2 << ">\n";
+        std::cout << "label=<" << tokens.label << "> ";
+        std::cout << "opcode=<" << tokens.opcode << "> ";
+        std::cout << "args=<" << tokens.arg_count << "> ";
+        std::cout << "arg1=<" << tokens.arg1 << "> ";
+        std::cout << "arg2=<" << tokens.arg2 << ">\n";
     }
 
-    return tokenizer;
-}
-
-LineTokenizer new_parse_line(const std::string& line)
-{
-    char label[20], opcode[80], arg1str[20], arg2str[20];
-    int args;
-    return parse_line(line, label, opcode, arg1str, arg2str, &args);
+    return tokens;
 }
 
 int find_opcode(std::string_view str)
@@ -623,7 +608,7 @@ int main(int argc, const char** argv)
             std::cout << "\"" << input_line << "\"\n";
         }
         /* this function breaks line into separate parts */
-        LineTokenizer tokens = new_parse_line(input_line);
+        LineTokenizer tokens = parse_line(input_line);
 
         if (global_options.debug)
         {
@@ -752,7 +737,7 @@ int main(int argc, const char** argv)
             printf("     0x%X \"%s\"\n", current_address, input_line.c_str());
         }
 
-        LineTokenizer tokens = new_parse_line(input_line);
+        LineTokenizer tokens = parse_line(input_line);
         args = tokens.arg_count;
 
         if (tokens.opcode.empty())
