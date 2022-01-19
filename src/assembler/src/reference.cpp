@@ -1,16 +1,18 @@
 #include "files.h"
 #include "line_tokenizer.h"
+#include "opcodes.h"
 #include "options.h"
 #include "symbol_table.h"
 #include "utils.h"
-#include "opcodes.h"
 
+#include <cassert>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <iostream>
+#include <regex>
 
 Options global_options;
 
@@ -257,101 +259,115 @@ void writebyte(int data, int address, FILE* ofp)
     }
 }
 
-int finddata(const SymbolTable& symbol_table, int line_count, const char* line, int* outdata)
+namespace
 {
-    const char* ptr;
+    std::regex data_rule{"[dD][aA][tT][aA]\\s*"};
+
+}
+
+int find_data(const SymbolTable& symbol_table, int line_count, const char* line, int* outdata)
+{
     char c;
-    char cleanline[80];
     char arg[13][20];
-    int i, n, *outptr;
+    int* outptr;
+    int i;
 
     outptr = outdata;
-    for (i = 0; i < (strlen(line) - 5); i++)
+
+    std::string str_line{line};
+    std::smatch data_match;
+    bool found = std::regex_search(str_line, data_match, data_rule);
+
+    if (!found)
     {
-        if (tolower(line[i]) != 'd')
-            continue;
-        if (tolower(line[i + 1]) != 'a')
-            continue;
-        if (tolower(line[i + 2]) != 't')
-            continue;
-        if (tolower(line[i + 3]) != 'a')
-            continue;
-        break;
-    }
-    if (i == (strlen(line) - 5))
-    {
-        fprintf(stderr, "can't find data code?  Unexpected bug\n");
+        std::cerr << "can't find data code?  Unexpected bug\n";
         exit(-1);
     }
-    ptr = &line[i + 4];
-    /* move ahead to non-white space */
-    for (i = 0; i < strlen(ptr); i++)
-        if (!isspace(ptr[i]))
-            break;
-    ptr = ptr + i;
-    if (*ptr == '*')
+
+    auto after_data_position = data_match.position() + data_match.length();
+
+    const char* ptr = line + after_data_position;
+
+    std::string_view line_view{str_line};
+    auto data_numbers = line_view.substr(after_data_position);
+
+    if (data_numbers.empty())
     {
-        if (sscanf(ptr + 1, "%d", &n) != 1)
+        return 0;
+    }
+
+    if (data_numbers.front() == '*')
+    {
+        // 'DATA *NNN' reserve NNN bytes.
+        try
         {
-            fprintf(stderr, " in line %s can't read number to reserve\n", line);
+            int number_to_reserve = std::stoi(data_numbers.substr(1).data());
+            return 0 - number_to_reserve;
+        }
+        catch (...)
+        {
+            std::cerr << " in line %s can't read number to reserve\n";
             exit(-1);
         }
-        return (0 - n);
     }
-    if ((*ptr == '\'') || (*ptr == '"'))
+    if ((data_numbers.front() == '\'') || (data_numbers.front() == '"'))
     {
-        /* data statement has a quoted string */
-        ptr++;
-        n = 0;
-        while ((*ptr != '"') && (*ptr != '\''))
+        // DATA "..." or DATA '...' declares a string of characters
+        const char quote_to_find = data_numbers.front();
+        auto last_quote_position = data_numbers.find_last_of(quote_to_find);
+        auto string_content = data_numbers.substr(1, last_quote_position - 1);
+
+        bool escape_char = false;
+        for (char char_data : string_content)
         {
-            if (*ptr == '\\')
+            if (escape_char)
             {
-                /* escape sequence */
-                ptr++;
-                if (*ptr == '\\')
+                escape_char = false;
+                switch (char_data)
                 {
-                    n++;
-                    *(outptr++) = '\\';
+                    case '\\':
+                        *(outptr++) = '\\';
+                        break;
+                    case 'n':
+                        *(outptr++) = '\n';
+                        break;
+                    case 't':
+                        *(outptr++) = '\t';
+                        break;
+                    case '0':
+                        *(outptr++) = '\0';
+                        break;
+                    default:
+                        std::cerr << " in line " << line_count << " " << line;
+                        std::cerr << " unknown escape sequence \\" << char_data << "\n";
+                        exit(-1);
                 }
-                else if (*ptr == 'n')
-                {
-                    n++;
-                    *(outptr++) = '\n';
-                }
-                else if (*ptr == 't')
-                {
-                    n++;
-                    *(outptr++) = '\t';
-                }
-                else if (*ptr == '0')
-                {
-                    n++;
-                    *(outptr++) = 0;
-                }
-                else
-                {
-                    fprintf(stderr, " in line %d %s unknown escape sequence \\%c\n", line_count,
-                            line, *ptr);
-                    exit(-1);
-                }
+            }
+            else if (char_data == '\\')
+            {
+                escape_char = true;
             }
             else
             {
-                n++;
-                *(outptr++) = *ptr;
+                *(outptr++) = static_cast<u_char>(char_data);
             }
-            ptr++;
-            if (strlen(ptr) < 1)
-                break;
         }
-        /* if "global_options.markascii" option, set the highest bit of these ascii bytes */
+
+        /* If "markascii" option is set, highest bit of these ascii bytes are forced to 1. */
         if (global_options.mark_8_ascii)
-            for (i = 0; i < n; i++)
-                outdata[i] = outdata[i] | 0x80;
+        {
+            for (auto* p = outdata; outdata < outptr; p++)
+            {
+                *p |= 0x80;
+            }
+        }
+
+        return static_cast<int>(outptr - outdata);
     }
     else
     {
+        char clean_line[80];
+
         /* data statement has list of arguments to evaluate */
 
         /* not we're removing comma from original line, list file won't have it */
@@ -362,12 +378,12 @@ int finddata(const SymbolTable& symbol_table, int line_count, const char* line, 
                 c = 0;
             if (c == ',')
                 c = ' ';
-            cleanline[i] = c;
+            clean_line[i] = c;
         }
 
-        n = sscanf(cleanline, "%s %s %s %s %s %s %s %s %s %s %s %s %s", arg[0], arg[1], arg[2],
-                   arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11],
-                   arg[12]);
+        int n = sscanf(clean_line, "%s %s %s %s %s %s %s %s %s %s %s %s %s", arg[0], arg[1], arg[2],
+                       arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11],
+                       arg[12]);
         if (n > 12)
         {
             fprintf(stderr, " in line %d %s max length is 12 bytes.\n", line_count, line);
@@ -378,8 +394,8 @@ int finddata(const SymbolTable& symbol_table, int line_count, const char* line, 
         {
             *(outdata++) = evaluate_argument(symbol_table, line_count, arg[i]);
         }
+        return n;
     }
-    return (n);
 }
 
 void write_listing_header(FILE* lfp)
@@ -510,7 +526,7 @@ void first_pass(SymbolTable& symbol_table, Files& files)
         else if (ci_equals(tokens.opcode, "data"))
         {
             int data_list[80];
-            int n = finddata(symbol_table, line_count, input_line.c_str(), data_list);
+            int n = find_data(symbol_table, line_count, input_line.c_str(), data_list);
             if (global_options.debug)
             {
                 printf("got %d items in data list\n", n);
@@ -642,7 +658,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
         else if (ci_equals(tokens.opcode, "data"))
         {
             int data_list[80];
-            int n = finddata(symbol_table, line_count, input_line.c_str(), data_list);
+            int n = find_data(symbol_table, line_count, input_line.c_str(), data_list);
             /* if n is negative, that number of bytes are just reserved */
             if (n < 0)
             {
