@@ -731,14 +731,12 @@ int main(int argc, const char** argv)
         }
     }
 
-    /*
-   *
-   *  Okay, now hopefully have all symbols defined.  Do second pass.
-   *
-   */
+    /* Symbols are defined. Second pass. */
 
     if (global_options.verbose || global_options.debug)
-        printf("Pass number Two:  Re-read and assemble codes\n");
+    {
+        std::cout << "Pass number Two:  Re-read and assemble codes\n";
+    }
 
     linecount = 0;
     current_address = 0;
@@ -750,47 +748,46 @@ int main(int argc, const char** argv)
         linecount++;
 
         if (global_options.verbose || global_options.debug)
+        {
             printf("     0x%X \"%s\"\n", current_address, input_line.c_str());
-        /* this function breaks line into separate parts */
-        char label[20], opcode[80], arg1str[20], arg2str[20];
-        parse_line(input_line, label, opcode, arg1str, arg2str, &args);
+        }
 
-        if (opcode[0] == 0)
+        LineTokenizer tokens = new_parse_line(input_line);
+        args = tokens.arg_count;
+
+        if (tokens.opcode.empty())
         {
-            /* must just be a comment line (or label only) */
+            /* Must just be a comment line (or label only) */
             if (global_options.generate_list_file)
+            {
                 fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
                         input_line.c_str());
+            }
             continue;
         }
-        /* check if this opcode is one of the pseudoops */
-        if (strcasecmp(opcode, "equ") == 0)
-        {
-            if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
-                        input_line.c_str());
-            continue;
-        }
-        if (strcasecmp(opcode, "cpu") == 0)
-        {
-            if (global_options.generate_list_file)
-                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
-                        input_line.c_str());
-            continue;
-        }
-        if (strcasecmp(opcode, "equ") == 0)
+
+        /* Check if this opcode is one of the pseudo ops. */
+        if (ci_equals(tokens.opcode, "equ"))
         {
             if (global_options.generate_list_file)
                 fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
                         input_line.c_str());
             continue;
         }
-        if (strcasecmp(opcode, "org") == 0)
+        if (ci_equals(tokens.opcode, "cpu"))
         {
-            if ((current_address = evaluate_argument(symbol_table, arg1str)) == -1)
+            if (global_options.generate_list_file)
+                fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
+                        input_line.c_str());
+            continue;
+        }
+
+        if (ci_equals(tokens.opcode, "org"))
+        {
+            if ((current_address = evaluate_argument(symbol_table, tokens.arg1)) == -1)
             {
                 fprintf(stderr, " in input_line.c_str() %d %s can't evaluate argument %s\n",
-                        linecount, input_line.c_str(), arg1str);
+                        linecount, input_line.c_str(), tokens.arg1.c_str());
                 exit(-1);
             }
             if (global_options.generate_list_file)
@@ -798,7 +795,7 @@ int main(int argc, const char** argv)
                         input_line.c_str());
             continue;
         }
-        if (strcasecmp(opcode, "end") == 0)
+        if (ci_equals(tokens.opcode, "end"))
         {
             if (global_options.generate_list_file)
                 fprintf(lfp, "%4d            %s%s\n", linecount, singlespacepad,
@@ -807,7 +804,7 @@ int main(int argc, const char** argv)
             /* we will go ahead and check for more with a continue */
             continue;
         }
-        else if (strcasecmp(opcode, "data") == 0)
+        else if (ci_equals(tokens.opcode, "data"))
         {
             n = finddata(symbol_table, input_line.c_str(), datalist);
             /* if n is negative, that number of bytes are just reserved */
@@ -883,10 +880,10 @@ int main(int argc, const char** argv)
      * Now we should have an opcode.
      *
      */
-        else if ((i = find_opcode(opcode)) == -1)
+        else if ((i = find_opcode(tokens.opcode)) == -1)
         {
             fprintf(stderr, " in line %d %s undefined opcode %s\n", linecount, input_line.c_str(),
-                    opcode);
+                    tokens.opcode.c_str());
             exit(-1);
         }
         /* found the opcode */
@@ -901,10 +898,10 @@ int main(int argc, const char** argv)
         }
         if (args == 1)
         {
-            if ((arg1 = evaluate_argument(symbol_table, arg1str)) == -1)
+            if ((arg1 = evaluate_argument(symbol_table, tokens.arg1)) == -1)
             {
                 fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount,
-                        input_line.c_str(), arg1str);
+                        input_line.c_str(), tokens.arg1.c_str());
                 exit(-1);
             }
         }
@@ -931,7 +928,7 @@ int main(int argc, const char** argv)
             {
                 fprintf(stderr, " in line %d %s expected argument 0-255\n", linecount,
                         input_line.c_str());
-                fprintf(stderr, "    instead got %s=%d\n", arg1str, arg1);
+                fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                 exit(-1);
             }
             code = opcodes[i].code;
@@ -962,7 +959,7 @@ int main(int argc, const char** argv)
             {
                 fprintf(stderr, " in input_line.c_str() %d %s expected argument 0-%d\n", linecount,
                         input_line.c_str(), 1024 * 16);
-                fprintf(stderr, "    instead got %s=%d\n", arg1str, arg1);
+                fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                 exit(-1);
             }
             code = opcodes[i].code;
@@ -1003,7 +1000,7 @@ int main(int argc, const char** argv)
             {
                 fprintf(stderr, " in input_line.c_str() %d %s expected port 0-%d\n", linecount,
                         input_line.c_str(), maxport);
-                fprintf(stderr, "    instead got %s=%d\n", arg1str, arg1);
+                fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                 exit(-1);
             }
             code = opcodes[i].code + (arg1 << 1);
