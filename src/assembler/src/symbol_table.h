@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <cstdio>
 #include <string>
+#include <vector>
 
 class SymbolTable
 {
@@ -14,6 +15,7 @@ public:
 
 private:
     std::unordered_map<std::string, int> symbols;
+    std::vector<std::string> insertion_order;
 };
 
 #endif //INC_8008_ASSEMBLER_SYMBOL_TABLE_H
