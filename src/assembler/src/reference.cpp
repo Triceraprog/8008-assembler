@@ -552,11 +552,6 @@ void stream_rewind(std::fstream& fstream)
 
 int main(int argc, const char** argv)
 {
-    char singlespacepad[9]; /* this is some extra padding if we use single space list file */
-    int arg1, val, datalist[80], *ptr;
-    int i, n, args, lineaddress, code;
-    int highbyte, lowbyte, maxport;
-
     try
     {
         global_options.parse(argc, argv);
@@ -574,11 +569,6 @@ int main(int argc, const char** argv)
 
     SymbolTable symbol_table;
 
-    if (global_options.single_byte_list)
-        singlespacepad[0] = 0;
-    else
-        strcpy(singlespacepad, "        ");
-
     /* First pass, just parse through line, keep track of address, and build a symbol table */
     {
         if (global_options.debug || global_options.verbose)
@@ -591,9 +581,10 @@ int main(int argc, const char** argv)
         int line_count = 0;
 
         int current_address = 0;
+        int line_address = 0;
         for (std::string input_line; std::getline(files.input_stream, input_line);)
         {
-            lineaddress = current_address;
+            line_address = current_address;
 
             line_count++;
             if (global_options.verbose || global_options.debug)
@@ -622,6 +613,7 @@ int main(int argc, const char** argv)
                 }
 
                 /* Or define it. */
+                int val;
                 if (ci_equals(tokens.opcode, "equ") || ci_equals(tokens.opcode, "org"))
                 {
                     val = evaluate_argument(symbol_table, line_count, tokens.arg1);
@@ -671,7 +663,8 @@ int main(int argc, const char** argv)
             }
             else if (ci_equals(tokens.opcode, "data"))
             {
-                n = finddata(symbol_table, line_count, input_line.c_str(), datalist);
+                int data_list[80];
+                int n = finddata(symbol_table, line_count, input_line.c_str(), data_list);
                 if (global_options.debug)
                 {
                     printf("got %d items in data list\n", n);
@@ -683,7 +676,7 @@ int main(int argc, const char** argv)
                 current_address += n;
                 continue;
             }
-            else if ((i = find_opcode(tokens.opcode)) != -1)
+            else if (int i = find_opcode(tokens.opcode); i != -1)
             {
                 /* found the opcode */
                 if (opcodes[i].rule == 0)
@@ -715,19 +708,32 @@ int main(int argc, const char** argv)
     /* Symbols are defined. Second pass. */
 
     {
+        int arg1;
 
         if (global_options.verbose || global_options.debug)
         {
             std::cout << "Pass number Two:  Re-read and assemble codes\n";
         }
 
+        char single_space_pad[9]; /* this is some extra padding if we use single space list file */
+        if (global_options.single_byte_list)
+        {
+            single_space_pad[0] = 0;
+        }
+
+        else
+        {
+            strcpy(single_space_pad, "        ");
+        }
+
         int line_count = 0;
         int current_address = 0;
+        int line_address = 0;
 
         stream_rewind(files.input_stream);
         for (std::string input_line; std::getline(files.input_stream, input_line);)
         {
-            lineaddress = current_address;
+            line_address = current_address;
             line_count++;
 
             if (global_options.verbose || global_options.debug)
@@ -736,14 +742,14 @@ int main(int argc, const char** argv)
             }
 
             LineTokenizer tokens = parse_line(input_line, line_count);
-            args = tokens.arg_count;
+            int args = tokens.arg_count;
 
             if (tokens.opcode.empty())
             {
                 /* Must just be a comment line (or label only) */
                 if (global_options.generate_list_file)
                 {
-                    fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
+                    fprintf(lfp, "%4d            %s%s\n", line_count, single_space_pad,
                             input_line.c_str());
                 }
                 continue;
@@ -753,14 +759,14 @@ int main(int argc, const char** argv)
             if (ci_equals(tokens.opcode, "equ"))
             {
                 if (global_options.generate_list_file)
-                    fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
+                    fprintf(lfp, "%4d            %s%s\n", line_count, single_space_pad,
                             input_line.c_str());
                 continue;
             }
             if (ci_equals(tokens.opcode, "cpu"))
             {
                 if (global_options.generate_list_file)
-                    fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
+                    fprintf(lfp, "%4d            %s%s\n", line_count, single_space_pad,
                             input_line.c_str());
                 continue;
             }
@@ -775,14 +781,14 @@ int main(int argc, const char** argv)
                     exit(-1);
                 }
                 if (global_options.generate_list_file)
-                    fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
+                    fprintf(lfp, "%4d            %s%s\n", line_count, single_space_pad,
                             input_line.c_str());
                 continue;
             }
             if (ci_equals(tokens.opcode, "end"))
             {
                 if (global_options.generate_list_file)
-                    fprintf(lfp, "%4d            %s%s\n", line_count, singlespacepad,
+                    fprintf(lfp, "%4d            %s%s\n", line_count, single_space_pad,
                             input_line.c_str());
                 /* could break here, but rather than break, */
                 /* we will go ahead and check for more with a continue */
@@ -790,64 +796,67 @@ int main(int argc, const char** argv)
             }
             else if (ci_equals(tokens.opcode, "data"))
             {
-                n = finddata(symbol_table, line_count, input_line.c_str(), datalist);
+                int data_list[80];
+                int n = finddata(symbol_table, line_count, input_line.c_str(), data_list);
                 /* if n is negative, that number of bytes are just reserved */
                 if (n < 0)
                 {
                     if (global_options.generate_list_file)
                         fprintf(lfp, "%4d %02o-%03o     %s%s\n", line_count,
-                                ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), singlespacepad,
-                                input_line.c_str());
+                                ((line_address >> 8) & 0xFF), (line_address & 0xFF),
+                                single_space_pad, input_line.c_str());
                     current_address += 0 - n;
                     continue;
                 }
-                for (i = 0; i < n; i++)
-                    writebyte(datalist[i], current_address++, ofp);
+                for (int i = 0; i < n; i++)
+                {
+                    writebyte(data_list[i], current_address++, ofp);
+                }
                 if (global_options.generate_list_file)
                 {
                     if (global_options.single_byte_list)
                     {
                         fprintf(lfp, "%4d %02o-%03o %03o %s\n", line_count,
-                                ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), datalist[0],
+                                ((line_address >> 8) & 0xFF), (line_address & 0xFF), data_list[0],
                                 input_line.c_str());
-                        for (i = 1; i < n; i++)
+                        for (int i = 1; i < n; i++)
                         {
                             fprintf(lfp, "%     %02o-%03o %03o\n", line_count,
-                                    (((lineaddress + i) >> 8) & 0xFF), ((lineaddress + i) & 0xFF),
-                                    datalist[i]);
+                                    (((line_address + i) >> 8) & 0xFF), ((line_address + i) & 0xFF),
+                                    data_list[i]);
                         }
                     }
                     else
                     {
-                        fprintf(lfp, "%4d %02o-%03o ", line_count, ((lineaddress >> 8) & 0xFF),
-                                (lineaddress & 0xFF));
+                        fprintf(lfp, "%4d %02o-%03o ", line_count, ((line_address >> 8) & 0xFF),
+                                (line_address & 0xFF));
                         if (n == 1)
-                            fprintf(lfp, "%03o          %s\n", datalist[0], input_line.c_str());
+                            fprintf(lfp, "%03o          %s\n", data_list[0], input_line.c_str());
                         else if (n == 2)
-                            fprintf(lfp, "%03o %03o      %s\n", datalist[0], datalist[1],
+                            fprintf(lfp, "%03o %03o      %s\n", data_list[0], data_list[1],
                                     input_line.c_str());
                         else if (n > 2)
                         {
-                            fprintf(lfp, "%03o %03o %03o  %s\n", datalist[0], datalist[1],
-                                    datalist[2], input_line.c_str());
-                            ptr = datalist + 3;
+                            fprintf(lfp, "%03o %03o %03o  %s\n", data_list[0], data_list[1],
+                                    data_list[2], input_line.c_str());
+                            int* ptr = data_list + 3;
                             n -= 3;
-                            lineaddress += 3;
+                            line_address += 3;
                             while (n > 0)
                             {
                                 /*	    fprintf(lfp,"            "); */
-                                fprintf(lfp, "     %02o-%03o ", ((lineaddress >> 8) & 0xFF),
-                                        (lineaddress & 0xFF));
+                                fprintf(lfp, "     %02o-%03o ", ((line_address >> 8) & 0xFF),
+                                        (line_address & 0xFF));
                                 if (n > 2)
                                 {
                                     fprintf(lfp, "%03o %03o %03o\n", ptr[0], ptr[1], ptr[2]);
                                     ptr += 3;
                                     n -= 3;
-                                    lineaddress += 3;
+                                    line_address += 3;
                                 }
                                 else
                                 {
-                                    for (i = 0; i < n; i++)
+                                    for (int i = 0; i < n; i++)
                                     {
                                         fprintf(lfp, "%03o ", ptr[0]);
                                         ptr++;
@@ -866,7 +875,8 @@ int main(int argc, const char** argv)
      * Now we should have an opcode.
      *
      */
-            else if ((i = find_opcode(tokens.opcode)) == -1)
+            int i = find_opcode(tokens.opcode);
+            if (i == -1)
             {
                 fprintf(stderr, " in line %d %s undefined opcode %s\n", line_count,
                         input_line.c_str(), tokens.opcode.c_str());
@@ -906,8 +916,8 @@ int main(int argc, const char** argv)
                 writebyte(opcodes[i].code, current_address++, ofp);
                 if (global_options.generate_list_file)
                     fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", line_count,
-                            ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), opcodes[i].code,
-                            singlespacepad, input_line.c_str());
+                            ((line_address >> 8) & 0xFF), (line_address & 0xFF), opcodes[i].code,
+                            single_space_pad, input_line.c_str());
             }
             else if (opcodes[i].rule == 1)
             {
@@ -919,7 +929,7 @@ int main(int argc, const char** argv)
                     fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                     exit(-1);
                 }
-                code = opcodes[i].code;
+                int code = opcodes[i].code;
                 writebyte(code, current_address++, ofp);
                 writebyte(arg1, current_address++, ofp);
                 if (global_options.generate_list_file)
@@ -927,16 +937,16 @@ int main(int argc, const char** argv)
                     if (global_options.single_byte_list)
                     {
                         fprintf(lfp, "%4d %02o-%03o %03o %s\n", line_count,
-                                ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code,
+                                ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
                                 input_line.c_str());
-                        lineaddress++;
-                        fprintf(lfp, "     %02o-%03o %03o\n", (((lineaddress) >> 8) & 0xFF),
-                                ((lineaddress) &0xFF), arg1);
+                        line_address++;
+                        fprintf(lfp, "     %02o-%03o %03o\n", (((line_address) >> 8) & 0xFF),
+                                ((line_address) &0xFF), arg1);
                     }
                     else
                     {
                         fprintf(lfp, "%4d %02o-%03o %03o %03o     %s\n", line_count,
-                                ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code, arg1,
+                                ((line_address >> 8) & 0xFF), (line_address & 0xFF), code, arg1,
                                 input_line.c_str());
                     }
                 }
@@ -951,9 +961,9 @@ int main(int argc, const char** argv)
                     fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                     exit(-1);
                 }
-                code = opcodes[i].code;
-                lowbyte = (0xFF & arg1);
-                highbyte = (0xFF & (arg1 >> 8));
+                int code = opcodes[i].code;
+                int lowbyte = (0xFF & arg1);
+                int highbyte = (0xFF & (arg1 >> 8));
                 writebyte(code, current_address++, ofp);
                 writebyte(lowbyte, current_address++, ofp);
                 writebyte(highbyte, current_address++, ofp);
@@ -962,19 +972,19 @@ int main(int argc, const char** argv)
                     if (global_options.single_byte_list)
                     {
                         fprintf(lfp, "%4d %02o-%03o %03o %s\n", line_count,
-                                ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code,
+                                ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
                                 input_line.c_str());
-                        lineaddress++;
-                        fprintf(lfp, "     %02o-%03o %03o\n", ((lineaddress >> 8) & 0xFF),
-                                (lineaddress & 0xFF), lowbyte);
-                        lineaddress++;
-                        fprintf(lfp, "     %02o-%03o %03o\n", ((lineaddress >> 8) & 0xFF),
-                                (lineaddress & 0xFF), highbyte);
+                        line_address++;
+                        fprintf(lfp, "     %02o-%03o %03o\n", ((line_address >> 8) & 0xFF),
+                                (line_address & 0xFF), lowbyte);
+                        line_address++;
+                        fprintf(lfp, "     %02o-%03o %03o\n", ((line_address >> 8) & 0xFF),
+                                (line_address & 0xFF), highbyte);
                     }
                     else
                     {
                         fprintf(lfp, "%4d %02o-%03o %03o %03o %03o %s\n", line_count,
-                                ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code, lowbyte,
+                                ((line_address >> 8) & 0xFF), (line_address & 0xFF), code, lowbyte,
                                 highbyte, input_line.c_str());
                     }
                 }
@@ -982,6 +992,8 @@ int main(int argc, const char** argv)
             else if (opcodes[i].rule == 3)
             {
                 /* have an input or output instruction */
+                int maxport;
+
                 if (opcodes[i].mnemonic[0] == 'i')
                     maxport = 7;
                 else
@@ -993,12 +1005,12 @@ int main(int argc, const char** argv)
                     fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                     exit(-1);
                 }
-                code = opcodes[i].code + (arg1 << 1);
+                int code = opcodes[i].code + (arg1 << 1);
                 writebyte(code, current_address++, ofp);
                 if (global_options.generate_list_file)
                     fprintf(lfp, "%4d %02o-%03o %03o %s%s\n", line_count,
-                            ((lineaddress >> 8) & 0xFF), (lineaddress & 0xFF), code, singlespacepad,
-                            input_line.c_str());
+                            ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
+                            single_space_pad, input_line.c_str());
             }
             else
             {
