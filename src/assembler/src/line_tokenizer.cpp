@@ -1,6 +1,7 @@
 #include "line_tokenizer.h"
 #include "utils.h"
 
+#include <iostream>
 #include <regex>
 
 namespace
@@ -61,4 +62,10 @@ void LineTokenizer::adjust_label()
     {
         warning_on_label = true;
     }
+}
+
+void LineTokenizer::debug_print() const
+{
+    std::cout << "parsed line label=" << label << " opcode=" << opcode << " arg1str=" << arg1
+              << "\n";
 }

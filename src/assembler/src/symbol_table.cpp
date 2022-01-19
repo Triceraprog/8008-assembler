@@ -1,7 +1,6 @@
 #include "symbol_table.h"
-#include <algorithm>
 
-void SymbolTable::define_symbol(const char* symbol_name, int value)
+void SymbolTable::define_symbol(const std::string_view symbol_name, int value)
 {
     std::string upper{symbol_name};
     transform(upper.begin(), upper.end(), upper.begin(), toupper);
@@ -13,7 +12,7 @@ void SymbolTable::define_symbol(const char* symbol_name, int value)
     insertion_order.emplace_back(symbol_name);
 }
 
-std::tuple<bool, int> SymbolTable::get_symbol_value(const char* symbol_name) const
+std::tuple<bool, int> SymbolTable::get_symbol_value(const std::string_view symbol_name) const
 {
     std::string upper{symbol_name};
     transform(upper.begin(), upper.end(), upper.begin(), toupper);

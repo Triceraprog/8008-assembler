@@ -8,6 +8,7 @@ class LineTokenizer
 {
 public:
     explicit LineTokenizer(const std::string& line);
+    void debug_print() const;
 
     std::string label;
     std::string opcode;

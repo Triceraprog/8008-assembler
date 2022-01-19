@@ -109,14 +109,14 @@ std::string clean_line(const std::string& input_line)
     return clean;
 }
 
-void parse_line(const std::string& line, char* label, char* opcode, char* arg1, char* arg2,
-                int* args)
+LineTokenizer parse_line(const std::string& line, char* label, char* opcode, char* arg1, char* arg2,
+                         int* args)
 {
     using namespace std::string_literals;
 
     std::string cleaned_line = clean_line(line);
 
-    const LineTokenizer tokenizer(cleaned_line);
+    LineTokenizer tokenizer(cleaned_line);
     *args = static_cast<int>(tokenizer.arg_count);
 
     if (tokenizer.warning_on_label)
@@ -144,18 +144,30 @@ void parse_line(const std::string& line, char* label, char* opcode, char* arg1, 
         std::cout << "arg1=<" << arg1 << "> ";
         std::cout << "arg2=<" << arg2 << ">\n";
     }
+
+    return tokenizer;
 }
 
-int findopcode(char* str)
+LineTokenizer new_parse_line(const std::string& line)
 {
-    int i;
-    for (i = 0; i < NUMOPCODES; i++)
-        if (strcasecmp(str, opcodes[i].mnemonic) == 0)
-            return (i);
-    return (-1);
+    char label[20], opcode[80], arg1str[20], arg2str[20];
+    int args;
+    return parse_line(line, label, opcode, arg1str, arg2str, &args);
 }
 
-int evaluateargument(const SymbolTable& symbol_table, char* arg)
+int find_opcode(std::string_view str)
+{
+    for (int i = 0; i < NUMOPCODES; i++)
+    {
+        if (ci_equals(str, opcodes[i].mnemonic))
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int evaluate_argument(const SymbolTable& symbol_table, std::string_view arg)
 {
     int i, n, j, k;
     char part[4][20], operation[3], extra[80];
@@ -163,37 +175,47 @@ int evaluateargument(const SymbolTable& symbol_table, char* arg)
     int value[4];
 
     for (i = 0; i < 4; i++)
+    {
         part[i][0] = 0;
+    }
     for (i = 0; i < 3; i++)
+    {
         operation[i] = 0;
+    }
     extra[0] = 0;
 
-    if (strncmp(arg, "\\HB\\", 4) == 0)
+    if (strncmp(arg.data(), "\\HB\\", 4) == 0)
     {
-        i = evaluateargument(symbol_table, arg + 4);
+        i = evaluate_argument(symbol_table, arg.data() + 4);
         return ((i >> 8) & 0xFF);
     }
-    if (strncmp(arg, "\\LB\\", 4) == 0)
+    if (strncmp(arg.data(), "\\LB\\", 4) == 0)
     {
-        i = evaluateargument(symbol_table, arg + 4);
+        i = evaluate_argument(symbol_table, arg.data() + 4);
         return (i & 0xFF);
     }
 
     if (global_options.debug)
-        printf("evaluating %s\n", arg);
-    n = sscanf(arg, "%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%s", part[0],
-               &operation[0], part[1], &operation[1], part[2], &operation[2], part[3], extra);
+    {
+        printf("evaluating %s\n", arg.data());
+    }
+    n = sscanf(arg.data(), "%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%s",
+               part[0], &operation[0], part[1], &operation[1], part[2], &operation[2], part[3],
+               extra);
     if (global_options.debug)
+    {
         printf("n=%d part0=%s operation0=%c part1=%s operation1=%c part2=%s operation2=%c part3=%s "
                "extra=%s\n",
                n, part[0], operation[0], part[1], operation[1], part[2], operation[2], part[3],
                extra);
+    }
 
     if ((n % 2) == 0)
     {
         fprintf(stderr, "line %d can't evaluate last arg in %s\n", linecount, arg);
         exit(-1);
     }
+
     n = (n + 1) / 2;
     sum = 0;
     for (j = 0; j < n; j++)
@@ -506,7 +528,7 @@ int finddata(const SymbolTable& symbol_table, const char* line, int* outdata)
         }
         for (i = 0; i < n; i++)
         {
-            *(outdata++) = evaluateargument(symbol_table, arg[i]);
+            *(outdata++) = evaluate_argument(symbol_table, arg[i]);
         }
     }
     return (n);
@@ -546,8 +568,6 @@ void stream_rewind(std::fstream& fstream)
 
 int main(int argc, const char** argv)
 {
-    char label[20];
-    char opcode[80], arg1str[20], arg2str[20];
     char singlespacepad[9]; /* this is some extra padding if we use single space list file */
     int arg1, val, datalist[80], *ptr;
     int i, n, linecount, args, lineaddress, code;
@@ -603,67 +623,79 @@ int main(int argc, const char** argv)
             std::cout << "\"" << input_line << "\"\n";
         }
         /* this function breaks line into separate parts */
-        parse_line(input_line, label, opcode, arg1str, arg2str, &args);
+        LineTokenizer tokens = new_parse_line(input_line);
 
         if (global_options.debug)
         {
-            printf("parsed line label=%s opcode=%s arg1str=%s\n", label, opcode, arg1str);
+            tokens.debug_print();
         }
 
-        if (label[0] != 0)
+        if (!tokens.label.empty())
         {
-            /* check to make sure not already defined */
-            if (auto symbol_value = symbol_table.get_symbol_value(label); std::get<0>(symbol_value))
+            /* Check if the label was already defined. */
+            if (auto symbol_value = symbol_table.get_symbol_value(tokens.label);
+                std::get<0>(symbol_value))
             {
-                fprintf(stderr, " in line %d %s label %s already defined as %d\n", linecount,
-                        input_line.c_str(), label, std::get<1>(symbol_value));
+                std::cerr << " in line " << linecount << " " << input_line;
+                std::cerr << " label " << tokens.label;
+                std::cerr << " already defined as " << std::get<1>(symbol_value) << "\n";
                 exit(-1);
             }
-            /* define it */
-            if ((strcasecmp(opcode, "equ") == 0) || (strcasecmp(opcode, "org") == 0))
-                val = evaluateargument(symbol_table, arg1str);
+
+            /* Or define it. */
+            if (ci_equals(tokens.opcode, "equ") || ci_equals(tokens.opcode, "org"))
+            {
+                val = evaluate_argument(symbol_table, tokens.arg1);
+            }
             else
+            {
                 val = current_address;
+            }
+
             if (global_options.debug)
-                printf("at address=%d=%X defining %s = %d =0x%X\n", current_address,
-                       current_address, label, val, val);
-            symbol_table.define_symbol(label, val);
+            {
+                std::cout << "at address=" << current_address;
+                std::cout << std::hex << std::uppercase << "=" << current_address;
+                std::cout << " defining " << tokens.label << " = " << std::dec << val;
+                std::cout << " =0x" << std::hex << std::uppercase << val << "\n";
+            }
+
+            symbol_table.define_symbol(tokens.label, val);
         }
 
-        if (opcode[0] == 0)
-            continue;
-        /* check if this opcode is one of the pseudoops */
-        if (strcasecmp(opcode, "equ") == 0)
-            continue;
-        if (strcasecmp(opcode, "cpu") == 0)
+        if (tokens.opcode.empty() || ci_equals(tokens.opcode, "equ") ||
+            ci_equals(tokens.opcode, "end"))
         {
-            if ((strcasecmp(arg1str, "8008") != 0) && (strcasecmp(arg1str, "i8008") != 0))
+            continue;
+        }
+
+        if (ci_equals(tokens.opcode, "cpu"))
+        {
+            if ((!ci_equals(tokens.arg1, "8008")) && (!ci_equals(tokens.arg1, "i8008")))
             {
-                fprintf(stderr, " in line %d %s cpu only allowed is \"8008\" or \"i8008\"\n",
-                        linecount, input_line.c_str());
+                std::cerr << " in line " << linecount << " " << input_line;
+                std::cerr << " cpu only allowed is \"8008\" or \"i8008\"\n";
                 exit(-1);
             }
             continue;
         }
 
-        if (strcasecmp(opcode, "org") == 0)
+        if (ci_equals(tokens.opcode, "org"))
         {
-            if ((current_address = evaluateargument(symbol_table, arg1str)) == -1)
+            if ((current_address = evaluate_argument(symbol_table, tokens.arg1)) == -1)
             {
-                fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount,
-                        input_line.c_str(), arg1str);
+                std::cerr << " in line " << linecount << " " << input_line;
+                std::cerr << " can't evaluate argument " << tokens.arg1 << "\n";
                 exit(-1);
             }
         }
-        else if (strcasecmp(opcode, "end") == 0)
-        {
-            continue;
-        }
-        else if (strcasecmp(opcode, "data") == 0)
+        else if (ci_equals(tokens.opcode, "data"))
         {
             n = finddata(symbol_table, input_line.c_str(), datalist);
             if (global_options.debug)
-                printf("got %d items in datalist\n", n);
+            {
+                printf("got %d items in data list\n", n);
+            }
             /* a negative number denotes that much space to save, but not specifying data */
             /* if so, just change sign to positive */
             if (n < 0)
@@ -671,27 +703,30 @@ int main(int argc, const char** argv)
             current_address += n;
             continue;
         }
-        /*
-     *
-     * Now we should have an opcode.
-     *
-     */
-        else if ((i = findopcode(opcode)) != -1)
+        else if ((i = find_opcode(tokens.opcode)) != -1)
         {
             /* found the opcode */
             if (opcodes[i].rule == 0)
+            {
                 current_address += 1;
+            }
             else if (opcodes[i].rule == 1)
+            {
                 current_address += 2;
+            }
             else if (opcodes[i].rule == 2)
+            {
                 current_address += 3;
+            }
             else if (opcodes[i].rule == 3)
+            {
                 current_address += 1;
+            }
         }
         else
         {
-            fprintf(stderr, " in line %d %s undefined opcode %s\n", linecount, input_line.c_str(),
-                    opcode);
+            std::cerr << " in line " << linecount << " " << input_line;
+            std::cerr << " undefined opcode " << tokens.opcode << "\n";
             exit(-1);
         }
     }
@@ -717,6 +752,7 @@ int main(int argc, const char** argv)
         if (global_options.verbose || global_options.debug)
             printf("     0x%X \"%s\"\n", current_address, input_line.c_str());
         /* this function breaks line into separate parts */
+        char label[20], opcode[80], arg1str[20], arg2str[20];
         parse_line(input_line, label, opcode, arg1str, arg2str, &args);
 
         if (opcode[0] == 0)
@@ -751,7 +787,7 @@ int main(int argc, const char** argv)
         }
         if (strcasecmp(opcode, "org") == 0)
         {
-            if ((current_address = evaluateargument(symbol_table, arg1str)) == -1)
+            if ((current_address = evaluate_argument(symbol_table, arg1str)) == -1)
             {
                 fprintf(stderr, " in input_line.c_str() %d %s can't evaluate argument %s\n",
                         linecount, input_line.c_str(), arg1str);
@@ -847,7 +883,7 @@ int main(int argc, const char** argv)
      * Now we should have an opcode.
      *
      */
-        else if ((i = findopcode(opcode)) == -1)
+        else if ((i = find_opcode(opcode)) == -1)
         {
             fprintf(stderr, " in line %d %s undefined opcode %s\n", linecount, input_line.c_str(),
                     opcode);
@@ -865,7 +901,7 @@ int main(int argc, const char** argv)
         }
         if (args == 1)
         {
-            if ((arg1 = evaluateargument(symbol_table, arg1str)) == -1)
+            if ((arg1 = evaluate_argument(symbol_table, arg1str)) == -1)
             {
                 fprintf(stderr, " in line %d %s can't evaluate argument %s\n", linecount,
                         input_line.c_str(), arg1str);
