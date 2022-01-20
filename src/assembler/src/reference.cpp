@@ -33,22 +33,24 @@ int evaluate_argument(const SymbolTable& symbol_table, int line_count, std::stri
     }
     extra[0] = 0;
 
-    if (strncmp(arg.data(), "\\HB\\", 4) == 0)
+    if (strncmp(arg.begin(), "\\HB\\", 4) == 0)
     {
-        i = evaluate_argument(symbol_table, line_count, arg.data() + 4);
+        i = evaluate_argument(symbol_table, line_count, arg.begin() + 4);
         return ((i >> 8) & 0xFF);
     }
-    if (strncmp(arg.data(), "\\LB\\", 4) == 0)
+    if (strncmp(arg.begin(), "\\LB\\", 4) == 0)
     {
-        i = evaluate_argument(symbol_table, line_count, arg.data() + 4);
+        i = evaluate_argument(symbol_table, line_count, arg.begin() + 4);
         return (i & 0xFF);
     }
 
     if (global_options.debug)
     {
-        printf("evaluating %s\n", arg.data());
+        std::cout << "evaluating " << arg << "\n";
     }
-    n = sscanf(arg.data(), "%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%s",
+
+    std::string to_parse(arg);
+    n = sscanf(to_parse.c_str(), "%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%s",
                part[0], &operation[0], part[1], &operation[1], part[2], &operation[2], part[3],
                extra);
     if (global_options.debug)
@@ -61,7 +63,7 @@ int evaluate_argument(const SymbolTable& symbol_table, int line_count, std::stri
 
     if ((n % 2) == 0)
     {
-        fprintf(stderr, "line %d can't evaluate last arg in %s\n", line_count, arg);
+        fprintf(stderr, "line %d can't evaluate last arg in %s\n", line_count, arg.begin());
         exit(-1);
     }
 
@@ -262,7 +264,7 @@ void writebyte(int data, int address, FILE* ofp)
 namespace
 {
     std::regex data_rule{"[dD][aA][tT][aA]\\s*"};
-
+    std::regex number_scan{R"((0x)?[[:xdigit:]]+)"};
 }
 
 int find_data(const SymbolTable& symbol_table, int line_count, const char* line, int* outdata)
@@ -313,6 +315,8 @@ int find_data(const SymbolTable& symbol_table, int line_count, const char* line,
     if ((data_numbers.front() == '\'') || (data_numbers.front() == '"'))
     {
         // DATA "..." or DATA '...' declares a string of characters
+        // Warning: there's a syntax limitation. If a comment contains a quote, then
+        // the result will be wrong.
         const char quote_to_find = data_numbers.front();
         auto last_quote_position = data_numbers.find_last_of(quote_to_find);
         auto string_content = data_numbers.substr(1, last_quote_position - 1);
@@ -366,35 +370,32 @@ int find_data(const SymbolTable& symbol_table, int line_count, const char* line,
     }
     else
     {
-        char clean_line[80];
+        /* DATA xxx,xxx,xxx,xxx */
+        const auto first_comment = data_numbers.find_first_of(';');
+        auto without_comment = std::string{data_numbers.substr(0, first_comment)};
 
-        /* data statement has list of arguments to evaluate */
+        int byte_count = 0;
 
-        /* not we're removing comma from original line, list file won't have it */
-        for (i = 0; i < (strlen(ptr) + 1); i++)
+        auto begin =
+                std::sregex_iterator(without_comment.begin(), without_comment.end(), number_scan);
+        auto end = std::sregex_iterator();
+
+        for (auto it = begin; it != end; it++)
         {
-            c = ptr[i];
-            if (c == ';')
-                c = 0;
-            if (c == ',')
-                c = ' ';
-            clean_line[i] = c;
+            std::string sub = it->str();
+            *(outdata++) = evaluate_argument(symbol_table, line_count, sub);
+            byte_count += 1;
+
+            if (byte_count > 12)
+            {
+                std::cerr << " in line " << line_count << " " << line;
+                std::cerr << " max length is 12 bytes.\n";
+                std::cerr << " Use a second line for more data\n";
+                exit(-1);
+            }
         }
 
-        int n = sscanf(clean_line, "%s %s %s %s %s %s %s %s %s %s %s %s %s", arg[0], arg[1], arg[2],
-                       arg[3], arg[4], arg[5], arg[6], arg[7], arg[8], arg[9], arg[10], arg[11],
-                       arg[12]);
-        if (n > 12)
-        {
-            fprintf(stderr, " in line %d %s max length is 12 bytes.\n", line_count, line);
-            fprintf(stderr, " Use a second line for more data\n");
-            exit(-1);
-        }
-        for (i = 0; i < n; i++)
-        {
-            *(outdata++) = evaluate_argument(symbol_table, line_count, arg[i]);
-        }
-        return n;
+        return byte_count;
     }
 }
 
