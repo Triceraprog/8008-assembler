@@ -16,6 +16,18 @@
 
 Options global_options;
 
+/*
+ * Preparing a context object
+struct Context
+{
+    SymbolTable & symbol_table;
+    const Options & options;
+    int line_count;
+    // Logger logger
+
+};
+ */
+
 int evaluate_argument(const SymbolTable& symbol_table, int line_count, std::string_view arg)
 {
     int i, n, j, k;
@@ -267,18 +279,11 @@ namespace
     std::regex number_scan{R"((0x)?[[:xdigit:]]+)"};
 }
 
-int find_data(const SymbolTable& symbol_table, int line_count, const char* line, int* outdata)
+int find_data(const SymbolTable& symbol_table, int line_count, const std::string_view line, int* outdata)
 {
-    char c;
-    char arg[13][20];
-    int* outptr;
-    int i;
-
-    outptr = outdata;
-
-    std::string str_line{line};
+    std::string line_as_string{line};
     std::smatch data_match;
-    bool found = std::regex_search(str_line, data_match, data_rule);
+    bool found = std::regex_search(line_as_string, data_match, data_rule);
 
     if (!found)
     {
@@ -287,23 +292,19 @@ int find_data(const SymbolTable& symbol_table, int line_count, const char* line,
     }
 
     auto after_data_position = data_match.position() + data_match.length();
+    auto data_part = line.substr(after_data_position);
 
-    const char* ptr = line + after_data_position;
-
-    std::string_view line_view{str_line};
-    auto data_numbers = line_view.substr(after_data_position);
-
-    if (data_numbers.empty())
+    if (data_part.empty())
     {
         return 0;
     }
 
-    if (data_numbers.front() == '*')
+    if (data_part.front() == '*')
     {
         // 'DATA *NNN' reserve NNN bytes.
         try
         {
-            int number_to_reserve = std::stoi(data_numbers.substr(1).data());
+            int number_to_reserve = std::stoi(data_part.substr(1).data());
             return 0 - number_to_reserve;
         }
         catch (...)
@@ -312,16 +313,18 @@ int find_data(const SymbolTable& symbol_table, int line_count, const char* line,
             exit(-1);
         }
     }
-    if ((data_numbers.front() == '\'') || (data_numbers.front() == '"'))
+    if ((data_part.front() == '\'') || (data_part.front() == '"'))
     {
         // DATA "..." or DATA '...' declares a string of characters
         // Warning: there's a syntax limitation. If a comment contains a quote, then
         // the result will be wrong.
-        const char quote_to_find = data_numbers.front();
-        auto last_quote_position = data_numbers.find_last_of(quote_to_find);
-        auto string_content = data_numbers.substr(1, last_quote_position - 1);
+        const char quote_to_find = data_part.front();
+        auto last_quote_position = data_part.find_last_of(quote_to_find);
+        auto string_content = data_part.substr(1, last_quote_position - 1);
 
         bool escape_char = false;
+        int* out_pointer = outdata;
+
         for (char char_data : string_content)
         {
             if (escape_char)
@@ -330,16 +333,16 @@ int find_data(const SymbolTable& symbol_table, int line_count, const char* line,
                 switch (char_data)
                 {
                     case '\\':
-                        *(outptr++) = '\\';
+                        *(out_pointer++) = '\\';
                         break;
                     case 'n':
-                        *(outptr++) = '\n';
+                        *(out_pointer++) = '\n';
                         break;
                     case 't':
-                        *(outptr++) = '\t';
+                        *(out_pointer++) = '\t';
                         break;
                     case '0':
-                        *(outptr++) = '\0';
+                        *(out_pointer++) = '\0';
                         break;
                     default:
                         std::cerr << " in line " << line_count << " " << line;
@@ -353,26 +356,26 @@ int find_data(const SymbolTable& symbol_table, int line_count, const char* line,
             }
             else
             {
-                *(outptr++) = static_cast<u_char>(char_data);
+                *(out_pointer++) = static_cast<u_char>(char_data);
             }
         }
 
         /* If "markascii" option is set, highest bit of these ascii bytes are forced to 1. */
         if (global_options.mark_8_ascii)
         {
-            for (auto* p = outdata; outdata < outptr; p++)
+            for (auto* p = outdata; outdata < out_pointer; p++)
             {
                 *p |= 0x80;
             }
         }
 
-        return static_cast<int>(outptr - outdata);
+        return static_cast<int>(out_pointer - outdata);
     }
     else
     {
         /* DATA xxx,xxx,xxx,xxx */
-        const auto first_comment = data_numbers.find_first_of(';');
-        auto without_comment = std::string{data_numbers.substr(0, first_comment)};
+        const auto first_comment = data_part.find_first_of(';');
+        auto without_comment = std::string{data_part.substr(0, first_comment)};
 
         int byte_count = 0;
 
