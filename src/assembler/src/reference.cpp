@@ -18,17 +18,18 @@ Options global_options;
 
 /*
  * Preparing a context object
-struct Context
+struct ParsingContext
 {
     SymbolTable & symbol_table;
     const Options & options;
-    int line_count;
+    std::string_view line;
+    int current_line_count;
     // Logger logger
 
 };
  */
 
-int evaluate_argument(const SymbolTable& symbol_table, int line_count, std::string_view arg)
+int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, std::string_view arg)
 {
     int i, n, j, k;
     char part[4][20], operation[3], extra[80];
@@ -47,12 +48,12 @@ int evaluate_argument(const SymbolTable& symbol_table, int line_count, std::stri
 
     if (strncmp(arg.begin(), "\\HB\\", 4) == 0)
     {
-        i = evaluate_argument(symbol_table, line_count, arg.begin() + 4);
+        i = evaluate_argument(symbol_table, current_line_count, arg.begin() + 4);
         return ((i >> 8) & 0xFF);
     }
     if (strncmp(arg.begin(), "\\LB\\", 4) == 0)
     {
-        i = evaluate_argument(symbol_table, line_count, arg.begin() + 4);
+        i = evaluate_argument(symbol_table, current_line_count, arg.begin() + 4);
         return (i & 0xFF);
     }
 
@@ -75,7 +76,7 @@ int evaluate_argument(const SymbolTable& symbol_table, int line_count, std::stri
 
     if ((n % 2) == 0)
     {
-        fprintf(stderr, "line %d can't evaluate last arg in %s\n", line_count, arg.begin());
+        fprintf(stderr, "line %d can't evaluate last arg in %s\n", current_line_count, arg.begin());
         exit(-1);
     }
 
@@ -175,7 +176,7 @@ int evaluate_argument(const SymbolTable& symbol_table, int line_count, std::stri
                 sum = sum * 256 + val;
             else
             {
-                fprintf(stderr, "in line %d unknown operation '%c'\n", line_count,
+                fprintf(stderr, "in line %d unknown operation '%c'\n", current_line_count,
                         operation[j - 1]);
                 exit(-1);
             }
@@ -279,7 +280,7 @@ namespace
     std::regex number_scan{R"((0x)?[[:xdigit:]]+)"};
 }
 
-int find_data(const SymbolTable& symbol_table, int line_count, const std::string_view line, int* outdata)
+int find_data(const SymbolTable& symbol_table, int current_line_count, const std::string_view line, int* outdata)
 {
     std::string line_as_string{line};
     std::smatch data_match;
@@ -345,7 +346,7 @@ int find_data(const SymbolTable& symbol_table, int line_count, const std::string
                         *(out_pointer++) = '\0';
                         break;
                     default:
-                        std::cerr << " in line " << line_count << " " << line;
+                        std::cerr << " in line " << current_line_count << " " << line;
                         std::cerr << " unknown escape sequence \\" << char_data << "\n";
                         exit(-1);
                 }
@@ -386,12 +387,12 @@ int find_data(const SymbolTable& symbol_table, int line_count, const std::string
         for (auto it = begin; it != end; it++)
         {
             std::string sub = it->str();
-            *(outdata++) = evaluate_argument(symbol_table, line_count, sub);
+            *(outdata++) = evaluate_argument(symbol_table, current_line_count, sub);
             byte_count += 1;
 
             if (byte_count > 12)
             {
-                std::cerr << " in line " << line_count << " " << line;
+                std::cerr << " in line " << current_line_count << " " << line;
                 std::cerr << " max length is 12 bytes.\n";
                 std::cerr << " Use a second line for more data\n";
                 exit(-1);
@@ -445,7 +446,7 @@ void first_pass(SymbolTable& symbol_table, Files& files)
 
     write_listing_header(files.lfp);
 
-    int line_count = 0;
+    int current_line_count = 0;
 
     int current_address = 0;
     int line_address = 0;
@@ -453,14 +454,14 @@ void first_pass(SymbolTable& symbol_table, Files& files)
     {
         line_address = current_address;
 
-        line_count++;
+        current_line_count++;
         if (global_options.verbose || global_options.debug)
         {
             std::cout << "     0x" << std::hex << std::uppercase << current_address << " ";
             std::cout << "\"" << input_line << "\"\n";
         }
         /* this function breaks line into separate parts */
-        LineTokenizer tokens = parse_line(global_options, input_line, line_count);
+        LineTokenizer tokens = parse_line(global_options, input_line, current_line_count);
 
         if (global_options.debug)
         {
@@ -473,7 +474,7 @@ void first_pass(SymbolTable& symbol_table, Files& files)
             if (auto symbol_value = symbol_table.get_symbol_value(tokens.label);
                 std::get<0>(symbol_value))
             {
-                std::cerr << " in line " << line_count << " " << input_line;
+                std::cerr << " in line " << current_line_count << " " << input_line;
                 std::cerr << " label " << tokens.label;
                 std::cerr << " already defined as " << std::get<1>(symbol_value) << "\n";
                 exit(-1);
@@ -483,7 +484,7 @@ void first_pass(SymbolTable& symbol_table, Files& files)
             int val;
             if (ci_equals(tokens.opcode, "equ") || ci_equals(tokens.opcode, "org"))
             {
-                val = evaluate_argument(symbol_table, line_count, tokens.arg1);
+                val = evaluate_argument(symbol_table, current_line_count, tokens.arg1);
             }
             else
             {
@@ -511,7 +512,7 @@ void first_pass(SymbolTable& symbol_table, Files& files)
         {
             if ((!ci_equals(tokens.arg1, "8008")) && (!ci_equals(tokens.arg1, "i8008")))
             {
-                std::cerr << " in line " << line_count << " " << input_line;
+                std::cerr << " in line " << current_line_count << " " << input_line;
                 std::cerr << " cpu only allowed is \"8008\" or \"i8008\"\n";
                 exit(-1);
             }
@@ -520,9 +521,9 @@ void first_pass(SymbolTable& symbol_table, Files& files)
 
         if (ci_equals(tokens.opcode, "org"))
         {
-            if ((current_address = evaluate_argument(symbol_table, line_count, tokens.arg1)) == -1)
+            if ((current_address = evaluate_argument(symbol_table, current_line_count, tokens.arg1)) == -1)
             {
-                std::cerr << " in line " << line_count << " " << input_line;
+                std::cerr << " in line " << current_line_count << " " << input_line;
                 std::cerr << " can't evaluate argument " << tokens.arg1 << "\n";
                 exit(-1);
             }
@@ -530,7 +531,7 @@ void first_pass(SymbolTable& symbol_table, Files& files)
         else if (ci_equals(tokens.opcode, "data"))
         {
             int data_list[80];
-            int n = find_data(symbol_table, line_count, input_line.c_str(), data_list);
+            int n = find_data(symbol_table, current_line_count, input_line.c_str(), data_list);
             if (global_options.debug)
             {
                 printf("got %d items in data list\n", n);
@@ -564,7 +565,7 @@ void first_pass(SymbolTable& symbol_table, Files& files)
         }
         else
         {
-            std::cerr << " in line " << line_count << " " << input_line;
+            std::cerr << " in line " << current_line_count << " " << input_line;
             std::cerr << " undefined opcode " << tokens.opcode << "\n";
             exit(-1);
         }
@@ -592,7 +593,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
         strcpy(single_space_pad, "        ");
     }
 
-    int line_count = 0;
+    int current_line_count = 0;
     int current_address = 0;
     int line_address = 0;
 
@@ -600,14 +601,14 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
     for (std::string input_line; std::getline(files.input_stream, input_line);)
     {
         line_address = current_address;
-        line_count++;
+        current_line_count++;
 
         if (global_options.verbose || global_options.debug)
         {
             printf("     0x%X \"%s\"\n", current_address, input_line.c_str());
         }
 
-        LineTokenizer tokens = parse_line(global_options, input_line, line_count);
+        LineTokenizer tokens = parse_line(global_options, input_line, current_line_count);
         int args = tokens.arg_count;
 
         if (tokens.opcode.empty())
@@ -615,7 +616,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
             /* Must just be a comment line (or label only) */
             if (global_options.generate_list_file)
             {
-                fprintf(files.lfp, "%4d            %s%s\n", line_count, single_space_pad,
+                fprintf(files.lfp, "%4d            %s%s\n", current_line_count, single_space_pad,
                         input_line.c_str());
             }
             continue;
@@ -625,35 +626,35 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
         if (ci_equals(tokens.opcode, "equ"))
         {
             if (global_options.generate_list_file)
-                fprintf(files.lfp, "%4d            %s%s\n", line_count, single_space_pad,
+                fprintf(files.lfp, "%4d            %s%s\n", current_line_count, single_space_pad,
                         input_line.c_str());
             continue;
         }
         if (ci_equals(tokens.opcode, "cpu"))
         {
             if (global_options.generate_list_file)
-                fprintf(files.lfp, "%4d            %s%s\n", line_count, single_space_pad,
+                fprintf(files.lfp, "%4d            %s%s\n", current_line_count, single_space_pad,
                         input_line.c_str());
             continue;
         }
 
         if (ci_equals(tokens.opcode, "org"))
         {
-            if ((current_address = evaluate_argument(symbol_table, line_count, tokens.arg1)) == -1)
+            if ((current_address = evaluate_argument(symbol_table, current_line_count, tokens.arg1)) == -1)
             {
                 fprintf(stderr, " in input_line.c_str() %d %s can't evaluate argument %s\n",
-                        line_count, input_line.c_str(), tokens.arg1.c_str());
+                        current_line_count, input_line.c_str(), tokens.arg1.c_str());
                 exit(-1);
             }
             if (global_options.generate_list_file)
-                fprintf(files.lfp, "%4d            %s%s\n", line_count, single_space_pad,
+                fprintf(files.lfp, "%4d            %s%s\n", current_line_count, single_space_pad,
                         input_line.c_str());
             continue;
         }
         if (ci_equals(tokens.opcode, "end"))
         {
             if (global_options.generate_list_file)
-                fprintf(files.lfp, "%4d            %s%s\n", line_count, single_space_pad,
+                fprintf(files.lfp, "%4d            %s%s\n", current_line_count, single_space_pad,
                         input_line.c_str());
             /* could break here, but rather than break, */
             /* we will go ahead and check for more with a continue */
@@ -662,12 +663,12 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
         else if (ci_equals(tokens.opcode, "data"))
         {
             int data_list[80];
-            int n = find_data(symbol_table, line_count, input_line.c_str(), data_list);
+            int n = find_data(symbol_table, current_line_count, input_line.c_str(), data_list);
             /* if n is negative, that number of bytes are just reserved */
             if (n < 0)
             {
                 if (global_options.generate_list_file)
-                    fprintf(files.lfp, "%4d %02o-%03o     %s%s\n", line_count,
+                    fprintf(files.lfp, "%4d %02o-%03o     %s%s\n", current_line_count,
                             ((line_address >> 8) & 0xFF), (line_address & 0xFF), single_space_pad,
                             input_line.c_str());
                 current_address += 0 - n;
@@ -681,19 +682,19 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
             {
                 if (global_options.single_byte_list)
                 {
-                    fprintf(files.lfp, "%4d %02o-%03o %03o %s\n", line_count,
+                    fprintf(files.lfp, "%4d %02o-%03o %03o %s\n", current_line_count,
                             ((line_address >> 8) & 0xFF), (line_address & 0xFF), data_list[0],
                             input_line.c_str());
                     for (int i = 1; i < n; i++)
                     {
-                        fprintf(files.lfp, "%     %02o-%03o %03o\n", line_count,
+                        fprintf(files.lfp, "%     %02o-%03o %03o\n", current_line_count,
                                 (((line_address + i) >> 8) & 0xFF), ((line_address + i) & 0xFF),
                                 data_list[i]);
                     }
                 }
                 else
                 {
-                    fprintf(files.lfp, "%4d %02o-%03o ", line_count, ((line_address >> 8) & 0xFF),
+                    fprintf(files.lfp, "%4d %02o-%03o ", current_line_count, ((line_address >> 8) & 0xFF),
                             (line_address & 0xFF));
                     if (n == 1)
                         fprintf(files.lfp, "%03o          %s\n", data_list[0], input_line.c_str());
@@ -740,7 +741,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
         auto [found, opcode] = find_opcode(tokens.opcode);
         if (!found)
         {
-            fprintf(stderr, " in line %d %s undefined opcode %s\n", line_count, input_line.c_str(),
+            fprintf(stderr, " in line %d %s undefined opcode %s\n", current_line_count, input_line.c_str(),
                     tokens.opcode.c_str());
             exit(-1);
         }
@@ -749,15 +750,15 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
         if (((opcode.rule == 0) && (args != 0)) || ((opcode.rule == 1) && (args != 1)) ||
             ((opcode.rule == 2) && (args != 1)) || ((opcode.rule == 3) && (args != 1)))
         {
-            fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n", line_count,
+            fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n", current_line_count,
                     input_line.c_str(), args);
             exit(-1);
         }
         if (args == 1)
         {
-            if ((arg1 = evaluate_argument(symbol_table, line_count, tokens.arg1)) == -1)
+            if ((arg1 = evaluate_argument(symbol_table, current_line_count, tokens.arg1)) == -1)
             {
-                fprintf(stderr, " in line %d %s can't evaluate argument %s\n", line_count,
+                fprintf(stderr, " in line %d %s can't evaluate argument %s\n", current_line_count,
                         input_line.c_str(), tokens.arg1.c_str());
                 exit(-1);
             }
@@ -775,7 +776,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
             /* single byte, no arguments */
             writebyte(opcode.code, current_address++, files.ofp);
             if (global_options.generate_list_file)
-                fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", line_count,
+                fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
                         ((line_address >> 8) & 0xFF), (line_address & 0xFF), opcode.code,
                         single_space_pad, input_line.c_str());
         }
@@ -784,7 +785,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
             /* single byte, must follow */
             if ((arg1 > 255) || (arg1 < 0))
             {
-                fprintf(stderr, " in line %d %s expected argument 0-255\n", line_count,
+                fprintf(stderr, " in line %d %s expected argument 0-255\n", current_line_count,
                         input_line.c_str());
                 fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                 exit(-1);
@@ -796,7 +797,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
             {
                 if (global_options.single_byte_list)
                 {
-                    fprintf(files.lfp, "%4d %02o-%03o %03o %s\n", line_count,
+                    fprintf(files.lfp, "%4d %02o-%03o %03o %s\n", current_line_count,
                             ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
                             input_line.c_str());
                     line_address++;
@@ -805,7 +806,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
                 }
                 else
                 {
-                    fprintf(files.lfp, "%4d %02o-%03o %03o %03o     %s\n", line_count,
+                    fprintf(files.lfp, "%4d %02o-%03o %03o %03o     %s\n", current_line_count,
                             ((line_address >> 8) & 0xFF), (line_address & 0xFF), code, arg1,
                             input_line.c_str());
                 }
@@ -816,7 +817,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
             /* two byte address to follow */
             if ((arg1 > 1024 * 16) || (arg1 < 0))
             {
-                fprintf(stderr, " in input_line.c_str() %d %s expected argument 0-%d\n", line_count,
+                fprintf(stderr, " in input_line.c_str() %d %s expected argument 0-%d\n", current_line_count,
                         input_line.c_str(), 1024 * 16);
                 fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                 exit(-1);
@@ -831,7 +832,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
             {
                 if (global_options.single_byte_list)
                 {
-                    fprintf(files.lfp, "%4d %02o-%03o %03o %s\n", line_count,
+                    fprintf(files.lfp, "%4d %02o-%03o %03o %s\n", current_line_count,
                             ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
                             input_line.c_str());
                     line_address++;
@@ -843,7 +844,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
                 }
                 else
                 {
-                    fprintf(files.lfp, "%4d %02o-%03o %03o %03o %03o %s\n", line_count,
+                    fprintf(files.lfp, "%4d %02o-%03o %03o %03o %03o %s\n", current_line_count,
                             ((line_address >> 8) & 0xFF), (line_address & 0xFF), code, lowbyte,
                             highbyte, input_line.c_str());
                 }
@@ -860,7 +861,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
                 maxport = 23;
             if ((arg1 > maxport) || (arg1 < 0))
             {
-                fprintf(stderr, " in input_line.c_str() %d %s expected port 0-%d\n", line_count,
+                fprintf(stderr, " in input_line.c_str() %d %s expected port 0-%d\n", current_line_count,
                         input_line.c_str(), maxport);
                 fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                 exit(-1);
@@ -868,13 +869,13 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
             int code = opcode.code + (arg1 << 1);
             writebyte(code, current_address++, files.ofp);
             if (global_options.generate_list_file)
-                fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", line_count,
+                fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
                         ((line_address >> 8) & 0xFF), (line_address & 0xFF), code, single_space_pad,
                         input_line.c_str());
         }
         else
         {
-            fprintf(stderr, " in input_line.c_str() %d %s can't comprehend rule %d\n", line_count,
+            fprintf(stderr, " in input_line.c_str() %d %s can't comprehend rule %d\n", current_line_count,
                     input_line.c_str(), opcode.rule);
             exit(-1);
         }
