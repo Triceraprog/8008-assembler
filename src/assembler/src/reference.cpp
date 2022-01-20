@@ -34,7 +34,7 @@ namespace
     std::regex data_rule{"[dD][aA][tT][aA]\\s*"};
     std::regex number_scan{R"((0x)?[[:xdigit:]]+)"};
     std::regex not_an_operator{R"(^\s*([^\+\*-/\s]+)\s*)"};
-    std::regex except_comma{R"(([^,]*))"};
+    std::regex except_comma{R"(([^,\s]*))"};
 }
 
 int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, std::string_view arg)
@@ -422,17 +422,20 @@ int find_data(const SymbolTable& symbol_table, int current_line_count, const std
 
         int byte_count = 0;
 
-        //auto begin =
-        //        std::sregex_iterator(without_comment.begin(), without_comment.end(), except_comma);
         auto begin =
-                std::sregex_iterator(without_comment.begin(), without_comment.end(), number_scan);
-
+                std::sregex_iterator(without_comment.begin(), without_comment.end(), except_comma);
         auto end = std::sregex_iterator();
 
         for (auto it = begin; it != end; it++)
         {
             std::string sub = it->str();
+
+            if(sub.empty())
+            {
+                continue;
+            }
             *(outdata++) = evaluate_argument(symbol_table, current_line_count, sub);
+
             byte_count += 1;
 
             if (byte_count > 12)
