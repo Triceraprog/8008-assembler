@@ -29,12 +29,19 @@ struct ParsingContext
 };
  */
 
+namespace
+{
+    std::regex data_rule{"[dD][aA][tT][aA]\\s*"};
+    std::regex number_scan{R"((0x)?[[:xdigit:]]+)"};
+    std::regex not_an_operator{R"(^\s*([^\+\*-/\s]+)\s*)"};
+    std::regex except_comma{R"(([^,]*))"};
+}
+
 int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, std::string_view arg)
 {
     int i, n, j, k;
     char part[4][20], operation[3], extra[80];
     int sum, val;
-    int value[4];
 
     for (i = 0; i < 4; i++)
     {
@@ -46,23 +53,63 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
     }
     extra[0] = 0;
 
-    if (strncmp(arg.begin(), "\\HB\\", 4) == 0)
+    if (arg.starts_with("\\HB\\"))
     {
-        i = evaluate_argument(symbol_table, current_line_count, arg.begin() + 4);
-        return ((i >> 8) & 0xFF);
+        int value = evaluate_argument(symbol_table, current_line_count, arg.begin() + 4);
+        return ((value >> 8) & 0xFF);
     }
-    if (strncmp(arg.begin(), "\\LB\\", 4) == 0)
+    if (arg.starts_with("\\LB\\"))
     {
-        i = evaluate_argument(symbol_table, current_line_count, arg.begin() + 4);
-        return (i & 0xFF);
+        int value = evaluate_argument(symbol_table, current_line_count, arg.begin() + 4);
+        return (value & 0xFF);
     }
 
     if (global_options.debug)
     {
         std::cout << "evaluating " << arg << "\n";
     }
+    int value[4];
 
     std::string to_parse(arg);
+
+    /*
+    while (!arg.empty())
+    {
+        std::string value_to_parse(arg);
+
+        std::smatch data_match;
+        bool found = std::regex_search(value_to_parse, data_match, not_an_operator);
+
+        if (!found)
+        {
+            break; // error
+        }
+
+        //std::cout << data_match[1].str() << ",";
+
+        arg = arg.substr(data_match.length());
+
+        if (!arg.empty())
+        {
+            char op = arg.front();
+
+            switch (op)
+            {
+                case '+':
+                case '-':
+                case '/':
+                case '*':
+                    arg = arg.substr(1);
+                    //std::cout << op << ",";
+                    break;
+                default:
+                    // error
+                    break;
+            }
+        }
+    }
+     */
+
     n = sscanf(to_parse.c_str(), "%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%s",
                part[0], &operation[0], part[1], &operation[1], part[2], &operation[2], part[3],
                extra);
@@ -274,13 +321,8 @@ void writebyte(int data, int address, FILE* ofp)
     }
 }
 
-namespace
-{
-    std::regex data_rule{"[dD][aA][tT][aA]\\s*"};
-    std::regex number_scan{R"((0x)?[[:xdigit:]]+)"};
-}
-
-int find_data(const SymbolTable& symbol_table, int current_line_count, const std::string_view line, int* outdata)
+int find_data(const SymbolTable& symbol_table, int current_line_count, const std::string_view line,
+              int* outdata)
 {
     std::string line_as_string{line};
     std::smatch data_match;
@@ -380,8 +422,11 @@ int find_data(const SymbolTable& symbol_table, int current_line_count, const std
 
         int byte_count = 0;
 
+        //auto begin =
+        //        std::sregex_iterator(without_comment.begin(), without_comment.end(), except_comma);
         auto begin =
                 std::sregex_iterator(without_comment.begin(), without_comment.end(), number_scan);
+
         auto end = std::sregex_iterator();
 
         for (auto it = begin; it != end; it++)
@@ -521,7 +566,8 @@ void first_pass(SymbolTable& symbol_table, Files& files)
 
         if (ci_equals(tokens.opcode, "org"))
         {
-            if ((current_address = evaluate_argument(symbol_table, current_line_count, tokens.arg1)) == -1)
+            if ((current_address =
+                         evaluate_argument(symbol_table, current_line_count, tokens.arg1)) == -1)
             {
                 std::cerr << " in line " << current_line_count << " " << input_line;
                 std::cerr << " can't evaluate argument " << tokens.arg1 << "\n";
@@ -640,7 +686,8 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
 
         if (ci_equals(tokens.opcode, "org"))
         {
-            if ((current_address = evaluate_argument(symbol_table, current_line_count, tokens.arg1)) == -1)
+            if ((current_address =
+                         evaluate_argument(symbol_table, current_line_count, tokens.arg1)) == -1)
             {
                 fprintf(stderr, " in input_line.c_str() %d %s can't evaluate argument %s\n",
                         current_line_count, input_line.c_str(), tokens.arg1.c_str());
@@ -694,8 +741,8 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
                 }
                 else
                 {
-                    fprintf(files.lfp, "%4d %02o-%03o ", current_line_count, ((line_address >> 8) & 0xFF),
-                            (line_address & 0xFF));
+                    fprintf(files.lfp, "%4d %02o-%03o ", current_line_count,
+                            ((line_address >> 8) & 0xFF), (line_address & 0xFF));
                     if (n == 1)
                         fprintf(files.lfp, "%03o          %s\n", data_list[0], input_line.c_str());
                     else if (n == 2)
@@ -741,8 +788,8 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
         auto [found, opcode] = find_opcode(tokens.opcode);
         if (!found)
         {
-            fprintf(stderr, " in line %d %s undefined opcode %s\n", current_line_count, input_line.c_str(),
-                    tokens.opcode.c_str());
+            fprintf(stderr, " in line %d %s undefined opcode %s\n", current_line_count,
+                    input_line.c_str(), tokens.opcode.c_str());
             exit(-1);
         }
         /* found the opcode */
@@ -750,8 +797,8 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
         if (((opcode.rule == 0) && (args != 0)) || ((opcode.rule == 1) && (args != 1)) ||
             ((opcode.rule == 2) && (args != 1)) || ((opcode.rule == 3) && (args != 1)))
         {
-            fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n", current_line_count,
-                    input_line.c_str(), args);
+            fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n",
+                    current_line_count, input_line.c_str(), args);
             exit(-1);
         }
         if (args == 1)
@@ -817,8 +864,8 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
             /* two byte address to follow */
             if ((arg1 > 1024 * 16) || (arg1 < 0))
             {
-                fprintf(stderr, " in input_line.c_str() %d %s expected argument 0-%d\n", current_line_count,
-                        input_line.c_str(), 1024 * 16);
+                fprintf(stderr, " in input_line.c_str() %d %s expected argument 0-%d\n",
+                        current_line_count, input_line.c_str(), 1024 * 16);
                 fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                 exit(-1);
             }
@@ -861,8 +908,8 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
                 maxport = 23;
             if ((arg1 > maxport) || (arg1 < 0))
             {
-                fprintf(stderr, " in input_line.c_str() %d %s expected port 0-%d\n", current_line_count,
-                        input_line.c_str(), maxport);
+                fprintf(stderr, " in input_line.c_str() %d %s expected port 0-%d\n",
+                        current_line_count, input_line.c_str(), maxport);
                 fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                 exit(-1);
             }
@@ -875,8 +922,8 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
         }
         else
         {
-            fprintf(stderr, " in input_line.c_str() %d %s can't comprehend rule %d\n", current_line_count,
-                    input_line.c_str(), opcode.rule);
+            fprintf(stderr, " in input_line.c_str() %d %s can't comprehend rule %d\n",
+                    current_line_count, input_line.c_str(), opcode.rule);
             exit(-1);
         }
     }
