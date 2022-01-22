@@ -29,6 +29,28 @@ struct ParsingContext
 };
  */
 
+int parse_number_value(const std::string& to_parse, int base, std::string_view type_name)
+{
+    int val;
+    try
+    {
+        val = std::stoi(to_parse, nullptr, base);
+    }
+    catch (const std::invalid_argument& e)
+    {
+        std::cerr << "error: tried to read " << type_name << " " << to_parse
+                  << ". Argument is invalid.\n";
+        exit(-1);
+    }
+    catch (const std::out_of_range& e)
+    {
+        std::cerr << "error: tried to read " << type_name << " " << to_parse
+                  << ". Argument is out of range.\n";
+        exit(-1);
+    }
+    return val;
+}
+
 namespace
 {
     std::regex data_rule{"[dD][aA][tT][aA]\\s*"};
@@ -161,92 +183,29 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
         }
         else if (tolower(args[j].back()) == 'o')
         {
-            try
-            {
-                val = std::stoi(args[j], nullptr, 8);
-            }
-            catch (const std::invalid_argument& e)
-            {
-                std::cerr << "error: tried to read octal " << args[j] << ". Argument is invalid.\n";
-                exit(-1);
-            }
-            catch (const std::out_of_range& e)
-            {
-                std::cerr << "error: tried to read octal " << args[j]
-                          << ". Argument is out of range.\n";
-                exit(-1);
-            }
+            val = parse_number_value(args[j], 8, "octal");
         }
         else if (tolower(args[j].back()) == 'h')
         {
-            try
-            {
-                val = std::stoi(args[j], nullptr, 16);
-            }
-            catch (const std::invalid_argument& e)
-            {
-                std::cerr << "error: tried to read hex " << args[j] << ". Argument is invalid.\n";
-                exit(-1);
-            }
-            catch (const std::out_of_range& e)
-            {
-                std::cerr << "error: tried to read hex " << args[j]
-                          << ". Argument is out of range.\n";
-                exit(-1);
-            }
+            val = parse_number_value(args[j], 16, "hex");
         }
         else if (args[j].starts_with("0x") || args[j].starts_with("0X"))
         {
-            try
-            {
-                val = std::stoi(args[j].substr(2), nullptr, 16);
-            }
-            catch (const std::invalid_argument& e)
-            {
-                std::cerr << "error: tried to read hex " << args[j] << ". Argument is invalid.\n";
-                exit(-1);
-            }
-            catch (const std::out_of_range& e)
-            {
-                std::cerr << "error: tried to read hex " << args[j]
-                          << ". Argument is out of range.\n";
-                exit(-1);
-            }
+            val = parse_number_value(args[j].substr(2), 16, "hex");
         }
-        else if (tolower(part[j][strlen(part[j]) - 1]) == 'b')
+        else if (tolower(args[j].back() == 'b'))
         {
-            i = 0;
-            for (k = 0; k < strlen(part[j]) - 1; k++)
-            {
-                if (part[j][k] == '0')
-                    i = i * 2;
-                else if (part[j][k] == '1')
-                    i = i * 2 + 1;
-                else
-                {
-                    fprintf(stderr, "error: tried to read binary \"%s\"\n", part[j]);
-                    exit(-1);
-                }
-            }
-            val = i;
+            val = parse_number_value(args[j], 2, "binary");
         }
         else
         {
             if ((strlen(part[j]) == 3) && (global_options.input_num_as_octal))
             {
-                if (sscanf(part[j], "%o", &val) != 1)
-                {
-                    fprintf(stderr, "can't evaluate %s as an octal number\n", part[j]);
-                    exit(-1);
-                }
+                val = parse_number_value(args[j], 8, "octal");
             }
             else
             {
-                if (sscanf(part[j], "%d", &val) != 1)
-                {
-                    fprintf(stderr, "can't evaluate %s as a decimal number\n", part[j]);
-                    exit(-1);
-                }
+                val = parse_number_value(args[j], 10, "decimal");
             }
         }
         if (global_options.debug)
