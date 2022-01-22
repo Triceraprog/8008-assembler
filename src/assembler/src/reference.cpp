@@ -72,6 +72,7 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
 
     std::string to_parse(arg);
     std::vector<std::string> args;
+    std::vector<std::string> operations;
     std::string_view arg_to_parse{arg};
 
     while (!arg_to_parse.empty())
@@ -108,7 +109,7 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
                 case '/':
                 case '*':
                 case '#':
-                    args.push_back(std::string{op});
+                    operations.push_back(std::string{op});
                     arg_to_parse = arg_to_parse.substr(1);
                     break;
                 default:
@@ -133,18 +134,17 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
         std::cout << std::endl;
     }
 
-    assert(args.size() == n);
-
+    /*
     if (args.size() % 2 == 0)
     {
         std::cerr << "line " << current_line_count << " can't evaluate last arg in " << arg << "\n";
     }
+     */
 
     n = (n + 1) / 2;
     sum = 0;
     for (j = 0; j < n; j++)
     {
-
         if (std::isalpha(args[j][0]))
         {
             if (auto symbol_value = symbol_table.get_symbol_value(args[j]);
