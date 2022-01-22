@@ -1,0 +1,2 @@
+- Use -DWITH_TESTS with CMake to build tests.
+- 
