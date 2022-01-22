@@ -17,4 +17,22 @@ set(ASSEMBLER_LIB_FILES
         src/utils.cpp src/utils.h
         src/opcodes.cpp src/opcodes.h)
 
+set(ASSEMBLER_TEST_FILES
+        tests/reference_tests.cpp)
+
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})
+
+if(WITH_TESTS)
+    add_executable(${ASSEMBLER_TEST_NAME} ${ASSEMBLER_TEST_FILES})
+    set_target_properties(${ASSEMBLER_TEST_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_link_libraries(${ASSEMBLER_TEST_NAME}
+            PRIVATE gtest gtest_main gmock
+            PUBLIC ${ASSEMBLER_LIB_NAME})
+    target_include_directories(${ASSEMBLER_TEST_NAME} PRIVATE src/)
+    target_include_directories(${ASSEMBLER_TEST_NAME} PRIVATE ../)
+    #if(${LINK_STATIC_EXE})
+    #    target_link_options(${ASSEMBLER_TEST_NAME} PRIVATE -static-libgcc -static-libstdc++)
+    #endif()
+
+    add_test(NAME ${ASSEMBLER_TEST_NAME} COMMAND ${ASSEMBLER_TEST_NAME})
+endif()
