@@ -29,6 +29,14 @@ struct ParsingContext
 };
  */
 
+namespace
+{
+    std::regex data_rule{"[dD][aA][tT][aA]\\s*"};
+    std::regex number_scan{R"((0x)?[[:xdigit:]]+)"};
+    std::regex not_an_operator{R"(^\s*([^\+\*-/#\s]+)\s*)"};
+    std::regex except_comma{R"(([^,\s]*))"};
+}
+
 int parse_number_value(const std::string& to_parse, int base, std::string_view type_name)
 {
     int val;
@@ -51,12 +59,53 @@ int parse_number_value(const std::string& to_parse, int base, std::string_view t
     return val;
 }
 
-namespace
+int string_to_int(const std::basic_string<char>& to_parse)
 {
-    std::regex data_rule{"[dD][aA][tT][aA]\\s*"};
-    std::regex number_scan{R"((0x)?[[:xdigit:]]+)"};
-    std::regex not_an_operator{R"(^\s*([^\+\*-/#\s]+)\s*)"};
-    std::regex except_comma{R"(([^,\s]*))"};
+    int val;
+    const auto last_char_in_parsing = tolower(to_parse.back());
+    if (last_char_in_parsing == 'o')
+    {
+        val = parse_number_value(to_parse, 8, "octal");
+    }
+    else if (last_char_in_parsing == 'h')
+    {
+        val = parse_number_value(to_parse, 16, "hex");
+    }
+    else if (to_parse.starts_with("0x") || to_parse.starts_with("0X"))
+    {
+        val = parse_number_value(to_parse.substr(2), 16, "hex");
+    }
+    else if (last_char_in_parsing == 'b')
+    {
+        val = parse_number_value(to_parse, 2, "binary");
+    }
+    else
+    {
+        if ((to_parse.size() == 3) && (global_options.input_num_as_octal))
+        {
+            val = parse_number_value(to_parse, 8, "octal");
+        }
+        else
+        {
+            val = parse_number_value(to_parse, 10, "decimal");
+        }
+    }
+    return val;
+}
+
+int symbol_to_int(const SymbolTable& symbol_table, const std::basic_string<char>& to_parse)
+{
+    int val;
+    if (auto symbol_value = symbol_table.get_symbol_value(to_parse); std::get<0>(symbol_value))
+    {
+        val = std::get<1>(symbol_value);
+    }
+    else
+    {
+        std::cerr << "can't find symbol " << to_parse << "\n";
+        exit(-1);
+    }
+    return val;
 }
 
 int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, std::string_view arg)
@@ -169,45 +218,13 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
     {
         if (std::isalpha(args[j][0]))
         {
-            if (auto symbol_value = symbol_table.get_symbol_value(args[j]);
-                std::get<0>(symbol_value))
-
-            {
-                val = std::get<1>(symbol_value);
-            }
-            else
-            {
-                fprintf(stderr, "can't find symbol %s\n", part[j]);
-                exit(-1);
-            }
-        }
-        else if (tolower(args[j].back()) == 'o')
-        {
-            val = parse_number_value(args[j], 8, "octal");
-        }
-        else if (tolower(args[j].back()) == 'h')
-        {
-            val = parse_number_value(args[j], 16, "hex");
-        }
-        else if (args[j].starts_with("0x") || args[j].starts_with("0X"))
-        {
-            val = parse_number_value(args[j].substr(2), 16, "hex");
-        }
-        else if (tolower(args[j].back() == 'b'))
-        {
-            val = parse_number_value(args[j], 2, "binary");
+            val = symbol_to_int(symbol_table, args[j]);
         }
         else
         {
-            if ((strlen(part[j]) == 3) && (global_options.input_num_as_octal))
-            {
-                val = parse_number_value(args[j], 8, "octal");
-            }
-            else
-            {
-                val = parse_number_value(args[j], 10, "decimal");
-            }
+            val = string_to_int(args[j]);
         }
+
         if (global_options.debug)
             printf("      for %s got value %d\n", part[j], val);
         if (j == 0)
