@@ -1,3 +1,6 @@
+- Add Google Test as optionnal to build tests
+- Test the find-data / evaluate
+- Make evaluate work when there are spaces
 - Option to output an expended, simple assembly code with a syntax for another assembler, especially as8
 - Macro system
 - Pseudo instructions

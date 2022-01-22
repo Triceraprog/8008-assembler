@@ -33,7 +33,7 @@ namespace
 {
     std::regex data_rule{"[dD][aA][tT][aA]\\s*"};
     std::regex number_scan{R"((0x)?[[:xdigit:]]+)"};
-    std::regex not_an_operator{R"(^\s*([^\+\*-/\s]+)\s*)"};
+    std::regex not_an_operator{R"(^\s*([^\+\*-/#\s]+)\s*)"};
     std::regex except_comma{R"(([^,\s]*))"};
 }
 
@@ -71,27 +71,35 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
     int value[4];
 
     std::string to_parse(arg);
+    std::vector<std::string> args;
+    std::string_view arg_to_parse{arg};
 
-    /*
-    while (!arg.empty())
+    while (!arg_to_parse.empty())
     {
-        std::string value_to_parse(arg);
-
+        std::string value_to_parse(arg_to_parse);
         std::smatch data_match;
         bool found = std::regex_search(value_to_parse, data_match, not_an_operator);
 
         if (!found)
         {
-            break; // error
+            std::cerr << "Error, expected value, found: " << arg_to_parse << std::endl;
+            exit(-1);
+            break;
         }
 
-        //std::cout << data_match[1].str() << ",";
+        arg_to_parse = arg_to_parse.substr(data_match.length());
 
-        arg = arg.substr(data_match.length());
+        auto trimmed_data = std::string_view{data_match.str()};
+        trimmed_data = trimmed_data.substr(trimmed_data.find_first_not_of(" \t"));
+        trimmed_data = trimmed_data.substr(0, trimmed_data.find_last_not_of(" \t") + 1);
 
-        if (!arg.empty())
+        //std::cout << "Trimmed" << trimmed_data << std::endl;
+
+        args.emplace_back(trimmed_data);
+
+        if (!arg_to_parse.empty())
         {
-            char op = arg.front();
+            char op = arg_to_parse.front();
 
             switch (op)
             {
@@ -99,16 +107,17 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
                 case '-':
                 case '/':
                 case '*':
-                    arg = arg.substr(1);
-                    //std::cout << op << ",";
+                case '#':
+                    args.push_back(std::string{op});
+                    arg_to_parse = arg_to_parse.substr(1);
                     break;
                 default:
-                    // error
+                    std::cerr << "Error '" << op << "'" << std::endl;
+                    exit(-1);
                     break;
             }
         }
     }
-     */
 
     n = sscanf(to_parse.c_str(), "%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%s",
                part[0], &operation[0], part[1], &operation[1], part[2], &operation[2], part[3],
@@ -119,12 +128,16 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
                "extra=%s\n",
                n, part[0], operation[0], part[1], operation[1], part[2], operation[2], part[3],
                extra);
+        std::cout << "parts=" << args.size() << ":";
+        std::ranges::copy(args, std::ostream_iterator<std::string>(std::cout, ","));
+        std::cout << std::endl;
     }
 
-    if ((n % 2) == 0)
+    assert(args.size() == n);
+
+    if (args.size() % 2 == 0)
     {
-        fprintf(stderr, "line %d can't evaluate last arg in %s\n", current_line_count, arg.begin());
-        exit(-1);
+        std::cerr << "line " << current_line_count << " can't evaluate last arg in " << arg << "\n";
     }
 
     n = (n + 1) / 2;
@@ -132,10 +145,11 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
     for (j = 0; j < n; j++)
     {
 
-        if (isalpha(part[j][0]))
+        if (std::isalpha(args[j][0]))
         {
-            if (auto symbol_value = symbol_table.get_symbol_value(part[j]);
+            if (auto symbol_value = symbol_table.get_symbol_value(args[j]);
                 std::get<0>(symbol_value))
+
             {
                 val = std::get<1>(symbol_value);
             }
@@ -145,27 +159,57 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
                 exit(-1);
             }
         }
-        else if (tolower(part[j][strlen(part[j]) - 1]) == 'o')
+        else if (tolower(args[j].back()) == 'o')
         {
-            if (sscanf(part[j], "%o", &val) != 1)
+            try
             {
-                fprintf(stderr, "error: tried to read octal \"%s\"\n", part[j]);
+                val = std::stoi(args[j], nullptr, 8);
+            }
+            catch (const std::invalid_argument& e)
+            {
+                std::cerr << "error: tried to read octal " << args[j] << ". Argument is invalid.\n";
+                exit(-1);
+            }
+            catch (const std::out_of_range& e)
+            {
+                std::cerr << "error: tried to read octal " << args[j]
+                          << ". Argument is out of range.\n";
                 exit(-1);
             }
         }
-        else if (tolower(part[j][strlen(part[j]) - 1]) == 'h')
+        else if (tolower(args[j].back()) == 'h')
         {
-            if (sscanf(part[j], "%x", &val) != 1)
+            try
             {
-                fprintf(stderr, "error: tried to read hex \"%s\"\n", part[j]);
+                val = std::stoi(args[j], nullptr, 16);
+            }
+            catch (const std::invalid_argument& e)
+            {
+                std::cerr << "error: tried to read hex " << args[j] << ". Argument is invalid.\n";
+                exit(-1);
+            }
+            catch (const std::out_of_range& e)
+            {
+                std::cerr << "error: tried to read hex " << args[j]
+                          << ". Argument is out of range.\n";
                 exit(-1);
             }
         }
-        else if ((tolower(part[j][1]) == 'x') && (part[j][0] == '0'))
+        else if (args[j].starts_with("0x") || args[j].starts_with("0X"))
         {
-            if (sscanf(part[j] + 2, "%x", &val) != 1)
+            try
             {
-                fprintf(stderr, "error: tried to read hex \"%s\"\n", part[j]);
+                val = std::stoi(args[j].substr(2), nullptr, 16);
+            }
+            catch (const std::invalid_argument& e)
+            {
+                std::cerr << "error: tried to read hex " << args[j] << ". Argument is invalid.\n";
+                exit(-1);
+            }
+            catch (const std::out_of_range& e)
+            {
+                std::cerr << "error: tried to read hex " << args[j]
+                          << ". Argument is out of range.\n";
                 exit(-1);
             }
         }
@@ -422,6 +466,9 @@ int find_data(const SymbolTable& symbol_table, int current_line_count, const std
 
         int byte_count = 0;
 
+        //std::cout << "DATA\n";
+        //std::cout << without_comment << std::endl;
+
         auto begin =
                 std::sregex_iterator(without_comment.begin(), without_comment.end(), except_comma);
         auto end = std::sregex_iterator();
@@ -430,10 +477,11 @@ int find_data(const SymbolTable& symbol_table, int current_line_count, const std
         {
             std::string sub = it->str();
 
-            if(sub.empty())
+            if (sub.empty())
             {
                 continue;
             }
+            //std::cout << sub << std::endl;
             *(outdata++) = evaluate_argument(symbol_table, current_line_count, sub);
 
             byte_count += 1;
@@ -446,6 +494,8 @@ int find_data(const SymbolTable& symbol_table, int current_line_count, const std
                 exit(-1);
             }
         }
+
+        //std::cout << "---" << std::endl;
 
         return byte_count;
     }
