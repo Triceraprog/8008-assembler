@@ -1,3 +1,4 @@
+#include "byte_writer.h"
 #include "evaluator.h"
 #include "files.h"
 #include "line_tokenizer.h"
@@ -5,7 +6,6 @@
 #include "options.h"
 #include "symbol_table.h"
 #include "utils.h"
-#include "byte_writer.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -32,7 +32,6 @@ struct ParsingContext
 namespace
 {
     std::regex data_rule{"[dD][aA][tT][aA]\\s*"};
-    std::regex number_scan{R"((0x)?[[:xdigit:]]+)"};
     std::regex except_comma{R"(([^,\s]*))"};
 }
 
@@ -41,8 +40,8 @@ namespace
 /* 3-digit numeric numbers are either octal or decimal, based on flag */
 /* 'w' (character) 123h (hex) 120o (octal)         */
 
-int find_data(const SymbolTable& symbol_table, int current_line_count, const std::string_view line,
-              int* outdata)
+int decode_data(const SymbolTable& symbol_table, int current_line_count,
+                const std::string_view line, int* outdata)
 {
     std::string line_as_string{line};
     std::smatch data_match;
@@ -126,7 +125,7 @@ int find_data(const SymbolTable& symbol_table, int current_line_count, const std
         /* If "markascii" option is set, highest bit of these ascii bytes are forced to 1. */
         if (global_options.mark_8_ascii)
         {
-            for (auto* p = outdata; outdata < out_pointer; p++)
+            for (auto* p = outdata; p < out_pointer; p++)
             {
                 *p |= 0x80;
             }
@@ -299,7 +298,7 @@ void first_pass(SymbolTable& symbol_table, Files& files)
         else if (ci_equals(tokens.opcode, "data"))
         {
             int data_list[80];
-            int n = find_data(symbol_table, current_line_count, input_line.c_str(), data_list);
+            int n = decode_data(symbol_table, current_line_count, input_line.c_str(), data_list);
             if (global_options.debug)
             {
                 printf("got %d items in data list\n", n);
@@ -435,7 +434,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
         else if (ci_equals(tokens.opcode, "data"))
         {
             int data_list[80];
-            int n = find_data(symbol_table, current_line_count, input_line.c_str(), data_list);
+            int n = decode_data(symbol_table, current_line_count, input_line.c_str(), data_list);
             /* if n is negative, that number of bytes are just reserved */
             if (n < 0)
             {
