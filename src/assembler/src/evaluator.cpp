@@ -94,6 +94,49 @@ namespace
         return val;
     }
 
+    int operand_to_int(const Options& options, const SymbolTable& table, const std::string& operand)
+    {
+        if (isalpha(operand.front()))
+        {
+            return symbol_to_int(table, operand);
+        }
+        else
+        {
+            return string_to_int(operand, EvaluationFlags::get_flags_from_options(options));
+        }
+    }
+
+    int apply_operation(int current_line_count, const char& op, int acc, int val)
+    {
+        if (op == '+')
+        {
+            acc += val;
+        }
+        else if (op == '-')
+        {
+            acc -= val;
+        }
+        else if (op == '*')
+        {
+            acc *= val;
+        }
+        else if (op == '/')
+        {
+            acc /= val;
+        }
+        else if (op == '#')
+        {
+            acc = acc * 256 + val;
+        }
+        else
+        {
+            std::cerr << "line " << current_line_count;
+            std::cerr << " unknown operation " << op << std::endl;
+            exit(-1);
+        }
+        return acc;
+    }
+
     class Accumulator
     {
     public:
@@ -110,50 +153,17 @@ namespace
             int sum = 0;
             for (int j = 0; j < operands.size(); j++)
             {
-                int val = 0;
                 const auto& operand = operands[j];
-                if (isalpha(operand.front()))
-                {
-                    val = symbol_to_int(table, operand);
-                }
-                else
-                {
-                    val = string_to_int(operand, EvaluationFlags::get_flags_from_options(options));
-                }
+                int val = operand_to_int(options, table, operand);
 
                 if (options.debug)
                 {
-                    std::cout << "      for %s got value " << operand;
+                    std::cout << "      for '" << operand << "' got value " << val;
                 }
 
                 {
                     const auto& op = operations[j];
-                    if (op == '+')
-                    {
-                        sum += val;
-                    }
-                    else if (op == '-')
-                    {
-                        sum -= val;
-                    }
-                    else if (op == '*')
-                    {
-                        sum *= val;
-                    }
-                    else if (op == '/')
-                    {
-                        sum /= val;
-                    }
-                    else if (op == '#')
-                    {
-                        sum = sum * 256 + val;
-                    }
-                    else
-                    {
-                        std::cerr << "line " << current_line_count;
-                        std::cerr << " unknown operation " << op << std::endl;
-                        exit(-1);
-                    }
+                    sum = apply_operation(current_line_count, op, sum, val);
                 }
             }
             return sum;
@@ -231,7 +241,7 @@ int evaluate_argument(Options& options, const SymbolTable& symbol_table, int cur
 
     if (options.debug)
     {
-        std::cout << "     for got sum " << result << "\n";
+        std::cout << "     got final value " << result << "\n";
     }
 
     return result;
