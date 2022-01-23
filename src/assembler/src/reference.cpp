@@ -40,7 +40,7 @@ namespace
 /* 3-digit numeric numbers are either octal or decimal, based on flag */
 /* 'w' (character) 123h (hex) 120o (octal)         */
 
-#define MAXONLINE 16
+#define MAX_BYTE_ON_LINE 16
 
 const int highest_address = 1024 * 16;
 
@@ -58,14 +58,11 @@ public:
         {
             program_memory.resize(highest_address);
         }
+        current_line_content.reserve(MAX_BYTE_ON_LINE * 2);
     }
 
-    void writebyte(int data, int address)
+    void write_byte(int data, int address)
     {
-        static int currentline[32];
-        static int lineaddress;
-        static int checksum, i;
-
         if (address >= highest_address)
         {
             std::cerr << "address of data larger than " << highest_address - 1;
@@ -81,43 +78,40 @@ public:
             return;
         }
 
-        /* not binary out, Intel HEX format */
-
+        /* Intel HEX format */
         if (old_address == -1)
         {
-            lineaddress = address;
-            currentline[counter++] = data;
+            line_address = address;
+            current_line_content.push_back(data);
         }
         else
         {
             /* if jump in address, or line full, or end of data, write line */
-            if ((address != (old_address + 1)) || (counter == MAXONLINE) || (address == -1))
+            if ((address != (old_address + 1)) ||
+                (current_line_content.size() == MAX_BYTE_ON_LINE) || (address == -1))
             {
                 /* write old buffer, then start new line */
-                fprintf(ofp, ":%02X%04X%02X", counter, lineaddress, 0);
-                checksum = counter + (lineaddress & 0xFF) + ((lineaddress >> 8) & 0xFF);
-                for (i = 0; i < counter; i++)
+                auto size_as_char = static_cast<unsigned char>(current_line_content.size());
+                fprintf(ofp, ":%02X%04X%02X", size_as_char, line_address, 0);
+                int checksum = size_as_char + (line_address & 0xFF) + ((line_address >> 8) & 0xFF);
+                for (auto data_on_line : current_line_content)
                 {
-                    checksum += currentline[i];
-                    fprintf(ofp, "%02X", currentline[i]);
+                    checksum += data_on_line;
+                    fprintf(ofp, "%02X", data_on_line);
                 }
                 checksum = 0x100 - (checksum & 0xFF);
                 fprintf(ofp, "%02X\n", checksum);
-                lineaddress = address;
-                counter = 0;
-                currentline[counter++] = data;
+                line_address = address;
+                current_line_content.clear();
             }
-            else
-            {
-                currentline[counter++] = data;
-            }
+            current_line_content.push_back(data);
         }
         old_address = address;
     }
 
     void write_end()
     {
-        writebyte(-1, -1);
+        write_byte(-1, -1);
         if (mode == BINARY)
         {
             fwrite(program_memory.data(), 16384, 1, ofp);
@@ -132,8 +126,9 @@ private:
     FILE* ofp;
     WriteMode mode;
     std::vector<unsigned char> program_memory;
-    int counter = 0;
+    std::vector<int> current_line_content;
     int old_address = -1;
+    int line_address{};
 };
 
 int find_data(const SymbolTable& symbol_table, int current_line_count, const std::string_view line,
@@ -543,7 +538,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
             }
             for (int i = 0; i < n; i++)
             {
-                writer.writebyte(data_list[i], current_address++);
+                writer.write_byte(data_list[i], current_address++);
             }
             if (global_options.generate_list_file)
             {
@@ -642,7 +637,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
         if (opcode.rule == 0)
         {
             /* single byte, no arguments */
-            writer.writebyte(opcode.code, current_address++);
+            writer.write_byte(opcode.code, current_address++);
             if (global_options.generate_list_file)
                 fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
                         ((line_address >> 8) & 0xFF), (line_address & 0xFF), opcode.code,
@@ -659,8 +654,8 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
                 exit(-1);
             }
             int code = opcode.code;
-            writer.writebyte(code, current_address++);
-            writer.writebyte(arg1, current_address++);
+            writer.write_byte(code, current_address++);
+            writer.write_byte(arg1, current_address++);
             if (global_options.generate_list_file)
             {
                 if (global_options.single_byte_list)
@@ -693,9 +688,9 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
             int code = opcode.code;
             int lowbyte = (0xFF & arg1);
             int highbyte = (0xFF & (arg1 >> 8));
-            writer.writebyte(code, current_address++);
-            writer.writebyte(lowbyte, current_address++);
-            writer.writebyte(highbyte, current_address++);
+            writer.write_byte(code, current_address++);
+            writer.write_byte(lowbyte, current_address++);
+            writer.write_byte(highbyte, current_address++);
             if (global_options.generate_list_file)
             {
                 if (global_options.single_byte_list)
@@ -735,7 +730,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
                 exit(-1);
             }
             int code = opcode.code + (arg1 << 1);
-            writer.writebyte(code, current_address++);
+            writer.write_byte(code, current_address++);
             if (global_options.generate_list_file)
                 fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
                         ((line_address >> 8) & 0xFF), (line_address & 0xFF), code, single_space_pad,
