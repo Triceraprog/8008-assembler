@@ -3,6 +3,7 @@
 #include "opcodes.h"
 #include "options.h"
 #include "symbol_table.h"
+#include "utils.h"
 
 #include <iostream>
 #include <regex>
@@ -239,31 +240,4 @@ int evaluate_argument(Options& options, const SymbolTable& symbol_table, int cur
 EvaluationFlags::Flags EvaluationFlags::get_flags_from_options(const Options& options)
 {
     return options.input_num_as_octal ? ThreeDigitsAsOctal : None;
-}
-
-std::string_view left_trim_string(std::string_view str)
-{
-    auto it = std::find_if_not(str.begin(), str.end(), [](auto c) { return std::isspace(c); });
-    if (it != str.end())
-    {
-        str.remove_prefix(std::distance(str.begin(), it));
-    }
-
-    return str;
-}
-
-std::string_view right_trim_string(std::string_view str)
-{
-    auto it = std::find_if_not(str.rbegin(), str.rend(), [](auto c) { return std::isspace(c); });
-    if (it != str.rend())
-    {
-        str.remove_suffix(std::distance(str.rbegin(), it));
-    }
-
-    return str;
-}
-
-std::string_view trim_string(std::string_view str)
-{
-    return right_trim_string(left_trim_string(str));
 }

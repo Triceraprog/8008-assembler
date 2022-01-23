@@ -19,7 +19,8 @@ set(ASSEMBLER_LIB_FILES
         src/evaluator.cpp src/evaluator.h)
 
 set(ASSEMBLER_TEST_FILES
-        tests/reference_tests.cpp)
+        tests/reference_tests.cpp
+        tests/evaluator_tests.cpp tests/utils_tests.cpp)
 
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})
 
