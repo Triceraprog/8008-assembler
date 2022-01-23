@@ -9,7 +9,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(ASSEMBLER_TEST_NAME ${ASSEMBLER_LIB_NAME}_tests)
 
 set(ASSEMBLER_LIB_FILES
-        src/reference.cpp
         src/options.cpp src/options.h
         src/files.cpp src/files.h
         src/symbol_table.cpp src/symbol_table.h
@@ -19,7 +18,8 @@ set(ASSEMBLER_LIB_FILES
         src/evaluator.cpp src/evaluator.h
         src/byte_writer.cpp src/byte_writer.h
         src/data_extraction.cpp src/data_extraction.h
-        src/first_pass.cpp src/first_pass.h)
+        src/first_pass.cpp src/first_pass.h
+        src/second_pass.cpp src/second_pass.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/reference_tests.cpp
