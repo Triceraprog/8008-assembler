@@ -15,7 +15,8 @@ set(ASSEMBLER_LIB_FILES
         src/symbol_table.cpp src/symbol_table.h
         src/line_tokenizer.cpp src/line_tokenizer.h
         src/utils.cpp src/utils.h
-        src/opcodes.cpp src/opcodes.h)
+        src/opcodes.cpp src/opcodes.h
+        src/evaluator.cpp src/evaluator.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/reference_tests.cpp)
