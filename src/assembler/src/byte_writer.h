@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <vector>
+#include <fstream>
 
 class ByteWriter
 {
@@ -13,7 +14,7 @@ public:
         HEX,
     };
 
-    ByteWriter(FILE* ofp, WriteMode mode);
+    ByteWriter(std::fstream output, WriteMode mode);
 
     void write_byte(int data, int address);
     void write_end();
@@ -21,7 +22,7 @@ public:
 private:
     void flush_hex_line();
 
-    FILE* ofp;
+    std::fstream output;
     WriteMode mode;
     std::vector<unsigned char> program_memory;
     std::vector<int> current_line_content;

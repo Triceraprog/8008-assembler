@@ -365,7 +365,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
     int current_address = 0;
     int line_address = 0;
 
-    ByteWriter writer(files.ofp,
+    ByteWriter writer(std::move(files.output_stream),
                       global_options.generate_binary_file ? ByteWriter::BINARY : ByteWriter::HEX);
 
     stream_rewind(files.input_stream);

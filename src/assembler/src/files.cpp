@@ -23,16 +23,16 @@ Files::~Files()
 void Files::set_output_filenames(const Options& options)
 {
     const auto* output_filename_extension = options.generate_binary_file ? ".bin" : ".hex";
-    outfilename = options.input_filename_base + output_filename_extension;
-    listfilename = options.input_filename_base + ".lst";
+    output_filename = options.input_filename_base + output_filename_extension;
+    list_filename = options.input_filename_base + ".lst";
     input_filename = options.input_filename;
 
     if (options.debug)
     {
         std::cout << "filebase=" << options.input_filename_base << " ";
         std::cout << "infile=" << input_filename << " ";
-        std::cout << "outfile=" << outfilename << " ";
-        std::cout << "listfile=" << listfilename << "\n";
+        std::cout << "outfile=" << output_filename << " ";
+        std::cout << "listfile=" << list_filename << "\n";
     }
 }
 
@@ -48,25 +48,28 @@ void Files::open_files(const Options& options)
 
     if (options.generate_binary_file)
     {
-        if ((ofp = fopen(outfilename.c_str(), "wb")) == nullptr)
+        output_stream.open(output_filename.c_str(), std::ios::binary | std::ios::out);
+        if (output_stream.fail())
         {
-            fprintf(stderr, "Can't open %s as output file\n", outfilename.c_str());
+            std::cerr << "Can't open " << options.input_filename << " as binary output file\n";
             exit(-1);
         }
     }
     else
     {
-        if ((ofp = fopen(outfilename.c_str(), "wt")) == nullptr)
+        output_stream.open(output_filename.c_str(), std::ios::out);
+        if (output_stream.fail())
         {
-            fprintf(stderr, "Can't open %s as output file\n", outfilename.c_str());
+            std::cerr << "Can't open " << options.input_filename << " as hex output file\n";
             exit(-1);
         }
     }
+    
     if (options.generate_list_file)
     {
-        if ((lfp = fopen(listfilename.c_str(), "wt")) == nullptr)
+        if ((lfp = fopen(list_filename.c_str(), "wt")) == nullptr)
         {
-            fprintf(stderr, "Can't open %s as input file\n", listfilename.c_str());
+            fprintf(stderr, "Can't open %s as input file\n", list_filename.c_str());
             exit(-1);
         }
     }

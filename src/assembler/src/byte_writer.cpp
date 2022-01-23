@@ -1,29 +1,24 @@
 #include "byte_writer.h"
 #include "evaluator.h"
-#include "files.h"
-#include "line_tokenizer.h"
-#include "opcodes.h"
-#include "options.h"
-#include "symbol_table.h"
-#include "utils.h"
-#include <cstdio>
 #include <cstdlib>
-#include <cstring>
-#include <ctime>
+#include <iomanip>
 #include <iostream>
 #include <regex>
 
-#define MAX_BYTE_ON_LINE 16
+namespace
+{
+    const int MAX_BYTE_ON_LINE = 16;
+    const int highest_address = 1024 * 16;
+}
 
-const int highest_address = 1024 * 16;
-
-ByteWriter::ByteWriter(FILE* ofp, ByteWriter::WriteMode mode) : ofp(ofp), mode(mode)
+ByteWriter::ByteWriter(std::fstream output, ByteWriter::WriteMode mode)
+    : output(std::move(output)), mode(mode)
 {
     if (mode == BINARY)
     {
         program_memory.resize(highest_address);
     }
-    current_line_content.reserve(MAX_BYTE_ON_LINE * 2);
+    current_line_content.reserve(MAX_BYTE_ON_LINE);
 }
 
 void ByteWriter::write_byte(int data, int address)
@@ -40,8 +35,7 @@ void ByteWriter::write_byte(int data, int address)
         return;
     }
 
-    /* Intel HEX format */
-    /* if jump in address, or line full, or end of data, write line */
+    /* if jump in address, or line full */
     if ((address != (old_address + 1)) || (current_line_content.size() == MAX_BYTE_ON_LINE))
     {
         flush_hex_line();
@@ -58,16 +52,25 @@ void ByteWriter::flush_hex_line()
         return;
     }
 
+    output << std::hex << std::uppercase << std::setfill('0');
+    output << ":";
+    output << std::setw(2) << current_line_content.size();
+    output << std::setw(4) << line_address;
+    output << std::setw(2) << 0L;
+
     auto size_as_char = static_cast<unsigned char>(current_line_content.size());
-    fprintf(ofp, ":%02X%04X%02X", size_as_char, line_address, 0);
     int checksum = size_as_char + (line_address & 0xFF) + ((line_address >> 8) & 0xFF);
+
     for (auto data_on_line : current_line_content)
     {
         checksum += data_on_line;
-        fprintf(ofp, "%02X", data_on_line);
+        output << std::setw(2) << static_cast<uint32_t>(data_on_line);
     }
     checksum = 0x100 - (checksum & 0xFF);
-    fprintf(ofp, "%02X\n", checksum);
+
+    output << std::setw(2) << checksum;
+    output << '\n';
+
     current_line_content.clear();
 }
 
@@ -75,11 +78,11 @@ void ByteWriter::write_end()
 {
     if (mode == BINARY)
     {
-        fwrite(program_memory.data(), 16384, 1, ofp);
+        std::ranges::copy(program_memory, std::ostream_iterator<char>(output));
     }
     else
     {
         flush_hex_line();
-        fprintf(ofp, ":00000001FF\n");
+        output << ":00000001FF\n";
     }
 }
