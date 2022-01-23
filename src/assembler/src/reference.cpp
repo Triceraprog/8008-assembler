@@ -302,11 +302,8 @@ void first_pass(SymbolTable& symbol_table, Files& files)
     int current_line_count = 0;
 
     int current_address = 0;
-    int line_address = 0;
     for (std::string input_line; std::getline(files.input_stream, input_line);)
     {
-        line_address = current_address;
-
         current_line_count++;
         if (global_options.verbose || global_options.debug)
         {
