@@ -9,6 +9,11 @@ extern int evaluate_argument(const SymbolTable& symbol_table, int current_line_c
 
 // TODO: missing test, octal by default. Needs to pass the option for this.
 
+TEST(TrimmingString, trims_spaces)
+{
+
+}
+
 TEST(EvaluateArguement, evaluates_int)
 {
     SymbolTable table;

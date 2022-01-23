@@ -108,22 +108,77 @@ int symbol_to_int(const SymbolTable& symbol_table, const std::basic_string<char>
     return val;
 }
 
+class Accumulator
+{
+public:
+    void add_operation(char op) { operations.push_back(op); }
+    void add_operand(std::string_view operand) { operands.emplace_back(operand); }
+
+    int resolve(const SymbolTable& table, int current_line_count)
+    {
+        if (operands.size() != operations.size())
+        {
+            std::cerr << "line " << current_line_count << " the expression is ill-formed.\n";
+        }
+
+        int sum = 0;
+        for (int j = 0; j < operands.size(); j++)
+        {
+            int val = 0;
+            const auto& operand = operands[j];
+            if (std::isalpha(operand.front()))
+            {
+                val = symbol_to_int(table, operand);
+            }
+            else
+            {
+                val = string_to_int(operand);
+            }
+
+            if (global_options.debug)
+            {
+                std::cout << "      for %s got value " << operand;
+            }
+
+            {
+                const auto& op = operations[j];
+                if (op == '+')
+                    sum = sum + val;
+                else if (op == '-')
+                    sum = sum - val;
+                else if (op == '*')
+                    sum = sum * val;
+                else if (op == '/')
+                    sum = sum / val;
+                else if (op == '#')
+                    sum = sum * 256 + val;
+                else
+                {
+                    std::cerr << "line " << current_line_count;
+                    std::cerr << " unknown operation " << op << std::endl;
+                    exit(-1);
+                }
+            }
+        }
+        return sum;
+    }
+
+private:
+    std::vector<std::string> operands;
+    std::vector<char> operations;
+};
+
+std::string_view trim_string(std::string_view str)
+{
+    auto trimmed_data = std::string_view{str};
+    trimmed_data = trimmed_data.substr(str.find_first_not_of(" \t"));
+    trimmed_data = trimmed_data.substr(0, str.find_last_not_of(" \t") + 1);
+
+    return trimmed_data;
+}
+
 int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, std::string_view arg)
 {
-    int i, n, j, k;
-    char part[4][20], operation[3], extra[80];
-    int sum, val;
-
-    for (i = 0; i < 4; i++)
-    {
-        part[i][0] = 0;
-    }
-    for (i = 0; i < 3; i++)
-    {
-        operation[i] = 0;
-    }
-    extra[0] = 0;
-
     if (arg.starts_with("\\HB\\"))
     {
         int value = evaluate_argument(symbol_table, current_line_count, arg.begin() + 4);
@@ -139,15 +194,14 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
     {
         std::cout << "evaluating " << arg << "\n";
     }
-    int value[4];
 
-    std::string to_parse(arg);
-    std::vector<std::string> args;
-    std::vector<std::string> operations;
+    Accumulator acc;
+    acc.add_operation('+'); // First operation is to add to the accumulator being 0.
+
     std::string_view arg_to_parse{arg};
-
     while (!arg_to_parse.empty())
     {
+        // Parse Operand
         std::string value_to_parse(arg_to_parse);
         std::smatch data_match;
         bool found = std::regex_search(value_to_parse, data_match, not_an_operator);
@@ -156,19 +210,12 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
         {
             std::cerr << "Error, expected value, found: " << arg_to_parse << std::endl;
             exit(-1);
-            break;
         }
 
+        acc.add_operand(trim_string(data_match.str()));
+
+        // Parse Operator
         arg_to_parse = arg_to_parse.substr(data_match.length());
-
-        auto trimmed_data = std::string_view{data_match.str()};
-        trimmed_data = trimmed_data.substr(trimmed_data.find_first_not_of(" \t"));
-        trimmed_data = trimmed_data.substr(0, trimmed_data.find_last_not_of(" \t") + 1);
-
-        //std::cout << "Trimmed" << trimmed_data << std::endl;
-
-        args.emplace_back(trimmed_data);
-
         if (!arg_to_parse.empty())
         {
             char op = arg_to_parse.front();
@@ -180,78 +227,24 @@ int evaluate_argument(const SymbolTable& symbol_table, int current_line_count, s
                 case '/':
                 case '*':
                 case '#':
-                    operations.push_back(std::string{op});
+                    acc.add_operation(op);
                     arg_to_parse = arg_to_parse.substr(1);
                     break;
                 default:
                     std::cerr << "Error '" << op << "'" << std::endl;
                     exit(-1);
-                    break;
             }
         }
     }
 
-    n = sscanf(to_parse.c_str(), "%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%[+-/*#]%[^+-/*#]%s",
-               part[0], &operation[0], part[1], &operation[1], part[2], &operation[2], part[3],
-               extra);
+    auto result = acc.resolve(symbol_table, current_line_count);
+
     if (global_options.debug)
     {
-        printf("n=%d part0=%s operation0=%c part1=%s operation1=%c part2=%s operation2=%c part3=%s "
-               "extra=%s\n",
-               n, part[0], operation[0], part[1], operation[1], part[2], operation[2], part[3],
-               extra);
-        std::cout << "parts=" << args.size() << ":";
-        std::ranges::copy(args, std::ostream_iterator<std::string>(std::cout, ","));
-        std::cout << std::endl;
+        std::cout << "     for got sum " << result << "\n";
     }
 
-    /*
-    if (args.size() % 2 == 0)
-    {
-        std::cerr << "line " << current_line_count << " can't evaluate last arg in " << arg << "\n";
-    }
-     */
-
-    n = (n + 1) / 2;
-    sum = 0;
-    for (j = 0; j < n; j++)
-    {
-        if (std::isalpha(args[j][0]))
-        {
-            val = symbol_to_int(symbol_table, args[j]);
-        }
-        else
-        {
-            val = string_to_int(args[j]);
-        }
-
-        if (global_options.debug)
-            printf("      for %s got value %d\n", part[j], val);
-        if (j == 0)
-            sum = val;
-        else
-        {
-            if (operation[j - 1] == '+')
-                sum = sum + val;
-            else if (operation[j - 1] == '-')
-                sum = sum - val;
-            else if (operation[j - 1] == '*')
-                sum = sum * val;
-            else if (operation[j - 1] == '/')
-                sum = sum / val;
-            else if (operation[j - 1] == '#')
-                sum = sum * 256 + val;
-            else
-            {
-                fprintf(stderr, "in line %d unknown operation '%c'\n", current_line_count,
-                        operation[j - 1]);
-                exit(-1);
-            }
-        }
-        if (global_options.debug)
-            printf("     for got sum %d\n", sum);
-    }
-    return (sum);
+    return result;
 }
 
 /* Here are the ways to specify a number or constant: */
