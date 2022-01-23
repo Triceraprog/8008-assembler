@@ -223,9 +223,6 @@ int find_data(const SymbolTable& symbol_table, int current_line_count, const std
 
         int byte_count = 0;
 
-        //std::cout << "DATA\n";
-        //std::cout << without_comment << std::endl;
-
         auto begin =
                 std::sregex_iterator(without_comment.begin(), without_comment.end(), except_comma);
         auto end = std::sregex_iterator();
@@ -373,7 +370,7 @@ void first_pass(SymbolTable& symbol_table, Files& files)
         if (ci_equals(tokens.opcode, "org"))
         {
             if ((current_address = evaluate_argument(global_options, symbol_table,
-                                                     current_line_count, tokens.arg1) == -1))
+                                                     current_line_count, tokens.arg1)) == -1)
             {
                 std::cerr << " in line " << current_line_count << " " << input_line;
                 std::cerr << " can't evaluate argument " << tokens.arg1 << "\n";
