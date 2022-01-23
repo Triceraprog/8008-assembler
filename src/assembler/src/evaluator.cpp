@@ -31,14 +31,14 @@ namespace
         }
         catch (const std::invalid_argument& e)
         {
-            std::cerr << "error: tried to read " << type_name << " " << to_parse
-                      << ". Argument is invalid.\n";
+            std::cerr << "error: tried to read " << type_name << " '" << to_parse
+                      << "'. Argument is invalid.\n";
             exit(-1);
         }
         catch (const std::out_of_range& e)
         {
-            std::cerr << "error: tried to read " << type_name << " " << to_parse
-                      << ". Argument is out of range.\n";
+            std::cerr << "error: tried to read " << type_name << " '" << to_parse
+                      << "'. Argument is out of range.\n";
             exit(-1);
         }
         return val;
@@ -241,11 +241,29 @@ EvaluationFlags::Flags EvaluationFlags::get_flags_from_options(const Options& op
     return options.input_num_as_octal ? ThreeDigitsAsOctal : None;
 }
 
+std::string_view left_trim_string(std::string_view str)
+{
+    auto it = std::find_if_not(str.begin(), str.end(), [](auto c) { return std::isspace(c); });
+    if (it != str.end())
+    {
+        str.remove_prefix(std::distance(str.begin(), it));
+    }
+
+    return str;
+}
+
+std::string_view right_trim_string(std::string_view str)
+{
+    auto it = std::find_if_not(str.rbegin(), str.rend(), [](auto c) { return std::isspace(c); });
+    if (it != str.rend())
+    {
+        str.remove_suffix(std::distance(str.rbegin(), it));
+    }
+
+    return str;
+}
+
 std::string_view trim_string(std::string_view str)
 {
-    auto trimmed_data = std::string_view{str};
-    trimmed_data = trimmed_data.substr(str.find_first_not_of(" \t"));
-    trimmed_data = trimmed_data.substr(0, str.find_last_not_of(" \t") + 1);
-
-    return trimmed_data;
+    return right_trim_string(left_trim_string(str));
 }

@@ -6,7 +6,22 @@
 
 using namespace testing;
 
-TEST(TrimmingString, trims_spaces) {}
+TEST(TrimmingString, trims_tabs) {
+    std::string source{"\t\t100\t\t\t"};
+
+    const auto & destination = trim_string(source);
+
+    ASSERT_THAT(destination, Eq("100"));
+}
+
+TEST(TrimmingString, trims_nothing) {
+    std::string source{"100"};
+
+    const auto & destination = trim_string(source);
+
+    ASSERT_THAT(destination, Eq("100"));
+}
+
 
 struct EvaluateArgumentFixture : public Test
 {
@@ -42,6 +57,13 @@ TEST_F(EvaluateArgumentFixture, evaluates_octal_by_default)
 {
     options.input_num_as_octal = true;
     auto value = evaluate_argument(options, table, 0, "100");
+    ASSERT_THAT(value, Eq(64));
+}
+
+TEST_F(EvaluateArgumentFixture, evaluates_octal_by_default_with_tabs)
+{
+    options.input_num_as_octal = true;
+    auto value = evaluate_argument(options, table, 0, "\t\t100\t\t\t");
     ASSERT_THAT(value, Eq(64));
 }
 
