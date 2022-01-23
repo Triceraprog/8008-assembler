@@ -1,4 +1,5 @@
 #include "byte_writer.h"
+#include "data_extraction.h"
 #include "evaluator.h"
 #include "files.h"
 #include "line_tokenizer.h"
@@ -12,7 +13,6 @@
 #include <cstring>
 #include <ctime>
 #include <iostream>
-#include <regex>
 
 Options global_options;
 
@@ -28,148 +28,6 @@ struct ParsingContext
 
 };
  */
-
-namespace
-{
-    std::regex data_rule{"[dD][aA][tT][aA]\\s*"};
-    std::regex except_comma{R"(([^,\s]*))"};
-}
-
-/* Here are the ways to specify a number or constant: */
-/* 0xFF (hex) 010101b (binary) 120 (decimal unless -octal flag, then octal) */
-/* 3-digit numeric numbers are either octal or decimal, based on flag */
-/* 'w' (character) 123h (hex) 120o (octal)         */
-
-int decode_data(const SymbolTable& symbol_table, int current_line_count,
-                const std::string_view line, int* outdata)
-{
-    std::string line_as_string{line};
-    std::smatch data_match;
-    bool found = std::regex_search(line_as_string, data_match, data_rule);
-
-    if (!found)
-    {
-        std::cerr << "can't find data code?  Unexpected bug\n";
-        exit(-1);
-    }
-
-    auto after_data_position = data_match.position() + data_match.length();
-    auto data_part = line.substr(after_data_position);
-
-    if (data_part.empty())
-    {
-        return 0;
-    }
-
-    if (data_part.front() == '*')
-    {
-        // 'DATA *NNN' reserve NNN bytes.
-        try
-        {
-            int number_to_reserve = std::stoi(data_part.substr(1).data());
-            return 0 - number_to_reserve;
-        }
-        catch (...)
-        {
-            std::cerr << " in line %s can't read number to reserve\n";
-            exit(-1);
-        }
-    }
-    if ((data_part.front() == '\'') || (data_part.front() == '"'))
-    {
-        // DATA "..." or DATA '...' declares a string of characters
-        // Warning: there's a syntax limitation. If a comment contains a quote, then
-        // the result will be wrong.
-        const char quote_to_find = data_part.front();
-        auto last_quote_position = data_part.find_last_of(quote_to_find);
-        auto string_content = data_part.substr(1, last_quote_position - 1);
-
-        bool escape_char = false;
-        int* out_pointer = outdata;
-
-        for (char char_data : string_content)
-        {
-            if (escape_char)
-            {
-                escape_char = false;
-                switch (char_data)
-                {
-                    case '\\':
-                        *(out_pointer++) = '\\';
-                        break;
-                    case 'n':
-                        *(out_pointer++) = '\n';
-                        break;
-                    case 't':
-                        *(out_pointer++) = '\t';
-                        break;
-                    case '0':
-                        *(out_pointer++) = '\0';
-                        break;
-                    default:
-                        std::cerr << " in line " << current_line_count << " " << line;
-                        std::cerr << " unknown escape sequence \\" << char_data << "\n";
-                        exit(-1);
-                }
-            }
-            else if (char_data == '\\')
-            {
-                escape_char = true;
-            }
-            else
-            {
-                *(out_pointer++) = static_cast<u_char>(char_data);
-            }
-        }
-
-        /* If "markascii" option is set, highest bit of these ascii bytes are forced to 1. */
-        if (global_options.mark_8_ascii)
-        {
-            for (auto* p = outdata; p < out_pointer; p++)
-            {
-                *p |= 0x80;
-            }
-        }
-
-        return static_cast<int>(out_pointer - outdata);
-    }
-    else
-    {
-        /* DATA xxx,xxx,xxx,xxx */
-        const auto first_comment = data_part.find_first_of(';');
-        auto without_comment = std::string{data_part.substr(0, first_comment)};
-
-        int byte_count = 0;
-
-        auto begin =
-                std::sregex_iterator(without_comment.begin(), without_comment.end(), except_comma);
-        auto end = std::sregex_iterator();
-
-        for (auto it = begin; it != end; it++)
-        {
-            std::string sub = it->str();
-
-            if (sub.empty())
-            {
-                continue;
-            }
-
-            *(outdata++) = evaluate_argument(global_options, symbol_table, current_line_count, sub);
-
-            byte_count += 1;
-
-            if (byte_count > 12)
-            {
-                std::cerr << " in line " << current_line_count << " " << line;
-                std::cerr << " max length is 12 bytes.\n";
-                std::cerr << " Use a second line for more data\n";
-                exit(-1);
-            }
-        }
-
-        return byte_count;
-    }
-}
 
 void write_listing_header(FILE* lfp)
 {
@@ -209,7 +67,7 @@ void first_pass(SymbolTable& symbol_table, Files& files)
 
     if (global_options.debug || global_options.verbose)
     {
-        printf("Pass number One:  Read and Define Symbols\n");
+        std::cout << "Pass number One:  Read and Define Symbols\n";
     }
 
     write_listing_header(files.lfp);
@@ -298,15 +156,19 @@ void first_pass(SymbolTable& symbol_table, Files& files)
         else if (ci_equals(tokens.opcode, "data"))
         {
             int data_list[80];
-            int n = decode_data(symbol_table, current_line_count, input_line.c_str(), data_list);
+            int n = decode_data(global_options, symbol_table, current_line_count,
+                                input_line.c_str(), data_list);
             if (global_options.debug)
             {
-                printf("got %d items in data list\n", n);
+                std::cout << "got " << n << " items in data list\n";
             }
+
             /* a negative number denotes that much space to save, but not specifying data */
             /* if so, just change sign to positive */
             if (n < 0)
+            {
                 n = 0 - n;
+            }
             current_address += n;
             continue;
         }
@@ -434,7 +296,8 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
         else if (ci_equals(tokens.opcode, "data"))
         {
             int data_list[80];
-            int n = decode_data(symbol_table, current_line_count, input_line.c_str(), data_list);
+            int n = decode_data(global_options, symbol_table, current_line_count,
+                                input_line.c_str(), data_list);
             /* if n is negative, that number of bytes are just reserved */
             if (n < 0)
             {

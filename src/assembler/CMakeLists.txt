@@ -17,7 +17,8 @@ set(ASSEMBLER_LIB_FILES
         src/utils.cpp src/utils.h
         src/opcodes.cpp src/opcodes.h
         src/evaluator.cpp src/evaluator.h
-        src/byte_writer.cpp src/byte_writer.h)
+        src/byte_writer.cpp src/byte_writer.h
+        src/data_extraction.cpp src/data_extraction.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/reference_tests.cpp
