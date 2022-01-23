@@ -175,21 +175,18 @@ void first_pass(SymbolTable& symbol_table, Files& files)
         else if (auto [found, opcode] = find_opcode(tokens.opcode); found)
         {
             /* found the opcode */
-            if (opcode.rule == 0)
+            switch (opcode.rule)
             {
-                current_address += 1;
-            }
-            else if (opcode.rule == 1)
-            {
-                current_address += 2;
-            }
-            else if (opcode.rule == 2)
-            {
-                current_address += 3;
-            }
-            else if (opcode.rule == 3)
-            {
-                current_address += 1;
+                case 0:
+                case 3:
+                    current_address += 1;
+                    break;
+                case 1:
+                    current_address += 2;
+                    break;
+                case 2:
+                    current_address += 3;
+                    break;
             }
         }
         else
@@ -241,7 +238,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
         }
 
         LineTokenizer tokens = parse_line(global_options, input_line, current_line_count);
-        int args = tokens.arg_count;
+        auto args = tokens.arg_count;
 
         if (tokens.opcode.empty())
         {
@@ -321,7 +318,7 @@ void second_pass(const SymbolTable& symbol_table, Files& files)
                             input_line.c_str());
                     for (int i = 1; i < n; i++)
                     {
-                        fprintf(files.lfp, "%     %02o-%03o %03o\n", current_line_count,
+                        fprintf(files.lfp, "%4d %02o-%03o %03o\n", current_line_count,
                                 (((line_address + i) >> 8) & 0xFF), ((line_address + i) & 0xFF),
                                 data_list[i]);
                     }
