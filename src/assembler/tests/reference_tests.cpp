@@ -6,8 +6,6 @@
 
 using namespace testing;
 
-// TODO: missing test, octal by default. Needs to pass the option for this.
-
 TEST(TrimmingString, trims_spaces) {}
 
 struct EvaluateArgumentFixture : public Test
@@ -37,6 +35,13 @@ TEST_F(EvaluateArgumentFixture, evaluates_octal_with_suffix)
 TEST_F(EvaluateArgumentFixture, evaluates_octal_with_suffix_upper_case)
 {
     auto value = evaluate_argument(options, table, 0, "100O");
+    ASSERT_THAT(value, Eq(64));
+}
+
+TEST_F(EvaluateArgumentFixture, evaluates_octal_by_default)
+{
+    options.input_num_as_octal = true;
+    auto value = evaluate_argument(options, table, 0, "100");
     ASSERT_THAT(value, Eq(64));
 }
 
