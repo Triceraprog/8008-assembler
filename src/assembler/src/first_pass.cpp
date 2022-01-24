@@ -160,6 +160,7 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files)
             {
                 case 0:
                 case 3:
+                case 4:
                     current_address += 1;
                     break;
                 case 1:

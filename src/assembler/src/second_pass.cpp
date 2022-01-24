@@ -204,7 +204,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
         /* found the opcode */
         /* check that we have right number of arguments */
         if (((opcode.rule == 0) && (args != 0)) || ((opcode.rule == 1) && (args != 1)) ||
-            ((opcode.rule == 2) && (args != 1)) || ((opcode.rule == 3) && (args != 1)))
+            ((opcode.rule == 2) && (args != 1)) || ((opcode.rule == 3) && (args != 1)) ||
+            ((opcode.rule == 4) && (args != 1)))
         {
             fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n",
                     current_line_count, input_line.c_str(), args);
@@ -220,13 +221,9 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                 exit(-1);
             }
         }
-        /*
-     *
-     * Now, each opcode, is categorized into different
-     * "rules" which states how arguments are combined
-     * with opcode to get machine codes.
-     *
-     */
+        /* Now, each opcode, is categorized into different
+         * "rules" which states how arguments are combined
+         * with opcode to get machine codes. */
 
         if (opcode.rule == 0)
         {
@@ -324,6 +321,22 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                 exit(-1);
             }
             int code = opcode.code + (arg1 << 1);
+            writer.write_byte(code, current_address++);
+            if (options.generate_list_file)
+                fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
+                        ((line_address >> 8) & 0xFF), (line_address & 0xFF), code, single_space_pad,
+                        input_line.c_str());
+        }
+        else if (opcode.rule == 4)
+        {
+            if ((arg1 > 7) || (arg1 < 0))
+            {
+                fprintf(stderr, " in line %d %s expected argument 0-7\n", current_line_count,
+                        input_line.c_str());
+                fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
+                exit(-1);
+            }
+            auto code = opcode.code |= (arg1 << 3);
             writer.write_byte(code, current_address++);
             if (options.generate_list_file)
                 fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
