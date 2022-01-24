@@ -7,7 +7,7 @@
 
 namespace
 {
-    std::regex label_scan{R"(([\w|\\#]+))"};
+    std::regex line_tokens_scan{R"(([\w|\\#|\(||)]+))"};
 }
 
 LineTokenizer::LineTokenizer(const std::string& line)
@@ -20,7 +20,7 @@ LineTokenizer::LineTokenizer(const std::string& line)
     auto c = line[0];
     auto used_first_column = (c != ' ') && (c != '\t') && (c != 0x00);
 
-    auto begin = std::sregex_iterator(line.begin(), line.end(), label_scan);
+    auto begin = std::sregex_iterator(line.begin(), line.end(), line_tokens_scan);
     auto end = std::sregex_iterator();
 
     std::deque<std::string> parsed;

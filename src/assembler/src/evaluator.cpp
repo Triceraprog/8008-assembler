@@ -184,10 +184,23 @@ int evaluate_argument(const Options& options, const SymbolTable& symbol_table,
         int value = evaluate_argument(options, symbol_table, current_line_count, arg.begin() + 4);
         return ((value >> 8) & 0xFF);
     }
+    if (arg.starts_with("H(") || arg.ends_with(')'))
+    {
+        int value = evaluate_argument(options, symbol_table, current_line_count,
+                                      arg.substr(2, arg.size() - 2 - 1));
+        return ((value >> 8) & 0xFF);
+    }
+
     if (arg.starts_with("\\LB\\"))
     {
         int value = evaluate_argument(options, symbol_table, current_line_count, arg.begin() + 4);
         return (value & 0xFF);
+    }
+    if (arg.starts_with("L(") || arg.ends_with(')'))
+    {
+        int value = evaluate_argument(options, symbol_table, current_line_count,
+                                      arg.substr(2, arg.size() - 2 - 1));
+        return ((value >> 8) & 0xFF);
     }
 
     if (options.debug)
