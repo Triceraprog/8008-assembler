@@ -7,7 +7,7 @@
 
 namespace
 {
-    std::regex line_tokens_scan{R"(([\w|\\#|\(||)]+))"};
+    std::regex line_tokens_scan{R"(([^\s,]+))"};
 }
 
 LineTokenizer::LineTokenizer(const std::string& line)

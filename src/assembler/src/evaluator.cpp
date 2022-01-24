@@ -65,6 +65,10 @@ namespace
         {
             val = parse_number_value(to_parse, 2, "binary");
         }
+        else if (last_char_in_parsing == '\'' && to_parse.front() == '\'' && to_parse.size() == 3)
+        {
+            val = static_cast<unsigned char>(to_parse[1]);
+        }
         else
         {
             if ((to_parse.size() == 3) && (flags == EvaluationFlags::ThreeDigitsAsOctal))
@@ -96,7 +100,8 @@ namespace
 
     int operand_to_int(const Options& options, const SymbolTable& table, const std::string& operand)
     {
-        if (isalpha(operand.front()))
+        auto front = operand.front();
+        if (isalpha(front) && front != '\'')
         {
             return symbol_to_int(table, operand);
         }
