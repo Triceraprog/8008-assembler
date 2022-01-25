@@ -336,7 +336,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                 fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                 exit(-1);
             }
-            auto code = opcode.code |= (arg1 << 3);
+            auto code = (opcode.code | (arg1 << 3));
             writer.write_byte(code, current_address++);
             if (options.generate_list_file)
                 fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
