@@ -77,6 +77,9 @@ int decode_data(const Options& options, const SymbolTable& symbol_table, int cur
                     case '\\':
                         *(out_pointer++) = '\\';
                         break;
+                    case 'r':
+                        *(out_pointer++) = '\r';
+                        break;
                     case 'n':
                         *(out_pointer++) = '\n';
                         break;
