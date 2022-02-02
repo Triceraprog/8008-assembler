@@ -4,6 +4,8 @@
 #include "assembler/src/second_pass.h"
 #include "assembler/src/symbol_table.h"
 
+#include <iostream>
+
 int main(int argc, const char** argv)
 {
     Options global_options;
@@ -17,16 +19,23 @@ int main(int argc, const char** argv)
         exit(-1);
     }
 
-    Files files(global_options);
-    SymbolTable symbol_table;
-
-    first_pass(global_options, symbol_table, files);
-    second_pass(global_options, symbol_table, files);
-
-    /* write symbol table to listfile */
-    if (global_options.generate_list_file)
+    try
     {
-        symbol_table.list_symbols(files.lfp);
+        Files files(global_options);
+        SymbolTable symbol_table;
+
+        first_pass(global_options, symbol_table, files);
+        second_pass(global_options, symbol_table, files);
+
+        /* write symbol table to listfile */
+        if (global_options.generate_list_file)
+        {
+            symbol_table.list_symbols(files.lfp);
+        }
+    }
+    catch (const CannotOpenFile& ex)
+    {
+        std::cerr << ex.what() << std::endl;
+        exit(-1);
     }
 }
-

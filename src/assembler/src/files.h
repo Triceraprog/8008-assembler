@@ -1,8 +1,19 @@
 #ifndef INC_8008_ASSEMBLER_FILES_H
 #define INC_8008_ASSEMBLER_FILES_H
 
-#include <string>
+#include <exception>
 #include <fstream>
+#include <string>
+
+class CannotOpenFile : std::exception
+{
+public:
+    CannotOpenFile(const std::string& filename, const std::string& file_type_name);
+    [[nodiscard]] const char* what() const noexcept override;
+
+private:
+    std::string reason;
+};
 
 class Options;
 
@@ -12,7 +23,7 @@ public:
     explicit Files(const Options& options);
     ~Files();
 
-    FILE *lfp{};
+    FILE* lfp{};
     std::fstream input_stream;
     std::fstream output_stream;
 
