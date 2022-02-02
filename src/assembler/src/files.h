@@ -5,16 +5,6 @@
 #include <fstream>
 #include <string>
 
-class CannotOpenFile : std::exception
-{
-public:
-    CannotOpenFile(const std::string& filename, const std::string& file_type_name);
-    [[nodiscard]] const char* what() const noexcept override;
-
-private:
-    std::string reason;
-};
-
 class Options;
 
 class Files
@@ -34,6 +24,16 @@ private:
     std::string output_filename;
     std::string list_filename;
     std::string input_filename;
+};
+
+class CannotOpenFile : std::exception
+{
+public:
+    CannotOpenFile(const std::string& filename, const std::string& file_type_name);
+    [[nodiscard]] const char* what() const noexcept override;
+
+private:
+    std::string reason;
 };
 
 #endif //INC_8008_ASSEMBLER_FILES_H
