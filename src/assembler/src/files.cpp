@@ -3,7 +3,6 @@
 #include "options.h"
 
 #include <cstdio>
-#include <cstdlib>
 #include <iostream>
 
 Files::Files(const Options& options)

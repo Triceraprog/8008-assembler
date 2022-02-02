@@ -1,15 +1,6 @@
 #include "opcodes.h"
-#include "files.h"
-#include "line_tokenizer.h"
 #include "options.h"
-#include "symbol_table.h"
 #include "utils.h"
-#include <cctype>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <ctime>
-#include <iostream>
 
 #define NUMOPCODES (sizeof(opcodes) / sizeof(opcodes[0]))
 

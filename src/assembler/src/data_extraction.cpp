@@ -1,16 +1,8 @@
 #include "data_extraction.h"
-#include "byte_writer.h"
 #include "evaluator.h"
-#include "files.h"
-#include "line_tokenizer.h"
-#include "opcodes.h"
 #include "options.h"
 #include "symbol_table.h"
-#include "utils.h"
-#include <cstdio>
 #include <cstdlib>
-#include <cstring>
-#include <ctime>
 #include <iostream>
 #include <regex>
 
