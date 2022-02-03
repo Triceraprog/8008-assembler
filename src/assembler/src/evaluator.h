@@ -11,56 +11,44 @@ class SymbolTable;
 int evaluate_argument(const Options& options, const SymbolTable& symbol_table,
                       int current_line_count, std::string_view arg);
 
-class CannotFindSymbol : public std::exception
+class ExceptionWithReason : public std::exception
+{
+public:
+    [[nodiscard]] const char* what() const noexcept override;
+
+protected:
+    std::string reason;
+};
+
+class CannotFindSymbol : public ExceptionWithReason
 {
 public:
     explicit CannotFindSymbol(const std::string& symbol);
-    [[nodiscard]] const char* what() const noexcept override;
-
-private:
-    std::string reason;
 };
 
-class UnknownOperation : public std::exception
+class UnknownOperation : public ExceptionWithReason
 {
 public:
     explicit UnknownOperation(char operation);
-    [[nodiscard]] const char* what() const noexcept override;
-
-private:
-    std::string reason;
 };
 
-class IllFormedExpression : public std::exception
+class IllFormedExpression : public ExceptionWithReason
 {
 public:
     explicit IllFormedExpression();
-    [[nodiscard]] const char* what() const noexcept override;
-
-private:
-    std::string reason;
 };
 
-class InvalidNumber : public std::exception
+class InvalidNumber : public ExceptionWithReason
 {
 public:
     explicit InvalidNumber(std::string_view to_parse, std::string_view type_name,
                            std::string_view fail_reason);
-    [[nodiscard]] const char* what() const noexcept override;
-
-private:
-    std::string reason;
 };
 
-class ExpectedValue : public std::exception
+class ExpectedValue : public ExceptionWithReason
 {
 public:
     explicit ExpectedValue(std::string_view to_parse);
-    [[nodiscard]] const char* what() const noexcept override;
-
-private:
-    std::string reason;
 };
-
 
 #endif //INC_8008_ASSEMBLER_EVALUATOR_H

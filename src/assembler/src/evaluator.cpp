@@ -256,17 +256,14 @@ CannotFindSymbol::CannotFindSymbol(const std::string& symbol)
 {
     reason = "cannot find symbol " + symbol;
 }
-const char* CannotFindSymbol::what() const noexcept { return reason.c_str(); }
 
 UnknownOperation::UnknownOperation(const char operation)
 {
     reason = "unknown operation ";
     reason.append(1, operation);
 }
-const char* UnknownOperation::what() const noexcept { return reason.c_str(); }
 
 IllFormedExpression::IllFormedExpression() { reason = "the expression is ill-formed"; }
-const char* IllFormedExpression::what() const noexcept { return reason.c_str(); }
 
 InvalidNumber::InvalidNumber(const std::string_view to_parse, std::string_view type_name,
                              std::string_view fail_reason)
@@ -274,10 +271,9 @@ InvalidNumber::InvalidNumber(const std::string_view to_parse, std::string_view t
     reason = "Tried to read '" + std::string{to_parse} + "' as " + std::string{type_name} +
              ". Argument is " + std::string{fail_reason};
 }
-const char* InvalidNumber::what() const noexcept { return reason.c_str(); }
 
 ExpectedValue::ExpectedValue(std::string_view to_parse)
 {
     reason = "Expected value, found '" + std::string(to_parse) + "'";
 }
-const char* ExpectedValue::what() const noexcept { return reason.c_str(); }
+const char* ExceptionWithReason::what() const noexcept { return reason.c_str(); }
