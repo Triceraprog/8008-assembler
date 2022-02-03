@@ -21,4 +21,14 @@ private:
     std::string reason;
 };
 
+class UnknownOperation : public std::exception
+{
+public:
+    explicit UnknownOperation(const char operation);
+    [[nodiscard]] const char* what() const noexcept override;
+
+private:
+    std::string reason;
+};
+
 #endif //INC_8008_ASSEMBLER_EVALUATOR_H

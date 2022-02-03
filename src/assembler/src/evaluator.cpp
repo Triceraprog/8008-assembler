@@ -105,33 +105,27 @@ namespace
         }
     }
 
-    int apply_operation(int current_line_count, const char& op, int acc, int val)
+    int apply_operation(const char& op, int acc, int val)
     {
-        if (op == '+')
+        switch (op)
         {
-            acc += val;
-        }
-        else if (op == '-')
-        {
-            acc -= val;
-        }
-        else if (op == '*')
-        {
-            acc *= val;
-        }
-        else if (op == '/')
-        {
-            acc /= val;
-        }
-        else if (op == '#')
-        {
-            acc = acc * 256 + val;
-        }
-        else
-        {
-            std::cerr << "line " << current_line_count;
-            std::cerr << " unknown operation " << op << std::endl;
-            exit(-1);
+            case '+':
+                acc += val;
+                break;
+            case '-':
+                acc -= val;
+                break;
+            case '*':
+                acc *= val;
+                break;
+            case '/':
+                acc /= val;
+                break;
+            case '#':
+                acc = acc * 256 + val;
+                break;
+            default:
+                throw UnknownOperation(op);
         }
         return acc;
     }
@@ -163,7 +157,7 @@ namespace
 
                 {
                     const auto& op = operations[j];
-                    sum = apply_operation(current_line_count, op, sum, val);
+                    sum = apply_operation(op, sum, val);
                 }
             }
             return sum;
@@ -270,3 +264,10 @@ CannotFindSymbol::CannotFindSymbol(const std::string& symbol)
     reason = "cannot find symbol " + symbol;
 }
 const char* CannotFindSymbol::what() const noexcept { return reason.c_str(); }
+
+UnknownOperation::UnknownOperation(const char operation)
+{
+    reason = "unknown operation ";
+    reason.append(1, operation);
+}
+const char* UnknownOperation::what() const noexcept { return reason.c_str(); }
