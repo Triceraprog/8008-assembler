@@ -273,4 +273,3 @@ ExpectedValue::ExpectedValue(std::string_view to_parse)
 {
     reason = "Expected value, found '" + std::string(to_parse) + "'";
 }
-const char* ExceptionWithReason::what() const noexcept { return reason.c_str(); }

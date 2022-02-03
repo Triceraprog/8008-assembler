@@ -1,6 +1,8 @@
 #ifndef INC_8008_ASSEMBLER_EVALUATOR_H
 #define INC_8008_ASSEMBLER_EVALUATOR_H
 
+#include "errors.h"
+
 #include <exception>
 #include <string>
 #include <string_view>
@@ -10,15 +12,6 @@ class SymbolTable;
 
 int evaluate_argument(const Options& options, const SymbolTable& symbol_table,
                       std::string_view arg);
-
-class ExceptionWithReason : public std::exception
-{
-public:
-    [[nodiscard]] const char* what() const noexcept override;
-
-protected:
-    std::string reason;
-};
 
 class CannotFindSymbol : public ExceptionWithReason
 {

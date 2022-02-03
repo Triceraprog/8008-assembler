@@ -3,15 +3,21 @@
 
 #include <exception>
 #include <string>
+#include <string_view>
 
-class ParsingException : std::exception
+class ExceptionWithReason : public std::exception
 {
 public:
-    explicit ParsingException(const std::exception& ex, int line_number, std::string & line);
     [[nodiscard]] const char* what() const noexcept override;
 
-private:
+protected:
     std::string reason;
+};
+
+class ParsingException : public ExceptionWithReason
+{
+public:
+    explicit ParsingException(const std::exception& ex, int line_number, std::string& line);
 };
 
 #endif //INC_8008_ASSEMBLER_ERRORS_H
