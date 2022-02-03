@@ -1,3 +1,4 @@
+#include "assembler/src/errors.h"
 #include "assembler/src/files.h"
 #include "assembler/src/first_pass.h"
 #include "assembler/src/options.h"
@@ -34,6 +35,11 @@ int main(int argc, const char** argv)
         }
     }
     catch (const CannotOpenFile& ex)
+    {
+        std::cerr << ex.what() << std::endl;
+        exit(-1);
+    }
+    catch (const ParsingException& ex)
     {
         std::cerr << ex.what() << std::endl;
         exit(-1);
