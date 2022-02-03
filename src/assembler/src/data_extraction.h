@@ -25,5 +25,11 @@ public:
     explicit DataTooLong();
 };
 
+class UnknownEscapeSequence : public ExceptionWithReason
+{
+public:
+    explicit UnknownEscapeSequence(char escape);
+};
+
 
 #endif //INC_8008_ASSEMBLER_DATA_EXTRACTION_H

@@ -82,9 +82,7 @@ int decode_data(const Options& options, const SymbolTable& symbol_table, int cur
                         *(out_pointer++) = '\0';
                         break;
                     default:
-                        std::cerr << " in line " << current_line_count << " " << line;
-                        std::cerr << " unknown escape sequence \\" << char_data << "\n";
-                        exit(-1);
+                        throw UnknownEscapeSequence(char_data);
                 }
             }
             else if (char_data == '\\')
@@ -146,4 +144,9 @@ int decode_data(const Options& options, const SymbolTable& symbol_table, int cur
 DataTooLong::DataTooLong()
 {
     reason = "DATA max length is 12 bytes. Use a second line for more data.";
+}
+
+UnknownEscapeSequence::UnknownEscapeSequence(char escape)
+{
+    reason = "unknown escape sequence \\" + std::string(1, escape);
 }

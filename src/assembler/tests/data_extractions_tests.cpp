@@ -28,3 +28,10 @@ TEST_F(DataExtractorFixture, throws_if_too_much_data)
                              out_data),
                  DataTooLong);
 }
+
+TEST_F(DataExtractorFixture, throws_if_finds_an_unknown_escape_char)
+{
+    int out_data[20];
+    ASSERT_THROW(decode_data(options, table, 0, "DATA \"\\u0001\"", out_data),
+                 UnknownEscapeSequence);
+}
