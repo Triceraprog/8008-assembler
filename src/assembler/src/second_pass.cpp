@@ -121,8 +121,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
             else if (ci_equals(tokens.opcode, "data"))
             {
                 int data_list[80];
-                int n = decode_data(options, symbol_table, current_line_count, input_line.c_str(),
-                                    data_list);
+                int n = decode_data(options, symbol_table, input_line.c_str(), data_list);
                 /* if n is negative, that number of bytes are just reserved */
                 if (n < 0)
                 {

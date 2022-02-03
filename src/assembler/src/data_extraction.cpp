@@ -12,7 +12,7 @@ namespace
     std::regex except_comma{R"(([^,\s]*))"};
 }
 
-int decode_data(const Options& options, const SymbolTable& symbol_table, int current_line_count,
+int decode_data(const Options& options, const SymbolTable& symbol_table,
                 const std::string_view line, int* out_data)
 {
     std::string line_as_string{line};
