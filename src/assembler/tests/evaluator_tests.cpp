@@ -131,9 +131,8 @@ TEST_F(EvaluateArgumentFixture, evaluates_complex_expression)
     ASSERT_THAT(value, Eq(16));
 }
 
-TEST_F(EvaluateArgumentFixture, evaluates_an_expression_with_a_symbol)
+
+TEST_F(EvaluateArgumentFixture, evaluates_throws_an_exception_if_the_symbol_is_not_found)
 {
-    table.define_symbol("TEST", 3);
-    auto value = evaluate_argument(options, table, 0, "TEST*TEST");
-    ASSERT_THAT(value, Eq(9));
+    ASSERT_THROW(evaluate_argument(options, table, 0, "TEST"), CannotFindSymbol);
 }

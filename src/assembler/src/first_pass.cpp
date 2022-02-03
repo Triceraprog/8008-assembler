@@ -1,6 +1,7 @@
 #include "first_pass.h"
 
 #include "data_extraction.h"
+#include "errors.h"
 #include "evaluator.h"
 #include "files.h"
 #include "line_tokenizer.h"
@@ -59,123 +60,130 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files)
     int current_address = 0;
     for (std::string input_line; std::getline(files.input_stream, input_line);)
     {
-        current_line_count++;
-        if (options.verbose || options.debug)
+        try
         {
-            std::cout << "     0x" << std::hex << std::uppercase << current_address << " ";
-            std::cout << "\"" << input_line << "\"\n";
-        }
-        /* this function breaks line into separate parts */
-        LineTokenizer tokens = parse_line(options, input_line, current_line_count);
-
-        if (options.debug)
-        {
-            tokens.debug_print();
-        }
-
-        if (!tokens.label.empty())
-        {
-            /* Check if the label was already defined. */
-            if (auto symbol_value = symbol_table.get_symbol_value(tokens.label);
-                std::get<0>(symbol_value))
+            current_line_count++;
+            if (options.verbose || options.debug)
             {
-                std::cerr << " in line " << current_line_count << " " << input_line;
-                std::cerr << " label " << tokens.label;
-                std::cerr << " already defined as " << std::get<1>(symbol_value) << "\n";
-                exit(-1);
+                std::cout << "     0x" << std::hex << std::uppercase << current_address << " ";
+                std::cout << "\"" << input_line << "\"\n";
+            }
+            /* this function breaks line into separate parts */
+            LineTokenizer tokens = parse_line(options, input_line, current_line_count);
+
+            if (options.debug)
+            {
+                tokens.debug_print();
             }
 
-            /* Or define it. */
-            int val;
-            if (ci_equals(tokens.opcode, "equ") || ci_equals(tokens.opcode, "org"))
+            if (!tokens.label.empty())
             {
-                val = evaluate_argument(options, symbol_table, current_line_count, tokens.arg1);
+                /* Check if the label was already defined. */
+                if (auto symbol_value = symbol_table.get_symbol_value(tokens.label);
+                    std::get<0>(symbol_value))
+                {
+                    std::cerr << " in line " << current_line_count << " " << input_line;
+                    std::cerr << " label " << tokens.label;
+                    std::cerr << " already defined as " << std::get<1>(symbol_value) << "\n";
+                    exit(-1);
+                }
+
+                /* Or define it. */
+                int val;
+                if (ci_equals(tokens.opcode, "equ") || ci_equals(tokens.opcode, "org"))
+                {
+                    val = evaluate_argument(options, symbol_table, current_line_count, tokens.arg1);
+                }
+                else
+                {
+                    val = current_address;
+                }
+
+                if (options.debug)
+                {
+                    std::cout << "at address=" << current_address;
+                    std::cout << std::hex << std::uppercase << "=" << current_address;
+                    std::cout << " defining " << tokens.label << " = " << std::dec << val;
+                    std::cout << " =0x" << std::hex << std::uppercase << val << "\n";
+                }
+
+                symbol_table.define_symbol(tokens.label, val);
+            }
+
+            if (tokens.opcode.empty() || ci_equals(tokens.opcode, "equ") ||
+                ci_equals(tokens.opcode, "end"))
+            {
+                continue;
+            }
+
+            if (ci_equals(tokens.opcode, "cpu"))
+            {
+                if ((!ci_equals(tokens.arg1, "8008")) && (!ci_equals(tokens.arg1, "i8008")))
+                {
+                    std::cerr << " in line " << current_line_count << " " << input_line;
+                    std::cerr << " cpu only allowed is \"8008\" or \"i8008\"\n";
+                    exit(-1);
+                }
+                continue;
+            }
+
+            if (ci_equals(tokens.opcode, "org"))
+            {
+                if ((current_address = evaluate_argument(options, symbol_table, current_line_count,
+                                                         tokens.arg1)) == -1)
+                {
+                    std::cerr << " in line " << current_line_count << " " << input_line;
+                    std::cerr << " can't evaluate argument " << tokens.arg1 << "\n";
+                    exit(-1);
+                }
+            }
+            else if (ci_equals(tokens.opcode, "data"))
+            {
+                int data_list[80];
+                int n = decode_data(options, symbol_table, current_line_count, input_line.c_str(),
+                                    data_list);
+                if (options.debug)
+                {
+                    std::cout << "got " << n << " items in data list\n";
+                }
+
+                /* a negative number denotes that much space to save, but not specifying data */
+                /* if so, just change sign to positive */
+                if (n < 0)
+                {
+                    n = 0 - n;
+                }
+                current_address += n;
+                continue;
+            }
+            else if (auto [found, opcode] = find_opcode(tokens.opcode); found)
+            {
+                /* found the opcode */
+                switch (opcode.rule)
+                {
+                    case 0:
+                    case 3:
+                    case 4:
+                        current_address += 1;
+                        break;
+                    case 1:
+                        current_address += 2;
+                        break;
+                    case 2:
+                        current_address += 3;
+                        break;
+                }
             }
             else
             {
-                val = current_address;
-            }
-
-            if (options.debug)
-            {
-                std::cout << "at address=" << current_address;
-                std::cout << std::hex << std::uppercase << "=" << current_address;
-                std::cout << " defining " << tokens.label << " = " << std::dec << val;
-                std::cout << " =0x" << std::hex << std::uppercase << val << "\n";
-            }
-
-            symbol_table.define_symbol(tokens.label, val);
-        }
-
-        if (tokens.opcode.empty() || ci_equals(tokens.opcode, "equ") ||
-            ci_equals(tokens.opcode, "end"))
-        {
-            continue;
-        }
-
-        if (ci_equals(tokens.opcode, "cpu"))
-        {
-            if ((!ci_equals(tokens.arg1, "8008")) && (!ci_equals(tokens.arg1, "i8008")))
-            {
                 std::cerr << " in line " << current_line_count << " " << input_line;
-                std::cerr << " cpu only allowed is \"8008\" or \"i8008\"\n";
-                exit(-1);
-            }
-            continue;
-        }
-
-        if (ci_equals(tokens.opcode, "org"))
-        {
-            if ((current_address = evaluate_argument(options, symbol_table, current_line_count,
-                                                     tokens.arg1)) == -1)
-            {
-                std::cerr << " in line " << current_line_count << " " << input_line;
-                std::cerr << " can't evaluate argument " << tokens.arg1 << "\n";
+                std::cerr << " undefined opcode " << tokens.opcode << "\n";
                 exit(-1);
             }
         }
-        else if (ci_equals(tokens.opcode, "data"))
+        catch (const CannotFindSymbol& ex)
         {
-            int data_list[80];
-            int n = decode_data(options, symbol_table, current_line_count, input_line.c_str(),
-                                data_list);
-            if (options.debug)
-            {
-                std::cout << "got " << n << " items in data list\n";
-            }
-
-            /* a negative number denotes that much space to save, but not specifying data */
-            /* if so, just change sign to positive */
-            if (n < 0)
-            {
-                n = 0 - n;
-            }
-            current_address += n;
-            continue;
-        }
-        else if (auto [found, opcode] = find_opcode(tokens.opcode); found)
-        {
-            /* found the opcode */
-            switch (opcode.rule)
-            {
-                case 0:
-                case 3:
-                case 4:
-                    current_address += 1;
-                    break;
-                case 1:
-                    current_address += 2;
-                    break;
-                case 2:
-                    current_address += 3;
-                    break;
-            }
-        }
-        else
-        {
-            std::cerr << " in line " << current_line_count << " " << input_line;
-            std::cerr << " undefined opcode " << tokens.opcode << "\n";
-            exit(-1);
+            throw ParsingException(ex, current_line_count, input_line);
         }
     }
 }

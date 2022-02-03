@@ -85,17 +85,11 @@ namespace
 
     int symbol_to_int(const SymbolTable& symbol_table, const std::basic_string<char>& to_parse)
     {
-        int val;
         if (auto symbol_value = symbol_table.get_symbol_value(to_parse); std::get<0>(symbol_value))
         {
-            val = std::get<1>(symbol_value);
+            return std::get<1>(symbol_value);
         }
-        else
-        {
-            std::cerr << "can't find symbol " << to_parse << "\n";
-            exit(-1);
-        }
-        return val;
+        throw CannotFindSymbol(to_parse);
     }
 
     int operand_to_int(const Options& options, const SymbolTable& table, const std::string& operand)
@@ -153,6 +147,7 @@ namespace
             if (operands.size() != operations.size())
             {
                 std::cerr << "line " << current_line_count << " the expression is ill-formed.\n";
+                exit(-1);
             }
 
             int sum = 0;
@@ -269,3 +264,9 @@ EvaluationFlags::Flags EvaluationFlags::get_flags_from_options(const Options& op
 {
     return options.input_num_as_octal ? ThreeDigitsAsOctal : None;
 }
+
+CannotFindSymbol::CannotFindSymbol(const std::string& symbol)
+{
+    reason = "cannot find symbol " + symbol;
+}
+const char* CannotFindSymbol::what() const noexcept { return reason.c_str(); }
