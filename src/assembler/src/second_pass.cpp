@@ -273,8 +273,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                 /* two byte address to follow */
                 if ((arg1 > 1024 * 16) || (arg1 < 0))
                 {
-                    fprintf(stderr, " in input_line.c_str() %d %s expected argument 0-%d\n",
-                            current_line_count, input_line.c_str(), 1024 * 16);
+                    fprintf(stderr, " in line %d %s expected argument 0-%d\n", current_line_count,
+                            input_line.c_str(), 1024 * 16);
                     fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                     exit(-1);
                 }
@@ -317,8 +317,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                     maxport = 23;
                 if ((arg1 > maxport) || (arg1 < 0))
                 {
-                    fprintf(stderr, " in input_line.c_str() %d %s expected port 0-%d\n",
-                            current_line_count, input_line.c_str(), maxport);
+                    fprintf(stderr, " in line %d %s expected port 0-%d\n", current_line_count,
+                            input_line.c_str(), maxport);
                     fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
                     exit(-1);
                 }
@@ -347,8 +347,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
             }
             else
             {
-                fprintf(stderr, " in input_line.c_str() %d %s can't comprehend rule %d\n",
-                        current_line_count, input_line.c_str(), opcode.rule);
+                fprintf(stderr, " in line %d %s can't comprehend rule %d\n", current_line_count,
+                        input_line.c_str(), opcode.rule);
                 exit(-1);
             }
         }
