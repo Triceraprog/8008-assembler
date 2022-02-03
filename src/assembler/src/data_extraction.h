@@ -1,6 +1,8 @@
 #ifndef INC_8008_ASSEMBLER_DATA_EXTRACTION_H
 #define INC_8008_ASSEMBLER_DATA_EXTRACTION_H
 
+#include "errors.h"
+
 #include <string_view>
 
 class Options;
@@ -15,5 +17,13 @@ class SymbolTable;
 // If the return value is negative, it's a reservation of uninitialized memory of the absolute value.
 int decode_data(const Options& options, const SymbolTable& symbol_table, int current_line_count,
                 std::string_view line, int* out_data);
+
+
+class DataTooLong : public ExceptionWithReason
+{
+public:
+    explicit DataTooLong();
+};
+
 
 #endif //INC_8008_ASSEMBLER_DATA_EXTRACTION_H

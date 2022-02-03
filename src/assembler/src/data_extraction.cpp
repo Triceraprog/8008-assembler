@@ -13,7 +13,7 @@ namespace
 }
 
 int decode_data(const Options& options, const SymbolTable& symbol_table, int current_line_count,
-                const std::string_view line, int* outdata)
+                const std::string_view line, int* out_data)
 {
     std::string line_as_string{line};
     std::smatch data_match;
@@ -57,7 +57,7 @@ int decode_data(const Options& options, const SymbolTable& symbol_table, int cur
         auto string_content = data_part.substr(1, last_quote_position - 1);
 
         bool escape_char = false;
-        int* out_pointer = outdata;
+        int* out_pointer = out_data;
 
         for (char char_data : string_content)
         {
@@ -100,13 +100,13 @@ int decode_data(const Options& options, const SymbolTable& symbol_table, int cur
         /* If "markascii" option is set, highest bit of these ascii bytes are forced to 1. */
         if (options.mark_8_ascii)
         {
-            for (auto* p = outdata; p < out_pointer; p++)
+            for (auto* p = out_data; p < out_pointer; p++)
             {
                 *p |= 0x80;
             }
         }
 
-        return static_cast<int>(out_pointer - outdata);
+        return static_cast<int>(out_pointer - out_data);
     }
     else
     {
@@ -129,19 +129,21 @@ int decode_data(const Options& options, const SymbolTable& symbol_table, int cur
                 continue;
             }
 
-            *(outdata++) = evaluate_argument(options, symbol_table, sub);
+            *(out_data++) = evaluate_argument(options, symbol_table, sub);
 
             byte_count += 1;
 
             if (byte_count > 12)
             {
-                std::cerr << " in line " << current_line_count << " " << line;
-                std::cerr << " max length is 12 bytes.\n";
-                std::cerr << " Use a second line for more data\n";
-                exit(-1);
+                throw DataTooLong();
             }
         }
 
         return byte_count;
     }
+}
+
+DataTooLong::DataTooLong()
+{
+    reason = "DATA max length is 12 bytes. Use a second line for more data.";
 }
