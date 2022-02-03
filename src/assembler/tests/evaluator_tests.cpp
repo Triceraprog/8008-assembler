@@ -150,3 +150,8 @@ TEST_F(EvaluateArgumentFixture, throws_if_invalid_number)
 {
     ASSERT_THROW(evaluate_argument(options, table, 0, "2*0xfffffffffffffff"), InvalidNumber);
 }
+
+TEST_F(EvaluateArgumentFixture, throws_if_no_expression)
+{
+    ASSERT_THROW(evaluate_argument(options, table, 0, "+"), ExpectedValue);
+}

@@ -210,8 +210,7 @@ int evaluate_argument(const Options& options, const SymbolTable& symbol_table,
 
         if (!found)
         {
-            std::cerr << "Error, expected value, found: " << arg_to_parse << std::endl;
-            exit(-1);
+            throw ExpectedValue(arg_to_parse);
         }
 
         acc.add_operand(trim_string(data_match.str()));
@@ -276,3 +275,9 @@ InvalidNumber::InvalidNumber(const std::string_view to_parse, std::string_view t
              ". Argument is " + std::string{fail_reason};
 }
 const char* InvalidNumber::what() const noexcept { return reason.c_str(); }
+
+ExpectedValue::ExpectedValue(std::string_view to_parse)
+{
+    reason = "Expected value, found '" + std::string(to_parse) + "'";
+}
+const char* ExpectedValue::what() const noexcept { return reason.c_str(); }

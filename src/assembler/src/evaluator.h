@@ -52,4 +52,15 @@ private:
     std::string reason;
 };
 
+class ExpectedValue : public std::exception
+{
+public:
+    explicit ExpectedValue(std::string_view to_parse);
+    [[nodiscard]] const char* what() const noexcept override;
+
+private:
+    std::string reason;
+};
+
+
 #endif //INC_8008_ASSEMBLER_EVALUATOR_H
