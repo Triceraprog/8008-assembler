@@ -25,8 +25,7 @@ void ByteWriter::write_byte(int data, int address)
 {
     if (address >= highest_address)
     {
-        std::cerr << "address of data larger than " << highest_address - 1;
-        exit(-1);
+        throw AddressTooHigh(address);
     }
 
     if (mode == BINARY)
@@ -85,4 +84,10 @@ void ByteWriter::write_end()
         flush_hex_line();
         output << ":00000001FF\n";
     }
+}
+
+AddressTooHigh::AddressTooHigh(int faulty_address)
+{
+    reason = "address of data " + std::to_string(faulty_address) + " larger than " +
+             std::to_string(highest_address - 1);
 }

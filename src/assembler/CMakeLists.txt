@@ -23,7 +23,9 @@ set(ASSEMBLER_LIB_FILES
         src/errors.cpp src/errors.h)
 
 set(ASSEMBLER_TEST_FILES
-        tests/evaluator_tests.cpp tests/utils_tests.cpp)
+        tests/evaluator_tests.cpp
+        tests/utils_tests.cpp
+        tests/byte_writer_tests.cpp)
 
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})
 

@@ -32,4 +32,10 @@ private:
     int line_address{};
 };
 
+class AddressTooHigh : public ExceptionWithReason
+{
+public:
+    explicit AddressTooHigh(int faulty_address);
+};
+
 #endif //INC_8008_ASSEMBLER_BYTE_WRITER_H
