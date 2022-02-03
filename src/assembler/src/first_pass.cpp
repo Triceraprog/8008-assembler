@@ -92,7 +92,7 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files)
                 int val;
                 if (ci_equals(tokens.opcode, "equ") || ci_equals(tokens.opcode, "org"))
                 {
-                    val = evaluate_argument(options, symbol_table, current_line_count, tokens.arg1);
+                    val = evaluate_argument(options, symbol_table, tokens.arg1);
                 }
                 else
                 {
@@ -129,8 +129,7 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files)
 
             if (ci_equals(tokens.opcode, "org"))
             {
-                if ((current_address = evaluate_argument(options, symbol_table, current_line_count,
-                                                         tokens.arg1)) == -1)
+                if ((current_address = evaluate_argument(options, symbol_table, tokens.arg1)) == -1)
                 {
                     std::cerr << " in line " << current_line_count << " " << input_line;
                     std::cerr << " can't evaluate argument " << tokens.arg1 << "\n";

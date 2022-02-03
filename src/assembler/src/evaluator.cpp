@@ -165,30 +165,27 @@ namespace
 
 }
 
-int evaluate_argument(const Options& options, const SymbolTable& symbol_table,
-                      int current_line_count, std::string_view arg)
+int evaluate_argument(const Options& options, const SymbolTable& symbol_table, std::string_view arg)
 {
     if (arg.starts_with("\\HB\\"))
     {
-        int value = evaluate_argument(options, symbol_table, current_line_count, arg.begin() + 4);
+        int value = evaluate_argument(options, symbol_table, arg.begin() + 4);
         return ((value >> 8) & 0xFF);
     }
     if (arg.starts_with("H(") && arg.ends_with(')'))
     {
-        int value = evaluate_argument(options, symbol_table, current_line_count,
-                                      arg.substr(2, arg.size() - 2 - 1));
+        int value = evaluate_argument(options, symbol_table, arg.substr(2, arg.size() - 2 - 1));
         return ((value >> 8) & 0xFF);
     }
 
     if (arg.starts_with("\\LB\\"))
     {
-        int value = evaluate_argument(options, symbol_table, current_line_count, arg.begin() + 4);
+        int value = evaluate_argument(options, symbol_table, arg.begin() + 4);
         return (value & 0xFF);
     }
     if (arg.starts_with("L(") && arg.ends_with(')'))
     {
-        int value = evaluate_argument(options, symbol_table, current_line_count,
-                                      arg.substr(2, arg.size() - 2 - 1));
+        int value = evaluate_argument(options, symbol_table, arg.substr(2, arg.size() - 2 - 1));
         return (value & 0xFF);
     }
 

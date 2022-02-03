@@ -129,7 +129,7 @@ int decode_data(const Options& options, const SymbolTable& symbol_table, int cur
                 continue;
             }
 
-            *(outdata++) = evaluate_argument(options, symbol_table, current_line_count, sub);
+            *(outdata++) = evaluate_argument(options, symbol_table, sub);
 
             byte_count += 1;
 

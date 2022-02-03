@@ -9,7 +9,7 @@ class Options;
 class SymbolTable;
 
 int evaluate_argument(const Options& options, const SymbolTable& symbol_table,
-                      int current_line_count, std::string_view arg);
+                      std::string_view arg);
 
 class ExceptionWithReason : public std::exception
 {
