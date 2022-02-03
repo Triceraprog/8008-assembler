@@ -140,8 +140,7 @@ namespace
         {
             if (operands.size() != operations.size())
             {
-                std::cerr << "line " << current_line_count << " the expression is ill-formed.\n";
-                exit(-1);
+                throw IllFormedExpression();
             }
 
             int sum = 0;
@@ -271,3 +270,6 @@ UnknownOperation::UnknownOperation(const char operation)
     reason.append(1, operation);
 }
 const char* UnknownOperation::what() const noexcept { return reason.c_str(); }
+
+IllFormedExpression::IllFormedExpression() { reason = "the expression is ill-formed"; }
+const char* IllFormedExpression::what() const noexcept { return exception::what(); }

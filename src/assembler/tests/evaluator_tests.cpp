@@ -131,8 +131,12 @@ TEST_F(EvaluateArgumentFixture, evaluates_complex_expression)
     ASSERT_THAT(value, Eq(16));
 }
 
-
 TEST_F(EvaluateArgumentFixture, evaluates_throws_an_exception_if_the_symbol_is_not_found)
 {
     ASSERT_THROW(evaluate_argument(options, table, 0, "TEST"), CannotFindSymbol);
+}
+
+TEST_F(EvaluateArgumentFixture, throws_if_expression_is_ill_formed)
+{
+    ASSERT_THROW(evaluate_argument(options, table, 0, "TEST*"), IllFormedExpression);
 }

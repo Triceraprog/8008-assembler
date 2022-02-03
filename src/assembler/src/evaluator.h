@@ -24,11 +24,22 @@ private:
 class UnknownOperation : public std::exception
 {
 public:
-    explicit UnknownOperation(const char operation);
+    explicit UnknownOperation(char operation);
     [[nodiscard]] const char* what() const noexcept override;
 
 private:
     std::string reason;
 };
+
+class IllFormedExpression : public std::exception
+{
+public:
+    explicit IllFormedExpression();
+    [[nodiscard]] const char* what() const noexcept override;
+
+private:
+    std::string reason;
+};
+
 
 #endif //INC_8008_ASSEMBLER_EVALUATOR_H
