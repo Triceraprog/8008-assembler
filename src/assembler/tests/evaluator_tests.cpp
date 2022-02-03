@@ -140,3 +140,13 @@ TEST_F(EvaluateArgumentFixture, throws_if_expression_is_ill_formed)
 {
     ASSERT_THROW(evaluate_argument(options, table, 0, "TEST*"), IllFormedExpression);
 }
+
+TEST_F(EvaluateArgumentFixture, throws_if_unknown_operation)
+{
+    ASSERT_THROW(evaluate_argument(options, table, 0, "TEST.TEST"), UnknownOperation);
+}
+
+TEST_F(EvaluateArgumentFixture, throws_if_invalid_number)
+{
+    ASSERT_THROW(evaluate_argument(options, table, 0, "2*0xfffffffffffffff"), InvalidNumber);
+}

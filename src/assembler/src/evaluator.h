@@ -41,5 +41,15 @@ private:
     std::string reason;
 };
 
+class InvalidNumber : public std::exception
+{
+public:
+    explicit InvalidNumber(std::string_view to_parse, std::string_view type_name,
+                           std::string_view fail_reason);
+    [[nodiscard]] const char* what() const noexcept override;
+
+private:
+    std::string reason;
+};
 
 #endif //INC_8008_ASSEMBLER_EVALUATOR_H

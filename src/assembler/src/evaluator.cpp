@@ -32,15 +32,11 @@ namespace
         }
         catch (const std::invalid_argument& e)
         {
-            std::cerr << "error: tried to read " << type_name << " '" << to_parse
-                      << "'. Argument is invalid.\n";
-            exit(-1);
+            throw InvalidNumber(to_parse, type_name, "invalid");
         }
         catch (const std::out_of_range& e)
         {
-            std::cerr << "error: tried to read " << type_name << " '" << to_parse
-                      << "'. Argument is out of range.\n";
-            exit(-1);
+            throw InvalidNumber(to_parse, type_name, "out of range");
         }
         return val;
     }
@@ -136,7 +132,7 @@ namespace
         void add_operation(char op) { operations.push_back(op); }
         void add_operand(std::string_view operand) { operands.emplace_back(operand); }
 
-        int resolve(const Options& options, const SymbolTable& table, int current_line_count)
+        int resolve(const Options& options, const SymbolTable& table)
         {
             if (operands.size() != operations.size())
             {
@@ -237,13 +233,12 @@ int evaluate_argument(const Options& options, const SymbolTable& symbol_table,
                     arg_to_parse = arg_to_parse.substr(1);
                     break;
                 default:
-                    std::cerr << "Error '" << op << "'" << std::endl;
-                    exit(-1);
+                    throw UnknownOperation(op);
             }
         }
     }
 
-    auto result = acc.resolve(options, symbol_table, current_line_count);
+    auto result = acc.resolve(options, symbol_table);
 
     if (options.debug)
     {
@@ -272,4 +267,12 @@ UnknownOperation::UnknownOperation(const char operation)
 const char* UnknownOperation::what() const noexcept { return reason.c_str(); }
 
 IllFormedExpression::IllFormedExpression() { reason = "the expression is ill-formed"; }
-const char* IllFormedExpression::what() const noexcept { return exception::what(); }
+const char* IllFormedExpression::what() const noexcept { return reason.c_str(); }
+
+InvalidNumber::InvalidNumber(const std::string_view to_parse, std::string_view type_name,
+                             std::string_view fail_reason)
+{
+    reason = "Tried to read '" + std::string{to_parse} + "' as " + std::string{type_name} +
+             ". Argument is " + std::string{fail_reason};
+}
+const char* InvalidNumber::what() const noexcept { return reason.c_str(); }
