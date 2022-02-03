@@ -11,8 +11,8 @@ namespace
     const int highest_address = 1024 * 16;
 }
 
-ByteWriter::ByteWriter(std::fstream output, ByteWriter::WriteMode mode)
-    : output(std::move(output)), mode(mode)
+ByteWriter::ByteWriter(std::ostream& output, ByteWriter::WriteMode mode)
+    : output(output), mode(mode)
 {
     if (mode == BINARY)
     {

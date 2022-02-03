@@ -49,7 +49,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
     int current_address = 0;
     int line_address;
 
-    ByteWriter writer(std::move(files.output_stream),
+    ByteWriter writer(files.output_stream,
                       options.generate_binary_file ? ByteWriter::BINARY : ByteWriter::HEX);
 
     stream_rewind(files.input_stream);
