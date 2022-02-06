@@ -20,4 +20,11 @@ public:
     explicit ParsingException(const std::exception& ex, int line_number, std::string& line);
 };
 
+class InternalError : public ExceptionWithReason
+{
+public:
+    explicit InternalError(const std::string& line);
+};
+
+
 #endif //INC_8008_ASSEMBLER_ERRORS_H
