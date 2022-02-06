@@ -98,12 +98,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
 
             if (ci_equals(tokens.opcode, "org"))
             {
-                if ((current_address = evaluate_argument(options, symbol_table, tokens.arg1)) == -1)
-                {
-                    fprintf(stderr, " in line %d %s can't evaluate argument %s\n",
-                            current_line_count, input_line.c_str(), tokens.arg1.c_str());
-                    exit(-1);
-                }
+                current_address = evaluate_argument(options, symbol_table, tokens.arg1);
                 if (options.generate_list_file)
                     fprintf(files.lfp, "%4d            %s%s\n", current_line_count,
                             single_space_pad, input_line.c_str());
