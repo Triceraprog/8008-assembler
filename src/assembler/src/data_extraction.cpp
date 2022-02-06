@@ -21,8 +21,7 @@ int decode_data(const Options& options, const SymbolTable& symbol_table,
 
     if (!found)
     {
-        std::cerr << "can't find data code?  Unexpected bug\n";
-        exit(-1);
+        throw InternalError("can't find data code");
     }
 
     auto after_data_position = data_match.position() + data_match.length();
