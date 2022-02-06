@@ -82,10 +82,7 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files)
                 if (auto symbol_value = symbol_table.get_symbol_value(tokens.label);
                     std::get<0>(symbol_value))
                 {
-                    std::cerr << " in line " << current_line_count << " " << input_line;
-                    std::cerr << " label " << tokens.label;
-                    std::cerr << " already defined as " << std::get<1>(symbol_value) << "\n";
-                    exit(-1);
+                    throw AlreadyDefinedSymbol(tokens.label, std::get<1>(symbol_value));
                 }
 
                 /* Or define it. */
@@ -184,4 +181,9 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files)
             throw ParsingException(ex, current_line_count, input_line);
         }
     }
+}
+
+AlreadyDefinedSymbol::AlreadyDefinedSymbol(const std::string& symbol, int value)
+{
+    reason = "label '" + symbol + "' was already defined as " + std::to_string(value);
 }
