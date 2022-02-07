@@ -119,7 +119,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
             }
             else if (ci_equals(tokens.opcode, "data"))
             {
-                int data_list[80];
+                std::vector<int> data_list;
                 int data_length = decode_data(options, symbol_table, input_line.c_str(), data_list);
                 /* if n is negative, that number of bytes are just reserved */
                 if (data_length < 0)
@@ -137,8 +137,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                 }
                 if (options.generate_list_file)
                 {
-                    listing.data(current_line_count, line_address, input_line, data_list,
-                                 data_length);
+                    listing.data(current_line_count, line_address, input_line, data_list);
                 }
                 continue;
             }

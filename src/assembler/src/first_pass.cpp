@@ -101,7 +101,7 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
             }
             else if (ci_equals(tokens.opcode, "data"))
             {
-                int data_list[80];
+                std::vector<int> data_list;
                 int n = decode_data(options, symbol_table, input_line.c_str(), data_list);
                 if (options.debug)
                 {

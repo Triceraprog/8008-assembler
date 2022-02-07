@@ -1,6 +1,8 @@
 #include "listing.h"
 
 #include <cstring>
+#include <ranges>
+#include <vector>
 
 Listing::Listing(FILE* output, const Options& options) : output(output), options(options)
 {
@@ -46,7 +48,7 @@ void Listing::simple_line(int line_number, const std::string& line_content)
 }
 
 void Listing::data(int line_number, int line_address, const std::string& line_content,
-                   int* data_list, int data_list_length)
+                   const std::vector<int>& data_list)
 {
     if (options.single_byte_list)
     {
@@ -55,10 +57,11 @@ void Listing::data(int line_number, int line_address, const std::string& line_co
 
         fprintf(output, "%4d %02o-%03o %03o %s\n", line_number, line_address_h, line_address_l,
                 data_list[0], line_content.c_str());
-        for (int i = 1; i < data_list_length; i++)
+        for (int data : data_list | std::views::drop(1))
         {
-            fprintf(output, "%4d %02o-%03o %03o\n", line_number, (((line_address + i) >> 8) & 0xFF),
-                    ((line_address + i) & 0xFF), data_list[i]);
+            line_address += 1;
+            fprintf(output, "%4d %02o-%03o %03o\n", line_number, (((line_address) >> 8) & 0xFF),
+                    ((line_address) &0xFF), data);
         }
     }
     else
@@ -67,40 +70,38 @@ void Listing::data(int line_number, int line_address, const std::string& line_co
         int line_address_l = line_address & 0xFF;
 
         fprintf(output, "%4d %02o-%03o ", line_number, line_address_h, line_address_l);
-        if (data_list_length == 1)
+        if (data_list.size() == 1)
             fprintf(output, "%03o          %s\n", data_list[0], line_content.c_str());
-        else if (data_list_length == 2)
+        else if (data_list.size() == 2)
             fprintf(output, "%03o %03o      %s\n", data_list[0], data_list[1],
                     line_content.c_str());
-        else if (data_list_length > 2)
+        else if (data_list.size() > 2)
         {
             fprintf(output, "%03o %03o %03o  %s\n", data_list[0], data_list[1], data_list[2],
                     line_content.c_str());
-            int* ptr = data_list + 3;
-            data_list_length -= 3;
+            int index = 3;
             line_address += 3;
-            while (data_list_length > 0)
+            while (data_list.size() > index)
             {
                 line_address_h = (line_address >> 8) & 0xFF;
                 line_address_l = line_address & 0xFF;
 
                 /*	    fprintf(output,"            "); */
                 fprintf(output, "     %02o-%03o ", line_address_h, line_address_l);
-                if (data_list_length > 2)
+                if (data_list.size() > 2 + index)
                 {
-                    fprintf(output, "%03o %03o %03o\n", ptr[0], ptr[1], ptr[2]);
-                    ptr += 3;
-                    data_list_length -= 3;
+                    fprintf(output, "%03o %03o %03o\n", data_list[index], data_list[index + 1],
+                            data_list[index + 2]);
+                    index += 3;
                     line_address += 3;
                 }
                 else
                 {
-                    for (int i = 0; i < data_list_length; i++)
+                    for (int data : data_list | std::views::drop(index))
                     {
-                        fprintf(output, "%03o ", ptr[0]);
-                        ptr++;
+                        fprintf(output, "%03o ", data);
+                        index += 1;
                     }
-                    data_list_length = 0;
                     fprintf(output, "\n");
                 }
             }

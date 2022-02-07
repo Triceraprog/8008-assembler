@@ -4,6 +4,7 @@
 #include "errors.h"
 
 #include <string_view>
+#include <vector>
 
 class Options;
 class SymbolTable;
@@ -16,7 +17,7 @@ class SymbolTable;
 //
 // If the return value is negative, it's a reservation of uninitialized memory of the absolute value.
 int decode_data(const Options& options, const SymbolTable& symbol_table, std::string_view line,
-                int* out_data);
+                std::vector<int>& out_data);
 
 class DataTooLong : public ExceptionWithReason
 {

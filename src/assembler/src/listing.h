@@ -4,6 +4,7 @@
 #include "options.h"
 
 #include <cstdio>
+#include <vector>
 
 class Listing
 {
@@ -11,8 +12,8 @@ public:
     Listing(FILE* output, const Options& options);
     void write_listing_header();
     void simple_line(int line_number, const std::string& line_content);
-    void data(int line_number, int line_address, const std::string& line_content, int* data_list,
-              int data_list_length);
+    void data(int line_number, int line_address, const std::string& line_content,
+              const std::vector<int>& data_list);
 
 private:
     FILE* output;
