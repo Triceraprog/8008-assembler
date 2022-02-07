@@ -20,7 +20,8 @@ set(ASSEMBLER_LIB_FILES
         src/data_extraction.cpp src/data_extraction.h
         src/first_pass.cpp src/first_pass.h
         src/second_pass.cpp src/second_pass.h
-        src/errors.cpp src/errors.h)
+        src/errors.cpp src/errors.h
+        src/listing.cpp src/listing.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp

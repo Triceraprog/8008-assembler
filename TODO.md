@@ -1,3 +1,4 @@
+- Extract the LST generation.
 - Change error/exit to exception (will avoid passing some contexts as current_line sometimes)
 - Option to output an expended, simple assembly code with a syntax for another assembler, especially as8
 - Macro system

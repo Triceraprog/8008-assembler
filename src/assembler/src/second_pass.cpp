@@ -5,6 +5,7 @@
 #include "evaluator.h"
 #include "files.h"
 #include "line_tokenizer.h"
+#include "listing.h"
 #include "opcodes.h"
 #include "options.h"
 #include "symbol_table.h"
@@ -24,7 +25,8 @@ namespace
     }
 }
 
-void second_pass(const Options& options, const SymbolTable& symbol_table, Files& files)
+void second_pass(const Options& options, const SymbolTable& symbol_table, Files& files,
+                 Listing& listing)
 {
     /* Symbols are defined. Second pass. */
     int arg1;
@@ -74,8 +76,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                 /* Must just be a comment line (or label only) */
                 if (options.generate_list_file)
                 {
-                    fprintf(files.lfp, "%4d            %s%s\n", current_line_count,
-                            single_space_pad, input_line.c_str());
+                    listing.simple_line(current_line_count, input_line);
                 }
                 continue;
             }
@@ -84,15 +85,19 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
             if (ci_equals(tokens.opcode, "equ"))
             {
                 if (options.generate_list_file)
-                    fprintf(files.lfp, "%4d            %s%s\n", current_line_count,
-                            single_space_pad, input_line.c_str());
+                {
+                    listing.simple_line(current_line_count, input_line);
+                }
+
                 continue;
             }
             if (ci_equals(tokens.opcode, "cpu"))
             {
                 if (options.generate_list_file)
-                    fprintf(files.lfp, "%4d            %s%s\n", current_line_count,
-                            single_space_pad, input_line.c_str());
+                {
+                    listing.simple_line(current_line_count, input_line);
+                }
+
                 continue;
             }
 
@@ -100,15 +105,17 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
             {
                 current_address = evaluate_argument(options, symbol_table, tokens.arg1);
                 if (options.generate_list_file)
-                    fprintf(files.lfp, "%4d            %s%s\n", current_line_count,
-                            single_space_pad, input_line.c_str());
+                {
+                    listing.simple_line(current_line_count, input_line);
+                }
                 continue;
             }
             if (ci_equals(tokens.opcode, "end"))
             {
                 if (options.generate_list_file)
-                    fprintf(files.lfp, "%4d            %s%s\n", current_line_count,
-                            single_space_pad, input_line.c_str());
+                {
+                    listing.simple_line(current_line_count, input_line);
+                }
                 /* could break here, but rather than break, */
                 /* we will go ahead and check for more with a continue */
                 continue;

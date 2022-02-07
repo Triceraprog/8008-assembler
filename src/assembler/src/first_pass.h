@@ -6,8 +6,9 @@
 class SymbolTable;
 class Files;
 class Options;
+class Listing;
 
-void first_pass(const Options& options, SymbolTable& symbol_table, Files& files);
+void first_pass(const Options& options, SymbolTable& symbol_table, Files& files, Listing & listing);
 
 class AlreadyDefinedSymbol : public ExceptionWithReason
 {

@@ -9,42 +9,13 @@
 #include "options.h"
 #include "symbol_table.h"
 #include "utils.h"
+#include "listing.h"
 
-#include <cstdio>
-#include <ctime>
 #include <iostream>
 #include <string>
 #include <tuple>
 
-namespace
-{
-    void write_listing_header(const Options& options, FILE* lfp)
-    {
-        time_t result = time(nullptr);
-        std::string compile_time{asctime(localtime(&result))};
-
-        fprintf(lfp, "AS8 assembler for intel 8008, t.e.jones Version 1.0\n");
-        fprintf(lfp, "Options: listfile=%d debug=%d ", options.generate_list_file, options.debug);
-        fprintf(lfp, "binaryout=%d singlelist=%d\n", options.generate_binary_file,
-                options.single_byte_list);
-        fprintf(lfp, "octalnums=%d markascii=%d\n", options.input_num_as_octal,
-                options.mark_8_ascii);
-        fprintf(lfp, "Infile=%s\n", options.input_filename.c_str());
-        fprintf(lfp, "Assembly Performed: %s\n\n", compile_time.c_str());
-        if (options.single_byte_list)
-        {
-            fprintf(lfp, "Line Addr.  DAT Source Line\n");
-            fprintf(lfp, "---- ------ --- ----------------------------------\n");
-        }
-        else
-        {
-            fprintf(lfp, "Line Addr.  CodeBytes   Source Line\n");
-            fprintf(lfp, "---- ------ ----------- ----------------------------------\n");
-        }
-    }
-}
-
-void first_pass(const Options& options, SymbolTable& symbol_table, Files& files)
+void first_pass(const Options& options, SymbolTable& symbol_table, Files& files, Listing & listing)
 {
     /* In the first pass, we just parse through lines to build a symbol table */
 
@@ -53,7 +24,7 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files)
         std::cout << "Pass number One:  Read and Define Symbols\n";
     }
 
-    write_listing_header(options, files.lfp);
+    listing.write_listing_header();
 
     int current_line_count = 0;
 
