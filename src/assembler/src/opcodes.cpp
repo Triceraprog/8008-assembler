@@ -103,3 +103,34 @@ std::tuple<bool, Opcode&> find_opcode(std::string_view opcode_name)
 
     return {true, get_opcode(index)};
 }
+
+PseudoOpcodeEnum opcode_to_enum(std::string_view opcode)
+{
+    if (opcode.empty())
+    {
+        return PseudoOpcodeEnum::EMPTY;
+    }
+    if (ci_equals(opcode, "equ"))
+    {
+        return PseudoOpcodeEnum::EQU;
+    }
+    if (ci_equals(opcode, "end"))
+    {
+        return PseudoOpcodeEnum::END;
+    }
+    if (ci_equals(opcode, "cpu"))
+    {
+        return PseudoOpcodeEnum::CPU;
+    }
+    if (ci_equals(opcode, "org"))
+    {
+        return PseudoOpcodeEnum::ORG;
+    }
+    if (ci_equals(opcode, "data"))
+    {
+        return PseudoOpcodeEnum::DATA;
+    }
+
+
+    return PseudoOpcodeEnum::OTHER;
+}

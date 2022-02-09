@@ -27,7 +27,8 @@ set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp
         tests/utils_tests.cpp
         tests/byte_writer_tests.cpp
-        tests/data_extractions_tests.cpp)
+        tests/data_extractions_tests.cpp
+        tests/opcodes_tests.cpp)
 
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})
 

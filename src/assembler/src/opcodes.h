@@ -11,6 +11,18 @@ struct Opcode
     int rule{};
 };
 
+enum class PseudoOpcodeEnum
+{
+    EMPTY,
+    EQU,
+    END,
+    CPU,
+    ORG,
+    DATA,
+    OTHER,
+};
+
 std::tuple<bool, Opcode&> find_opcode(std::string_view opcode_name);
+PseudoOpcodeEnum opcode_to_enum(std::string_view opcode);
 
 #endif //INC_8008_ASSEMBLER_OPCODES_H
