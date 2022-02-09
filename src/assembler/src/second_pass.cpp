@@ -70,232 +70,203 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
             LineTokenizer tokens = parse_line(options, input_line, current_line_count);
             auto args = tokens.arg_count;
 
-            if (tokens.opcode.empty())
+            switch (opcode_to_enum(tokens.opcode))
             {
-                /* Must just be a comment line (or label only) */
-                if (options.generate_list_file)
-                {
-                    listing.simple_line(current_line_count, input_line);
-                }
-                continue;
-            }
-
-            /* Check if this opcode is one of the pseudo ops. */
-            if (ci_equals(tokens.opcode, "equ"))
-            {
-                if (options.generate_list_file)
-                {
-                    listing.simple_line(current_line_count, input_line);
-                }
-                continue;
-            }
-            if (ci_equals(tokens.opcode, "cpu"))
-            {
-                if (options.generate_list_file)
-                {
-                    listing.simple_line(current_line_count, input_line);
-                }
-                continue;
-            }
-
-            if (ci_equals(tokens.opcode, "org"))
-            {
-                current_address = evaluate_argument(options, symbol_table, tokens.arg1);
-                if (options.generate_list_file)
-                {
-                    listing.simple_line(current_line_count, input_line);
-                }
-                continue;
-            }
-            if (ci_equals(tokens.opcode, "end"))
-            {
-                if (options.generate_list_file)
-                {
-                    listing.simple_line(current_line_count, input_line);
-                }
-                /* could break here, but rather than break, */
-                /* we will go ahead and check for more with a continue */
-                continue;
-            }
-            else if (ci_equals(tokens.opcode, "data"))
-            {
-                std::vector<int> data_list;
-                int data_length = decode_data(options, symbol_table, input_line.c_str(), data_list);
-                /* if n is negative, that number of bytes are just reserved */
-                if (data_length < 0)
-                {
+                case PseudoOpcodeEnum::ORG:
+                    current_address = evaluate_argument(options, symbol_table, tokens.arg1);
+                    // no break
+                case PseudoOpcodeEnum::EMPTY:
+                case PseudoOpcodeEnum::EQU:
+                case PseudoOpcodeEnum::CPU:
+                case PseudoOpcodeEnum::END:
+                    /* For END, could break here, but rather than break, */
+                    /* we will go ahead and check for more. */
                     if (options.generate_list_file)
-                        fprintf(files.lfp, "%4d %02o-%03o     %s%s\n", current_line_count,
-                                ((line_address >> 8) & 0xFF), (line_address & 0xFF),
-                                single_space_pad, input_line.c_str());
-                    current_address += 0 - data_length;
-                    continue;
-                }
-                for (int i = 0; i < data_length; i++)
-                {
-                    writer.write_byte(data_list[i], current_address++);
-                }
-                if (options.generate_list_file)
-                {
-                    listing.data(current_line_count, line_address, input_line, data_list);
-                }
-                continue;
-            }
-            /* Now we should have an opcode. */
-
-            auto [found, opcode] = find_opcode(tokens.opcode);
-            if (!found)
-            {
-                fprintf(stderr, " in line %d %s undefined opcode %s\n", current_line_count,
-                        input_line.c_str(), tokens.opcode.c_str());
-                exit(-1);
-            }
-            /* found the opcode */
-            /* check that we have right number of arguments */
-            if (((opcode.rule == 0) && (args != 0)) || ((opcode.rule == 1) && (args != 1)) ||
-                ((opcode.rule == 2) && (args != 1)) || ((opcode.rule == 3) && (args != 1)) ||
-                ((opcode.rule == 4) && (args != 1)))
-            {
-                fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n",
-                        current_line_count, input_line.c_str(), args);
-                exit(-1);
-            }
-            if (args == 1)
-            {
-                if ((arg1 = evaluate_argument(options, symbol_table, tokens.arg1)) == -1)
-                {
-                    fprintf(stderr, " in line %d %s can't evaluate argument %s\n",
-                            current_line_count, input_line.c_str(), tokens.arg1.c_str());
-                    exit(-1);
-                }
-            }
-            /* Now, each opcode, is categorized into different
-             * "rules" which states how arguments are combined
-             * with opcode to get machine codes. */
-
-            if (opcode.rule == 0)
-            {
-                /* single byte, no arguments */
-                writer.write_byte(opcode.code, current_address++);
-                if (options.generate_list_file)
-                    fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
-                            ((line_address >> 8) & 0xFF), (line_address & 0xFF), opcode.code,
-                            single_space_pad, input_line.c_str());
-            }
-            else if (opcode.rule == 1)
-            {
-                /* single byte, must follow */
-                if ((arg1 > 255) || (arg1 < 0))
-                {
-                    fprintf(stderr, " in line %d %s expected argument 0-255\n", current_line_count,
-                            input_line.c_str());
-                    fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
-                    exit(-1);
-                }
-                int code = opcode.code;
-                writer.write_byte(code, current_address++);
-                writer.write_byte(arg1, current_address++);
-                if (options.generate_list_file)
-                {
-                    if (options.single_byte_list)
                     {
-                        fprintf(files.lfp, "%4d %02o-%03o %03o %s\n", current_line_count,
-                                ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
-                                input_line.c_str());
-                        line_address++;
-                        fprintf(files.lfp, "     %02o-%03o %03o\n", (((line_address) >> 8) & 0xFF),
-                                ((line_address) &0xFF), arg1);
+                        listing.simple_line(current_line_count, input_line);
+                    }
+                    break;
+                case PseudoOpcodeEnum::DATA: {
+                    std::vector<int> data_list;
+                    int data_length =
+                            decode_data(options, symbol_table, input_line.c_str(), data_list);
+                    /* if n is negative, that number of bytes are just reserved */
+                    if (data_length < 0)
+                    {
+                        if (options.generate_list_file)
+                            fprintf(files.lfp, "%4d %02o-%03o     %s%s\n", current_line_count,
+                                    ((line_address >> 8) & 0xFF), (line_address & 0xFF),
+                                    single_space_pad, input_line.c_str());
+                        current_address += 0 - data_length;
+                        continue;
+                    }
+                    for (int i = 0; i < data_length; i++)
+                    {
+                        writer.write_byte(data_list[i], current_address++);
+                    }
+                    if (options.generate_list_file)
+                    {
+                        listing.data(current_line_count, line_address, input_line, data_list);
+                    }
+                }
+                break;
+                case PseudoOpcodeEnum::OTHER: {
+                    auto [found, opcode] = find_opcode(tokens.opcode);
+                    if (!found)
+                    {
+                        fprintf(stderr, " in line %d %s undefined opcode %s\n", current_line_count,
+                                input_line.c_str(), tokens.opcode.c_str());
+                        exit(-1);
+                    }
+                    /* found the opcode */
+                    /* check that we have right number of arguments */
+                    if (((opcode.rule == 0) && (args != 0)) ||
+                        ((opcode.rule == 1) && (args != 1)) ||
+                        ((opcode.rule == 2) && (args != 1)) ||
+                        ((opcode.rule == 3) && (args != 1)) || ((opcode.rule == 4) && (args != 1)))
+                    {
+                        fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n",
+                                current_line_count, input_line.c_str(), args);
+                        exit(-1);
+                    }
+                    if (args == 1)
+                    {
+                        arg1 = evaluate_argument(options, symbol_table, tokens.arg1);
+                    }
+                    /* Now, each opcode, is categorized into different
+                     * "rules" which states how arguments are combined
+                     * with opcode to get machine codes. */
+
+                    if (opcode.rule == 0)
+                    {
+                        /* single byte, no arguments */
+                        writer.write_byte(opcode.code, current_address++);
+                        if (options.generate_list_file)
+                            fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
+                                    ((line_address >> 8) & 0xFF), (line_address & 0xFF),
+                                    opcode.code, single_space_pad, input_line.c_str());
+                    }
+                    else if (opcode.rule == 1)
+                    {
+                        /* single byte, must follow */
+                        if ((arg1 > 255) || (arg1 < 0))
+                        {
+                            fprintf(stderr, " in line %d %s expected argument 0-255\n",
+                                    current_line_count, input_line.c_str());
+                            fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
+                            exit(-1);
+                        }
+                        int code = opcode.code;
+                        writer.write_byte(code, current_address++);
+                        writer.write_byte(arg1, current_address++);
+                        if (options.generate_list_file)
+                        {
+                            if (options.single_byte_list)
+                            {
+                                fprintf(files.lfp, "%4d %02o-%03o %03o %s\n", current_line_count,
+                                        ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
+                                        input_line.c_str());
+                                line_address++;
+                                fprintf(files.lfp, "     %02o-%03o %03o\n",
+                                        (((line_address) >> 8) & 0xFF), ((line_address) &0xFF),
+                                        arg1);
+                            }
+                            else
+                            {
+                                fprintf(files.lfp, "%4d %02o-%03o %03o %03o     %s\n",
+                                        current_line_count, ((line_address >> 8) & 0xFF),
+                                        (line_address & 0xFF), code, arg1, input_line.c_str());
+                            }
+                        }
+                    }
+                    else if (opcode.rule == 2)
+                    {
+                        /* two byte address to follow */
+                        if ((arg1 > 1024 * 16) || (arg1 < 0))
+                        {
+                            fprintf(stderr, " in line %d %s expected argument 0-%d\n",
+                                    current_line_count, input_line.c_str(), 1024 * 16);
+                            fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
+                            exit(-1);
+                        }
+                        int code = opcode.code;
+                        int low_byte = (0xFF & arg1);
+                        int high_byte = (0xFF & (arg1 >> 8));
+                        writer.write_byte(code, current_address++);
+                        writer.write_byte(low_byte, current_address++);
+                        writer.write_byte(high_byte, current_address++);
+                        if (options.generate_list_file)
+                        {
+                            if (options.single_byte_list)
+                            {
+                                fprintf(files.lfp, "%4d %02o-%03o %03o %s\n", current_line_count,
+                                        ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
+                                        input_line.c_str());
+                                line_address++;
+                                fprintf(files.lfp, "     %02o-%03o %03o\n",
+                                        ((line_address >> 8) & 0xFF), (line_address & 0xFF),
+                                        low_byte);
+                                line_address++;
+                                fprintf(files.lfp, "     %02o-%03o %03o\n",
+                                        ((line_address >> 8) & 0xFF), (line_address & 0xFF),
+                                        high_byte);
+                            }
+                            else
+                            {
+                                fprintf(files.lfp, "%4d %02o-%03o %03o %03o %03o %s\n",
+                                        current_line_count, ((line_address >> 8) & 0xFF),
+                                        (line_address & 0xFF), code, low_byte, high_byte,
+                                        input_line.c_str());
+                            }
+                        }
+                    }
+                    else if (opcode.rule == 3)
+                    {
+                        /* have an input or output instruction */
+                        int max_port;
+
+                        if (opcode.mnemonic[0] == 'i')
+                            max_port = 7;
+                        else
+                            max_port = 23;
+                        if ((arg1 > max_port) || (arg1 < 0))
+                        {
+                            fprintf(stderr, " in line %d %s expected port 0-%d\n",
+                                    current_line_count, input_line.c_str(), max_port);
+                            fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
+                            exit(-1);
+                        }
+                        int code = opcode.code + (arg1 << 1);
+                        writer.write_byte(code, current_address++);
+                        if (options.generate_list_file)
+                            fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
+                                    ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
+                                    single_space_pad, input_line.c_str());
+                    }
+                    else if (opcode.rule == 4)
+                    {
+                        if ((arg1 > 7) || (arg1 < 0))
+                        {
+                            fprintf(stderr, " in line %d %s expected argument 0-7\n",
+                                    current_line_count, input_line.c_str());
+                            fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
+                            exit(-1);
+                        }
+                        auto code = (opcode.code | (arg1 << 3));
+                        writer.write_byte(code, current_address++);
+                        if (options.generate_list_file)
+                            fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
+                                    ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
+                                    single_space_pad, input_line.c_str());
                     }
                     else
                     {
-                        fprintf(files.lfp, "%4d %02o-%03o %03o %03o     %s\n", current_line_count,
-                                ((line_address >> 8) & 0xFF), (line_address & 0xFF), code, arg1,
-                                input_line.c_str());
+                        fprintf(stderr, " in line %d %s can't comprehend rule %d\n",
+                                current_line_count, input_line.c_str(), opcode.rule);
+                        exit(-1);
                     }
                 }
-            }
-            else if (opcode.rule == 2)
-            {
-                /* two byte address to follow */
-                if ((arg1 > 1024 * 16) || (arg1 < 0))
-                {
-                    fprintf(stderr, " in line %d %s expected argument 0-%d\n", current_line_count,
-                            input_line.c_str(), 1024 * 16);
-                    fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
-                    exit(-1);
-                }
-                int code = opcode.code;
-                int low_byte = (0xFF & arg1);
-                int high_byte = (0xFF & (arg1 >> 8));
-                writer.write_byte(code, current_address++);
-                writer.write_byte(low_byte, current_address++);
-                writer.write_byte(high_byte, current_address++);
-                if (options.generate_list_file)
-                {
-                    if (options.single_byte_list)
-                    {
-                        fprintf(files.lfp, "%4d %02o-%03o %03o %s\n", current_line_count,
-                                ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
-                                input_line.c_str());
-                        line_address++;
-                        fprintf(files.lfp, "     %02o-%03o %03o\n", ((line_address >> 8) & 0xFF),
-                                (line_address & 0xFF), low_byte);
-                        line_address++;
-                        fprintf(files.lfp, "     %02o-%03o %03o\n", ((line_address >> 8) & 0xFF),
-                                (line_address & 0xFF), high_byte);
-                    }
-                    else
-                    {
-                        fprintf(files.lfp, "%4d %02o-%03o %03o %03o %03o %s\n", current_line_count,
-                                ((line_address >> 8) & 0xFF), (line_address & 0xFF), code, low_byte,
-                                high_byte, input_line.c_str());
-                    }
-                }
-            }
-            else if (opcode.rule == 3)
-            {
-                /* have an input or output instruction */
-                int max_port;
-
-                if (opcode.mnemonic[0] == 'i')
-                    max_port = 7;
-                else
-                    max_port = 23;
-                if ((arg1 > max_port) || (arg1 < 0))
-                {
-                    fprintf(stderr, " in line %d %s expected port 0-%d\n", current_line_count,
-                            input_line.c_str(), max_port);
-                    fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
-                    exit(-1);
-                }
-                int code = opcode.code + (arg1 << 1);
-                writer.write_byte(code, current_address++);
-                if (options.generate_list_file)
-                    fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
-                            ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
-                            single_space_pad, input_line.c_str());
-            }
-            else if (opcode.rule == 4)
-            {
-                if ((arg1 > 7) || (arg1 < 0))
-                {
-                    fprintf(stderr, " in line %d %s expected argument 0-7\n", current_line_count,
-                            input_line.c_str());
-                    fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
-                    exit(-1);
-                }
-                auto code = (opcode.code | (arg1 << 3));
-                writer.write_byte(code, current_address++);
-                if (options.generate_list_file)
-                    fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
-                            ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
-                            single_space_pad, input_line.c_str());
-            }
-            else
-            {
-                fprintf(stderr, " in line %d %s can't comprehend rule %d\n", current_line_count,
-                        input_line.c_str(), opcode.rule);
-                exit(-1);
+                break;
             }
         }
         catch (const CannotFindSymbol& ex)

@@ -82,7 +82,6 @@ namespace
 void first_pass(const Options& options, SymbolTable& symbol_table, Files& files, Listing& listing)
 {
     /* In the first pass, we just parse through lines to build a symbol table */
-
     if (options.debug || options.verbose)
     {
         std::cout << "Pass number One:  Read and Define Symbols\n";
@@ -91,7 +90,6 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
     listing.write_listing_header();
 
     int current_line_count = 0;
-
     int current_address = 0;
     for (std::string input_line; std::getline(files.input_stream, input_line);)
     {
