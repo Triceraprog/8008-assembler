@@ -37,7 +37,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                  Listing& listing)
 {
     /* Symbols are defined. Second pass. */
-    int arg1;
+    int evaluated_arg1;
 
     if (options.verbose || options.debug)
     {
@@ -137,8 +137,9 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                     }
                     if (arg_count == 1)
                     {
-                        arg1 = evaluate_argument(options, symbol_table, tokens.arg1);
+                        evaluated_arg1 = evaluate_argument(options, symbol_table, tokens.arg1);
                     }
+
                     /* Now, each opcode, is categorized into different
                      * "rules" which states how arguments are combined
                      * with opcode to get machine codes. */
@@ -155,16 +156,13 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                     else if (opcode.rule == 1)
                     {
                         /* single byte, must follow */
-                        if ((arg1 > 255) || (arg1 < 0))
+                        if ((evaluated_arg1 > 255) || (evaluated_arg1 < 0))
                         {
-                            fprintf(stderr, " in line %d %s expected argument 0-255\n",
-                                    current_line_count, input_line.c_str());
-                            fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
-                            exit(-1);
+                            throw ExpectedArgumentWithinLimits(255, tokens.arg1, evaluated_arg1);
                         }
                         int code = opcode.code;
                         writer.write_byte(code, current_address++);
-                        writer.write_byte(arg1, current_address++);
+                        writer.write_byte(evaluated_arg1, current_address++);
                         if (options.generate_list_file)
                         {
                             if (options.single_byte_list)
@@ -175,29 +173,29 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                                 line_address++;
                                 fprintf(files.lfp, "     %02o-%03o %03o\n",
                                         (((line_address) >> 8) & 0xFF), ((line_address) &0xFF),
-                                        arg1);
+                                        evaluated_arg1);
                             }
                             else
                             {
                                 fprintf(files.lfp, "%4d %02o-%03o %03o %03o     %s\n",
                                         current_line_count, ((line_address >> 8) & 0xFF),
-                                        (line_address & 0xFF), code, arg1, input_line.c_str());
+                                        (line_address & 0xFF), code, evaluated_arg1,
+                                        input_line.c_str());
                             }
                         }
                     }
                     else if (opcode.rule == 2)
                     {
                         /* two byte address to follow */
-                        if ((arg1 > 1024 * 16) || (arg1 < 0))
+                        const int MAX_ADDRESS = 1024 * 16;
+                        if ((evaluated_arg1 > MAX_ADDRESS) || (evaluated_arg1 < 0))
                         {
-                            fprintf(stderr, " in line %d %s expected argument 0-%d\n",
-                                    current_line_count, input_line.c_str(), 1024 * 16);
-                            fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
-                            exit(-1);
+                            throw ExpectedArgumentWithinLimits(MAX_ADDRESS, tokens.arg1,
+                                                               evaluated_arg1);
                         }
                         int code = opcode.code;
-                        int low_byte = (0xFF & arg1);
-                        int high_byte = (0xFF & (arg1 >> 8));
+                        int low_byte = (0xFF & evaluated_arg1);
+                        int high_byte = (0xFF & (evaluated_arg1 >> 8));
                         writer.write_byte(code, current_address++);
                         writer.write_byte(low_byte, current_address++);
                         writer.write_byte(high_byte, current_address++);
@@ -229,20 +227,15 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                     else if (opcode.rule == 3)
                     {
                         /* have an input or output instruction */
-                        int max_port;
+                        int max_port = (opcode.mnemonic[0] == 'i') ? 7 : 23;
 
-                        if (opcode.mnemonic[0] == 'i')
-                            max_port = 7;
-                        else
-                            max_port = 23;
-                        if ((arg1 > max_port) || (arg1 < 0))
+                        if ((evaluated_arg1 > max_port) || (evaluated_arg1 < 0))
                         {
-                            fprintf(stderr, " in line %d %s expected port 0-%d\n",
-                                    current_line_count, input_line.c_str(), max_port);
-                            fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
-                            exit(-1);
+                            throw ExpectedArgumentWithinLimits(max_port, tokens.arg1,
+                                                               evaluated_arg1);
                         }
-                        int code = opcode.code + (arg1 << 1);
+
+                        int code = opcode.code + (evaluated_arg1 << 1);
                         writer.write_byte(code, current_address++);
                         if (options.generate_list_file)
                             fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
@@ -251,14 +244,12 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                     }
                     else if (opcode.rule == 4)
                     {
-                        if ((arg1 > 7) || (arg1 < 0))
+                        if ((evaluated_arg1 > 7) || (evaluated_arg1 < 0))
                         {
-                            fprintf(stderr, " in line %d %s expected argument 0-7\n",
-                                    current_line_count, input_line.c_str());
-                            fprintf(stderr, "    instead got %s=%d\n", tokens.arg1.c_str(), arg1);
-                            exit(-1);
+                            throw ExpectedArgumentWithinLimits(7, tokens.arg1, evaluated_arg1);
                         }
-                        auto code = (opcode.code | (arg1 << 3));
+
+                        auto code = (opcode.code | (evaluated_arg1 << 3));
                         writer.write_byte(code, current_address++);
                         if (options.generate_list_file)
                             fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
@@ -282,4 +273,11 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
     }
 
     writer.write_end();
+}
+
+ExpectedArgumentWithinLimits::ExpectedArgumentWithinLimits(int limit, std::string& content,
+                                                           int evaluated)
+{
+    reason = "expected argument between 0 and " + std::to_string(limit) + " instead got " +
+             content + "=" + std::to_string(evaluated);
 }
