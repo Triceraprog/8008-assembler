@@ -129,3 +129,7 @@ PseudoOpcodeEnum opcode_to_enum(std::string_view opcode)
     return std::get<1>(*found_op_code);
 }
 
+UndefinedOpcode::UndefinedOpcode(const std::string& opcode)
+{
+    reason = "undefined opcode " + opcode;
+}

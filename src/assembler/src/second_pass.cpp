@@ -23,6 +23,14 @@ namespace
         fstream.clear();
         fstream.seekg(std::ios::beg);
     }
+
+    bool correct_argument_count(const Opcode& opcode, uint32_t arg_count)
+    {
+        return ((opcode.rule == 0) && (arg_count != 0)) ||
+               ((opcode.rule == 1) && (arg_count != 1)) ||
+               ((opcode.rule == 2) && (arg_count != 1)) ||
+               ((opcode.rule == 3) && (arg_count != 1)) || ((opcode.rule == 4) && (arg_count != 1));
+    }
 }
 
 void second_pass(const Options& options, const SymbolTable& symbol_table, Files& files,
@@ -68,7 +76,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
             }
 
             LineTokenizer tokens = parse_line(options, input_line, current_line_count);
-            auto args = tokens.arg_count;
+            auto arg_count = tokens.arg_count;
 
             switch (opcode_to_enum(tokens.opcode))
             {
@@ -90,23 +98,26 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                     std::vector<int> data_list;
                     int data_length =
                             decode_data(options, symbol_table, input_line.c_str(), data_list);
-                    /* if n is negative, that number of bytes are just reserved */
                     if (data_length < 0)
                     {
+                        /* if n is negative, that number of bytes are just reserved */
                         if (options.generate_list_file)
-                            fprintf(files.lfp, "%4d %02o-%03o     %s%s\n", current_line_count,
-                                    ((line_address >> 8) & 0xFF), (line_address & 0xFF),
-                                    single_space_pad, input_line.c_str());
+                        {
+                            listing.reserved_data(current_line_count, line_address, input_line);
+                        }
                         current_address += 0 - data_length;
-                        continue;
                     }
-                    for (int i = 0; i < data_length; i++)
+                    else
                     {
-                        writer.write_byte(data_list[i], current_address++);
-                    }
-                    if (options.generate_list_file)
-                    {
-                        listing.data(current_line_count, line_address, input_line, data_list);
+                        for (const auto& data : data_list)
+                        {
+                            writer.write_byte(data, current_address);
+                            current_address += 1;
+                        }
+                        if (options.generate_list_file)
+                        {
+                            listing.data(current_line_count, line_address, input_line, data_list);
+                        }
                     }
                 }
                 break;
@@ -114,22 +125,17 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                     auto [found, opcode] = find_opcode(tokens.opcode);
                     if (!found)
                     {
-                        fprintf(stderr, " in line %d %s undefined opcode %s\n", current_line_count,
-                                input_line.c_str(), tokens.opcode.c_str());
-                        exit(-1);
+                        throw UndefinedOpcode(tokens.opcode);
                     }
                     /* found the opcode */
-                    /* check that we have right number of arguments */
-                    if (((opcode.rule == 0) && (args != 0)) ||
-                        ((opcode.rule == 1) && (args != 1)) ||
-                        ((opcode.rule == 2) && (args != 1)) ||
-                        ((opcode.rule == 3) && (args != 1)) || ((opcode.rule == 4) && (args != 1)))
+                    /* check that we have right the number of arguments */
+                    if (correct_argument_count(opcode, arg_count))
                     {
                         fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n",
-                                current_line_count, input_line.c_str(), args);
+                                current_line_count, input_line.c_str(), arg_count);
                         exit(-1);
                     }
-                    if (args == 1)
+                    if (arg_count == 1)
                     {
                         arg1 = evaluate_argument(options, symbol_table, tokens.arg1);
                     }

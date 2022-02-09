@@ -176,8 +176,3 @@ AlreadyDefinedSymbol::AlreadyDefinedSymbol(const std::string& symbol, int value)
 }
 
 InvalidCPU::InvalidCPU() { reason = R"(cpu only allowed is "8008" or "i8008")"; }
-
-UndefinedOpcode::UndefinedOpcode(const std::string& opcode)
-{
-    reason = "undefined opcode " + opcode;
-}

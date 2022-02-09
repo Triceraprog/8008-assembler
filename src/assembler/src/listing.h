@@ -15,6 +15,8 @@ public:
     void data(int line_number, int line_address, const std::string& line_content,
               const std::vector<int>& data_list);
 
+    void reserved_data(int line_number, int line_address, const std::string& line_content);
+
 private:
     FILE* output;
     const Options& options;

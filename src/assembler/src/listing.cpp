@@ -47,6 +47,12 @@ void Listing::simple_line(int line_number, const std::string& line_content)
     fprintf(output, "%4d            %s%s\n", line_number, single_space_pad, line_content.c_str());
 }
 
+void Listing::reserved_data(int line_number, int line_address, const std::string& line_content)
+{
+    fprintf(output, "%4d %02o-%03o     %s%s\n", line_number, ((line_address >> 8) & 0xFF),
+            (line_address & 0xFF), single_space_pad, line_content.c_str());
+}
+
 void Listing::data(int line_number, int line_address, const std::string& line_content,
                    const std::vector<int>& data_list)
 {
