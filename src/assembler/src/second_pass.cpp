@@ -12,7 +12,6 @@
 #include "utils.h"
 
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <iostream>
 
@@ -131,9 +130,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                     /* check that we have right the number of arguments */
                     if (correct_argument_count(opcode, arg_count))
                     {
-                        fprintf(stderr, " in line %d %s we see an unexpected %d arguments\n",
-                                current_line_count, input_line.c_str(), arg_count);
-                        exit(-1);
+                        throw UnexpectedArgumentCount(arg_count);
                     }
                     if (arg_count == 1)
                     {
@@ -144,123 +141,125 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                      * "rules" which states how arguments are combined
                      * with opcode to get machine codes. */
 
-                    if (opcode.rule == 0)
+                    switch (opcode.rule)
                     {
-                        /* single byte, no arguments */
-                        writer.write_byte(opcode.code, current_address++);
-                        if (options.generate_list_file)
-                            fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
-                                    ((line_address >> 8) & 0xFF), (line_address & 0xFF),
-                                    opcode.code, single_space_pad, input_line.c_str());
-                    }
-                    else if (opcode.rule == 1)
-                    {
-                        /* single byte, must follow */
-                        if ((evaluated_arg1 > 255) || (evaluated_arg1 < 0))
-                        {
-                            throw ExpectedArgumentWithinLimits(255, tokens.arg1, evaluated_arg1);
-                        }
-                        int code = opcode.code;
-                        writer.write_byte(code, current_address++);
-                        writer.write_byte(evaluated_arg1, current_address++);
-                        if (options.generate_list_file)
-                        {
-                            if (options.single_byte_list)
+                        case 0:
+                            /* single byte, no arguments */
+                            writer.write_byte(opcode.code, current_address++);
+                            if (options.generate_list_file)
                             {
-                                fprintf(files.lfp, "%4d %02o-%03o %03o %s\n", current_line_count,
-                                        ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
-                                        input_line.c_str());
-                                line_address++;
-                                fprintf(files.lfp, "     %02o-%03o %03o\n",
-                                        (((line_address) >> 8) & 0xFF), ((line_address) &0xFF),
-                                        evaluated_arg1);
-                            }
-                            else
-                            {
-                                fprintf(files.lfp, "%4d %02o-%03o %03o %03o     %s\n",
-                                        current_line_count, ((line_address >> 8) & 0xFF),
-                                        (line_address & 0xFF), code, evaluated_arg1,
-                                        input_line.c_str());
-                            }
-                        }
-                    }
-                    else if (opcode.rule == 2)
-                    {
-                        /* two byte address to follow */
-                        const int MAX_ADDRESS = 1024 * 16;
-                        if ((evaluated_arg1 > MAX_ADDRESS) || (evaluated_arg1 < 0))
-                        {
-                            throw ExpectedArgumentWithinLimits(MAX_ADDRESS, tokens.arg1,
-                                                               evaluated_arg1);
-                        }
-                        int code = opcode.code;
-                        int low_byte = (0xFF & evaluated_arg1);
-                        int high_byte = (0xFF & (evaluated_arg1 >> 8));
-                        writer.write_byte(code, current_address++);
-                        writer.write_byte(low_byte, current_address++);
-                        writer.write_byte(high_byte, current_address++);
-                        if (options.generate_list_file)
-                        {
-                            if (options.single_byte_list)
-                            {
-                                fprintf(files.lfp, "%4d %02o-%03o %03o %s\n", current_line_count,
-                                        ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
-                                        input_line.c_str());
-                                line_address++;
-                                fprintf(files.lfp, "     %02o-%03o %03o\n",
+                                fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
                                         ((line_address >> 8) & 0xFF), (line_address & 0xFF),
-                                        low_byte);
-                                line_address++;
-                                fprintf(files.lfp, "     %02o-%03o %03o\n",
-                                        ((line_address >> 8) & 0xFF), (line_address & 0xFF),
-                                        high_byte);
+                                        opcode.code, single_space_pad, input_line.c_str());
                             }
-                            else
+                            break;
+                        case 1: {
+                            /* single byte, must follow */
+                            if ((evaluated_arg1 > 255) || (evaluated_arg1 < 0))
                             {
-                                fprintf(files.lfp, "%4d %02o-%03o %03o %03o %03o %s\n",
-                                        current_line_count, ((line_address >> 8) & 0xFF),
-                                        (line_address & 0xFF), code, low_byte, high_byte,
-                                        input_line.c_str());
+                                throw ExpectedArgumentWithinLimits(255, tokens.arg1,
+                                                                   evaluated_arg1);
+                            }
+                            int code = opcode.code;
+                            writer.write_byte(code, current_address++);
+                            writer.write_byte(evaluated_arg1, current_address++);
+                            if (options.generate_list_file)
+                            {
+                                if (options.single_byte_list)
+                                {
+                                    fprintf(files.lfp, "%4d %02o-%03o %03o %s\n",
+                                            current_line_count, ((line_address >> 8) & 0xFF),
+                                            (line_address & 0xFF), code, input_line.c_str());
+                                    line_address++;
+                                    fprintf(files.lfp, "     %02o-%03o %03o\n",
+                                            (((line_address) >> 8) & 0xFF), ((line_address) &0xFF),
+                                            evaluated_arg1);
+                                }
+                                else
+                                {
+                                    fprintf(files.lfp, "%4d %02o-%03o %03o %03o     %s\n",
+                                            current_line_count, ((line_address >> 8) & 0xFF),
+                                            (line_address & 0xFF), code, evaluated_arg1,
+                                            input_line.c_str());
+                                }
                             }
                         }
-                    }
-                    else if (opcode.rule == 3)
-                    {
-                        /* have an input or output instruction */
-                        int max_port = (opcode.mnemonic[0] == 'i') ? 7 : 23;
-
-                        if ((evaluated_arg1 > max_port) || (evaluated_arg1 < 0))
-                        {
-                            throw ExpectedArgumentWithinLimits(max_port, tokens.arg1,
-                                                               evaluated_arg1);
+                        break;
+                        case 2: {
+                            /* two byte address to follow */
+                            const int MAX_ADDRESS = 1024 * 16;
+                            if ((evaluated_arg1 > MAX_ADDRESS) || (evaluated_arg1 < 0))
+                            {
+                                throw ExpectedArgumentWithinLimits(MAX_ADDRESS, tokens.arg1,
+                                                                   evaluated_arg1);
+                            }
+                            int code = opcode.code;
+                            int low_byte = (0xFF & evaluated_arg1);
+                            int high_byte = (0xFF & (evaluated_arg1 >> 8));
+                            writer.write_byte(code, current_address++);
+                            writer.write_byte(low_byte, current_address++);
+                            writer.write_byte(high_byte, current_address++);
+                            if (options.generate_list_file)
+                            {
+                                if (options.single_byte_list)
+                                {
+                                    fprintf(files.lfp, "%4d %02o-%03o %03o %s\n",
+                                            current_line_count, ((line_address >> 8) & 0xFF),
+                                            (line_address & 0xFF), code, input_line.c_str());
+                                    line_address++;
+                                    fprintf(files.lfp, "     %02o-%03o %03o\n",
+                                            ((line_address >> 8) & 0xFF), (line_address & 0xFF),
+                                            low_byte);
+                                    line_address++;
+                                    fprintf(files.lfp, "     %02o-%03o %03o\n",
+                                            ((line_address >> 8) & 0xFF), (line_address & 0xFF),
+                                            high_byte);
+                                }
+                                else
+                                {
+                                    fprintf(files.lfp, "%4d %02o-%03o %03o %03o %03o %s\n",
+                                            current_line_count, ((line_address >> 8) & 0xFF),
+                                            (line_address & 0xFF), code, low_byte, high_byte,
+                                            input_line.c_str());
+                                }
+                            }
                         }
+                        break;
+                        case 3: {
+                            /* have an input or output instruction */
+                            int max_port = (opcode.mnemonic[0] == 'i') ? 7 : 23;
 
-                        int code = opcode.code + (evaluated_arg1 << 1);
-                        writer.write_byte(code, current_address++);
-                        if (options.generate_list_file)
-                            fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
-                                    ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
-                                    single_space_pad, input_line.c_str());
-                    }
-                    else if (opcode.rule == 4)
-                    {
-                        if ((evaluated_arg1 > 7) || (evaluated_arg1 < 0))
-                        {
-                            throw ExpectedArgumentWithinLimits(7, tokens.arg1, evaluated_arg1);
+                            if ((evaluated_arg1 > max_port) || (evaluated_arg1 < 0))
+                            {
+                                throw ExpectedArgumentWithinLimits(max_port, tokens.arg1,
+                                                                   evaluated_arg1);
+                            }
+
+                            int code = opcode.code + (evaluated_arg1 << 1);
+                            writer.write_byte(code, current_address++);
+                            if (options.generate_list_file)
+                                fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
+                                        ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
+                                        single_space_pad, input_line.c_str());
                         }
+                        break;
+                        case 4: {
+                            if ((evaluated_arg1 > 7) || (evaluated_arg1 < 0))
+                            {
+                                throw ExpectedArgumentWithinLimits(7, tokens.arg1, evaluated_arg1);
+                            }
 
-                        auto code = (opcode.code | (evaluated_arg1 << 3));
-                        writer.write_byte(code, current_address++);
-                        if (options.generate_list_file)
-                            fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
-                                    ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
-                                    single_space_pad, input_line.c_str());
-                    }
-                    else
-                    {
-                        fprintf(stderr, " in line %d %s can't comprehend rule %d\n",
-                                current_line_count, input_line.c_str(), opcode.rule);
-                        exit(-1);
+                            auto code = (opcode.code | (evaluated_arg1 << 3));
+                            writer.write_byte(code, current_address++);
+                            if (options.generate_list_file)
+                                fprintf(files.lfp, "%4d %02o-%03o %03o %s%s\n", current_line_count,
+                                        ((line_address >> 8) & 0xFF), (line_address & 0xFF), code,
+                                        single_space_pad, input_line.c_str());
+                        }
+                        break;
+                        default:
+                            // Uncovered case.
+                            throw InternalError(input_line);
                     }
                 }
                 break;
@@ -280,4 +279,9 @@ ExpectedArgumentWithinLimits::ExpectedArgumentWithinLimits(int limit, std::strin
 {
     reason = "expected argument between 0 and " + std::to_string(limit) + " instead got " +
              content + "=" + std::to_string(evaluated);
+}
+
+UnexpectedArgumentCount::UnexpectedArgumentCount(uint32_t arg_count)
+{
+    reason = "unexpected number of arguments: " + std::to_string(arg_count);
 }
