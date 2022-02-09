@@ -122,58 +122,57 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
             }
         }
 
-        if (tokens.opcode.empty() || ci_equals(tokens.opcode, "equ") ||
-            ci_equals(tokens.opcode, "end"))
+        switch (opcode_to_enum(tokens.opcode))
         {
-        }
-        else if (ci_equals(tokens.opcode, "cpu"))
-        {
-            verify_cpu(tokens.arg1);
-        }
-        else if (ci_equals(tokens.opcode, "org"))
-        {
-            try
-            {
-                current_address = evaluate_argument(options, symbol_table, tokens.arg1);
-            }
-            catch (const std::exception& ex)
-            {
-                throw ParsingException(ex, current_line_count, input_line);
-            }
-        }
-        else if (ci_equals(tokens.opcode, "data"))
-        {
-            int data_size;
-            try
-            {
-                std::vector<int> data_list;
-                data_size = decode_data(options, symbol_table, input_line.c_str(), data_list);
-            }
-            catch (const std::exception& ex)
-            {
-                throw ParsingException(ex, current_line_count, input_line);
-            }
+            case PseudoOpcodeEnum::EMPTY:
+            case PseudoOpcodeEnum::EQU:
+            case PseudoOpcodeEnum::END:
+                break;
+            case PseudoOpcodeEnum::CPU:
+                verify_cpu(tokens.arg1);
+                break;
+            case PseudoOpcodeEnum::ORG:
+                try
+                {
+                    current_address = evaluate_argument(options, symbol_table, tokens.arg1);
+                }
+                catch (const std::exception& ex)
+                {
+                    throw ParsingException(ex, current_line_count, input_line);
+                }
+                break;
+            case PseudoOpcodeEnum::DATA: {
+                int data_size;
+                try
+                {
+                    std::vector<int> data_list;
+                    data_size = decode_data(options, symbol_table, input_line.c_str(), data_list);
+                }
+                catch (const std::exception& ex)
+                {
+                    throw ParsingException(ex, current_line_count, input_line);
+                }
 
-            if (options.debug)
-            {
-                std::cout << "got " << data_size << " items in data list\n";
-            }
+                if (options.debug)
+                {
+                    std::cout << "got " << data_size << " items in data list\n";
+                }
 
-            /* a negative number denotes that much space to save, but not specifying data */
-            /* if so, just change sign to positive */
-            if (data_size < 0)
-            {
-                data_size = 0 - data_size;
+                /* a negative number denotes that much space to save, but not specifying data */
+                current_address += std::abs(data_size);
             }
-            current_address += data_size;
-        }
-        else if (auto [found, opcode] = find_opcode(tokens.opcode); found)
-        {
-            current_address += get_opcode_size(opcode);
-        }
-        else
-        {
-            throw UndefinedOpcode(tokens.opcode);
+            break;
+            case PseudoOpcodeEnum::OTHER: {
+                if (auto [found, opcode] = find_opcode(tokens.opcode); found)
+                {
+                    current_address += get_opcode_size(opcode);
+                }
+                else
+                {
+                    throw UndefinedOpcode(tokens.opcode);
+                }
+                break;
+            }
         }
     }
 }
