@@ -65,12 +65,6 @@ void LineTokenizer::adjust_label()
     }
 }
 
-void LineTokenizer::debug_print() const
-{
-    std::cout << "parsed line label=" << label << " opcode=" << opcode << " arg1str=" << arg1
-              << "\n";
-}
-
 namespace
 {
     std::string clean_line(const std::string& input_line)

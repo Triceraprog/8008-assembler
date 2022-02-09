@@ -105,11 +105,6 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
         /* this function breaks line into separate parts */
         LineTokenizer tokens = parse_line(options, input_line, current_line_count);
 
-        if (options.debug)
-        {
-            tokens.debug_print();
-        }
-
         if (!tokens.label.empty())
         {
             try
