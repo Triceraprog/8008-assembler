@@ -1,6 +1,7 @@
 #include "opcodes.h"
-#include "options.h"
 #include "utils.h"
+#include <algorithm>
+#include <vector>
 
 #define NUMOPCODES (sizeof(opcodes) / sizeof(opcodes[0]))
 
@@ -106,31 +107,25 @@ std::tuple<bool, Opcode&> find_opcode(std::string_view opcode_name)
 
 PseudoOpcodeEnum opcode_to_enum(std::string_view opcode)
 {
+    static std::vector<std::tuple<const char*, PseudoOpcodeEnum>> association = {
+            {"equ", PseudoOpcodeEnum::EQU},   {"end", PseudoOpcodeEnum::END},
+            {"cpu", PseudoOpcodeEnum::CPU},   {"org", PseudoOpcodeEnum::ORG},
+            {"data", PseudoOpcodeEnum::DATA},
+    };
     if (opcode.empty())
     {
         return PseudoOpcodeEnum::EMPTY;
     }
-    if (ci_equals(opcode, "equ"))
+    auto found_op_code = std::ranges::find_if(association, [&opcode](const auto& t) {
+        auto& [opcode_str, opcode_enum] = t;
+        return ci_equals(opcode, opcode_str);
+    });
+
+    if (found_op_code == association.end())
     {
-        return PseudoOpcodeEnum::EQU;
-    }
-    if (ci_equals(opcode, "end"))
-    {
-        return PseudoOpcodeEnum::END;
-    }
-    if (ci_equals(opcode, "cpu"))
-    {
-        return PseudoOpcodeEnum::CPU;
-    }
-    if (ci_equals(opcode, "org"))
-    {
-        return PseudoOpcodeEnum::ORG;
-    }
-    if (ci_equals(opcode, "data"))
-    {
-        return PseudoOpcodeEnum::DATA;
+        return PseudoOpcodeEnum::OTHER;
     }
 
-
-    return PseudoOpcodeEnum::OTHER;
+    return std::get<1>(*found_op_code);
 }
+
