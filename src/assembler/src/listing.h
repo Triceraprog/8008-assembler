@@ -19,6 +19,7 @@ public:
 
     void reserved_data(int line_number, int line_address, const std::string& line_content);
     void one_byte_of_data_with_address(int line_number, int line_address, int data, const std::string& line_content) const;
+    void one_byte_of_data_continued(int line_number, int line_address, int data) const;
     void opcode_line_with_space(int line_number, int line_address, const Opcode& opcode,
                                 const std::string& line_content);
 

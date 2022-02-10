@@ -157,9 +157,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                                     listing.one_byte_of_data_with_address(
                                             current_line_count, line_address, code, input_line);
                                     line_address++;
-                                    fprintf(files.lfp, "     %02o-%03o %03o\n",
-                                            (((line_address) >> 8) & 0xFF), ((line_address) &0xFF),
-                                            evaluated_arg1);
+                                    listing.one_byte_of_data_continued(
+                                            current_line_count, line_address, evaluated_arg1);
                                 }
                                 else
                                 {
@@ -192,13 +191,11 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                                     listing.one_byte_of_data_with_address(
                                             current_line_count, line_address, code, input_line);
                                     line_address++;
-                                    fprintf(files.lfp, "     %02o-%03o %03o\n",
-                                            ((line_address >> 8) & 0xFF), (line_address & 0xFF),
-                                            low_byte);
+                                    listing.one_byte_of_data_continued(current_line_count,
+                                                                       line_address, low_byte);
                                     line_address++;
-                                    fprintf(files.lfp, "     %02o-%03o %03o\n",
-                                            ((line_address >> 8) & 0xFF), (line_address & 0xFF),
-                                            high_byte);
+                                    listing.one_byte_of_data_continued(current_line_count,
+                                                                       line_address, high_byte);
                                 }
                                 else
                                 {

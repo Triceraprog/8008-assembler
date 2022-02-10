@@ -63,12 +63,20 @@ void Listing::opcode_line_with_space(int line_number, int line_address, const Op
 }
 
 void Listing::one_byte_of_data_with_address(int line_number, int line_address, int data,
-                               const std::string& line_content) const
+                                            const std::string& line_content) const
 {
     int line_address_h = (line_address >> 8) & 0xFF;
     int line_address_l = line_address & 0xFF;
     fprintf(output, "%4d %02o-%03o %03o %s\n", line_number, line_address_h, line_address_l, data,
             line_content.c_str());
+}
+
+void Listing::one_byte_of_data_continued(int line_number, int line_address, int data) const
+{
+    int line_address_h = (line_address >> 8) & 0xFF;
+    int line_address_l = line_address & 0xFF;
+
+    fprintf(output, "     %02o-%03o %03o\n", line_address_h, line_address_l, data);
 }
 
 void Listing::data(int line_number, int line_address, const std::string& line_content,
