@@ -62,16 +62,22 @@ void Listing::opcode_line_with_space(int line_number, int line_address, const Op
             (line_address & 0xFF), opcode.code, single_space_pad, line_content.c_str());
 }
 
+void Listing::one_byte_of_data_with_address(int line_number, int line_address, int data,
+                               const std::string& line_content) const
+{
+    int line_address_h = (line_address >> 8) & 0xFF;
+    int line_address_l = line_address & 0xFF;
+    fprintf(output, "%4d %02o-%03o %03o %s\n", line_number, line_address_h, line_address_l, data,
+            line_content.c_str());
+}
+
 void Listing::data(int line_number, int line_address, const std::string& line_content,
                    const std::vector<int>& data_list)
 {
     if (options.single_byte_list)
     {
-        int line_address_h = (line_address >> 8) & 0xFF;
-        int line_address_l = line_address & 0xFF;
 
-        fprintf(output, "%4d %02o-%03o %03o %s\n", line_number, line_address_h, line_address_l,
-                data_list[0], line_content.c_str());
+        one_byte_of_data_with_address(line_number, line_address, data_list[0], line_content);
         for (int data : data_list | std::views::drop(1))
         {
             line_address += 1;

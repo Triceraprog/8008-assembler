@@ -154,9 +154,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                             {
                                 if (options.single_byte_list)
                                 {
-                                    fprintf(files.lfp, "%4d %02o-%03o %03o %s\n",
-                                            current_line_count, ((line_address >> 8) & 0xFF),
-                                            (line_address & 0xFF), code, input_line.c_str());
+                                    listing.one_byte_of_data_with_address(
+                                            current_line_count, line_address, code, input_line);
                                     line_address++;
                                     fprintf(files.lfp, "     %02o-%03o %03o\n",
                                             (((line_address) >> 8) & 0xFF), ((line_address) &0xFF),
@@ -190,9 +189,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                             {
                                 if (options.single_byte_list)
                                 {
-                                    fprintf(files.lfp, "%4d %02o-%03o %03o %s\n",
-                                            current_line_count, ((line_address >> 8) & 0xFF),
-                                            (line_address & 0xFF), code, input_line.c_str());
+                                    listing.one_byte_of_data_with_address(
+                                            current_line_count, line_address, code, input_line);
                                     line_address++;
                                     fprintf(files.lfp, "     %02o-%03o %03o\n",
                                             ((line_address >> 8) & 0xFF), (line_address & 0xFF),
