@@ -6,6 +6,8 @@
 #include <cstdio>
 #include <vector>
 
+struct Opcode;
+
 class Listing
 {
 public:
@@ -16,6 +18,8 @@ public:
               const std::vector<int>& data_list);
 
     void reserved_data(int line_number, int line_address, const std::string& line_content);
+    void opcode_line_with_space(int line_number, int line_address, const Opcode& opcode,
+                                const std::string& line_content);
 
 private:
     FILE* output;
