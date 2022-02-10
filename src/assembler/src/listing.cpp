@@ -62,6 +62,20 @@ void Listing::opcode_line_with_space(int line_number, int line_address, const Op
             (line_address & 0xFF), opcode.code, single_space_pad, line_content.c_str());
 }
 
+void Listing::opcode_line_with_space_1_arg(int line_number, int line_address, const Opcode& opcode,
+                                           int arg1, const std::string& line_content)
+{
+    fprintf(output, "%4d %02o-%03o %03o %03o     %s\n", line_number, ((line_address >> 8) & 0xFF),
+            (line_address & 0xFF), opcode.code, arg1, line_content.c_str());
+}
+
+void Listing::opcode_line_with_space_2_arg(int line_number, int line_address, const Opcode& opcode,
+                                           int arg1, int arg2, const std::string& line_content)
+{
+    fprintf(output, "%4d %02o-%03o %03o %03o %03o %s\n", line_number, ((line_address >> 8) & 0xFF),
+            (line_address & 0xFF), opcode.code, arg1, arg2, line_content.c_str());
+}
+
 void Listing::one_byte_of_data_with_address(int line_number, int line_address, int data,
                                             const std::string& line_content) const
 {

@@ -162,10 +162,10 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                                 }
                                 else
                                 {
-                                    fprintf(files.lfp, "%4d %02o-%03o %03o %03o     %s\n",
-                                            current_line_count, ((line_address >> 8) & 0xFF),
-                                            (line_address & 0xFF), code, evaluated_arg1,
-                                            input_line.c_str());
+
+                                    listing.opcode_line_with_space_1_arg(
+                                            current_line_count, line_address, opcode,
+                                            evaluated_arg1, input_line);
                                 }
                             }
                         }
@@ -199,10 +199,9 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                                 }
                                 else
                                 {
-                                    fprintf(files.lfp, "%4d %02o-%03o %03o %03o %03o %s\n",
-                                            current_line_count, ((line_address >> 8) & 0xFF),
-                                            (line_address & 0xFF), code, low_byte, high_byte,
-                                            input_line.c_str());
+                                    listing.opcode_line_with_space_2_arg(
+                                            current_line_count, line_address, opcode, low_byte,
+                                            high_byte, input_line);
                                 }
                             }
                         }
