@@ -32,6 +32,8 @@ private:
     FILE* output;
     const Options& options;
     char single_space_pad[9]{}; /* this is some extra padding if we use single space list file */
+    void write_line_number(int line_number) const;
+    void write_address(int address) const;
 };
 
 #endif //INC_8008_ASSEMBLER_LISTING_H

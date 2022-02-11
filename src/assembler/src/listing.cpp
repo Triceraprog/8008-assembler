@@ -44,53 +44,62 @@ void Listing::write_listing_header()
     }
 }
 
+void Listing::write_line_number(int line_number) const { fprintf(output, "%4d ", line_number); }
+void Listing::write_address(int address) const
+{
+    fprintf(output, "%02o-%03o ", ((address >> 8) & 0xFF), (address & 0xFF));
+}
+
 void Listing::simple_line(int line_number, const std::string& line_content)
 {
-    fprintf(output, "%4d            %s%s\n", line_number, single_space_pad, line_content.c_str());
+    write_line_number(line_number);
+    fprintf(output, "           %s%s\n", single_space_pad, line_content.c_str());
 }
 
 void Listing::reserved_data(int line_number, int line_address, const std::string& line_content)
 {
-    fprintf(output, "%4d %02o-%03o     %s%s\n", line_number, ((line_address >> 8) & 0xFF),
-            (line_address & 0xFF), single_space_pad, line_content.c_str());
+    write_line_number(line_number);
+    write_address(line_address);
+    fprintf(output, "    %s%s\n", single_space_pad, line_content.c_str());
 }
 
 void Listing::opcode_line_with_space(int line_number, int line_address, const Opcode& opcode,
                                      const std::string& line_content)
 {
-    fprintf(output, "%4d %02o-%03o %03o %s%s\n", line_number, ((line_address >> 8) & 0xFF),
-            (line_address & 0xFF), opcode.code, single_space_pad, line_content.c_str());
+    write_line_number(line_number);
+    write_address(line_address);
+    fprintf(output, "%03o %s%s\n", opcode.code, single_space_pad, line_content.c_str());
 }
 
 void Listing::opcode_line_with_space_1_arg(int line_number, int line_address, const Opcode& opcode,
                                            int arg1, const std::string& line_content)
 {
-    fprintf(output, "%4d %02o-%03o %03o %03o     %s\n", line_number, ((line_address >> 8) & 0xFF),
-            (line_address & 0xFF), opcode.code, arg1, line_content.c_str());
+    write_line_number(line_number);
+    write_address(line_address);
+    fprintf(output, "%03o %03o     %s\n", opcode.code, arg1, line_content.c_str());
 }
 
 void Listing::opcode_line_with_space_2_arg(int line_number, int line_address, const Opcode& opcode,
                                            int arg1, int arg2, const std::string& line_content)
 {
-    fprintf(output, "%4d %02o-%03o %03o %03o %03o %s\n", line_number, ((line_address >> 8) & 0xFF),
-            (line_address & 0xFF), opcode.code, arg1, arg2, line_content.c_str());
+    write_line_number(line_number);
+    write_address(line_address);
+    fprintf(output, "%03o %03o %03o %s\n", opcode.code, arg1, arg2, line_content.c_str());
 }
 
 void Listing::one_byte_of_data_with_address(int line_number, int line_address, int data,
                                             const std::string& line_content) const
 {
-    int line_address_h = (line_address >> 8) & 0xFF;
-    int line_address_l = line_address & 0xFF;
-    fprintf(output, "%4d %02o-%03o %03o %s\n", line_number, line_address_h, line_address_l, data,
-            line_content.c_str());
+    write_line_number(line_number);
+    write_address(line_address);
+    fprintf(output, "%03o %s\n", data, line_content.c_str());
 }
 
 void Listing::one_byte_of_data_continued(int line_number, int line_address, int data) const
 {
-    int line_address_h = (line_address >> 8) & 0xFF;
-    int line_address_l = line_address & 0xFF;
-
-    fprintf(output, "     %02o-%03o %03o\n", line_address_h, line_address_l, data);
+    fprintf(output, "     ");
+    write_address(line_address);
+    fprintf(output, "%03o\n", data);
 }
 
 void Listing::data(int line_number, int line_address, const std::string& line_content,
@@ -98,13 +107,13 @@ void Listing::data(int line_number, int line_address, const std::string& line_co
 {
     if (options.single_byte_list)
     {
-
         one_byte_of_data_with_address(line_number, line_address, data_list[0], line_content);
         for (int data : data_list | std::views::drop(1))
         {
             line_address += 1;
-            fprintf(output, "%4d %02o-%03o %03o\n", line_number, (((line_address) >> 8) & 0xFF),
-                    ((line_address) &0xFF), data);
+            write_line_number(line_number);
+            write_address(line_address);
+            fprintf(output, "%03o\n", data);
         }
     }
     else
@@ -112,7 +121,8 @@ void Listing::data(int line_number, int line_address, const std::string& line_co
         int line_address_h = (line_address >> 8) & 0xFF;
         int line_address_l = line_address & 0xFF;
 
-        fprintf(output, "%4d %02o-%03o ", line_number, line_address_h, line_address_l);
+        write_line_number(line_number);
+        write_address(line_address);
         if (data_list.size() == 1)
             fprintf(output, "%03o          %s\n", data_list[0], line_content.c_str());
         else if (data_list.size() == 2)
@@ -126,11 +136,8 @@ void Listing::data(int line_number, int line_address, const std::string& line_co
             line_address += 3;
             while (data_list.size() > index)
             {
-                line_address_h = (line_address >> 8) & 0xFF;
-                line_address_l = line_address & 0xFF;
-
-                /*	    fprintf(output,"            "); */
-                fprintf(output, "     %02o-%03o ", line_address_h, line_address_l);
+                fprintf(output, "     ");
+                write_address(line_address);
                 if (data_list.size() > 2 + index)
                 {
                     fprintf(output, "%03o %03o %03o\n", data_list[index], data_list[index + 1],
