@@ -132,31 +132,22 @@ void Listing::data(int line_number, int line_address, const std::string& line_co
 
         write_line_number(line_number);
         write_address(line_address);
-        if (data_list.size() == 1)
-        {
-            fprintf(output, " ");
-            write_octal(data_list[0]);
-            fprintf(output, "          %s\n", line_content.c_str());
-        }
-        else if (data_list.size() == 2)
-        {
-            fprintf(output, " ");
-            write_octal(data_list[0]);
-            fprintf(output, " ");
-            write_octal(data_list[1]);
-            fprintf(output, "      %s\n", line_content.c_str());
-        }
-        else if (data_list.size() > 2)
         {
             int index = 0;
 
             // First line
-            for (int data : data_list | std::views::drop(index) | std::views::take(3))
+            for (int data : data_list | std::views::take(3))
             {
                 fprintf(output, " ");
                 write_octal(data);
                 index += 1;
                 line_address += 1;
+            }
+            auto spaces = (3 - std::min<int>(data_list.size(), 3));
+            while (spaces)
+            {
+                fprintf(output, "    ");
+                spaces -= 1;
             }
             fprintf(output, "  %s\n", line_content.c_str());
 
