@@ -76,8 +76,10 @@ void Listing::reserved_data(int line_number, int line_address, const std::string
 void Listing::opcode_line_with_space(int line_number, int line_address, const Opcode& opcode,
                                      const std::string& line_content)
 {
-    write_line_preamble(line_number, line_address);
-    fprintf(output, "%03o %s%s\n", opcode.code, single_space_pad, line_content.c_str());
+    ListingLine line{line_number, line_address};
+    line.add_byte(opcode.code);
+    line.add_line_content(line_content);
+    fprintf(output, "%s\n", line.str().c_str());
 }
 
 void Listing::opcode_line_with_space_1_arg(int line_number, int line_address, const Opcode& opcode,

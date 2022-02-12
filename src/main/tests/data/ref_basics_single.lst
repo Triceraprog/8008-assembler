@@ -2,7 +2,7 @@ AS8 assembler for intel 8008, t.e.jones Version 1.0
 Options: listfile=1 debug=0 binaryout=0 singlelist=1
 octalnums=0 markascii=0
 Infile=data/basics.asm
-Assembly Performed: Fri Jan 14 23:44:23 2022
+Assembly Performed: Sun Feb 13 00:06:51 2022
 
 
 Line Addr.  DAT Source Line
@@ -14,9 +14,9 @@ Line Addr.  DAT Source Line
    5                ORG 000#000
    6            
    7                ; Index Register Instructions
-   8 00-000 300     LAA
-   9 00-001 371     LMB
-  10 00-002 327     LCM
+   8 00-000 300             LAA
+   9 00-001 371             LMB
+  10 00-002 327             LCM
   11 00-003 036     LDI 030
      00-004 036
   12 00-005 046     LEI 0xFF
@@ -27,49 +27,49 @@ Line Addr.  DAT Source Line
      00-012 165
   15 00-013 076     LMI 123
      00-014 173
-  16 00-015 030     IND
-  17 00-016 041     DCE
+  16 00-015 030             IND
+  17 00-016 041             DCE
   18            
   19                ; Accumulator group
-  20 00-017 202     ADC
-  21 00-020 207     ADM
+  20 00-017 202             ADC
+  21 00-020 207             ADM
   22 00-021 004     ADI 0x00
      00-022 000
-  23 00-023 213     ACD
-  24 00-024 217     ACM
+  23 00-023 213             ACD
+  24 00-024 217             ACM
   25 00-025 014     ACI 022
      00-026 026
   26            
-  27 00-027 225     SUH
-  28 00-030 227     SUM
+  27 00-027 225             SUH
+  28 00-030 227             SUM
   29 00-031 024     SUI 033
      00-032 041
-  30 00-033 231     SBB
-  31 00-034 237     SBM
+  30 00-033 231             SBB
+  31 00-034 237             SBM
   32 00-035 034     SBI 0x11
      00-036 021
   33            
-  34 00-037 240     NDA
-  35 00-040 247     NDM
+  34 00-037 240             NDA
+  35 00-040 247             NDM
   36 00-041 044     NDI 0x00
      00-042 000
-  37 00-043 251     XRB
-  38 00-044 257     XRM
+  37 00-043 251             XRB
+  38 00-044 257             XRM
   39 00-045 054     XRI 10
      00-046 012
-  40 00-047 262     ORC
-  41 00-050 267     ORM
+  40 00-047 262             ORC
+  41 00-050 267             ORM
   42 00-051 064     ORI 0x11
      00-052 021
-  43 00-053 273     CPD
-  44 00-054 277     CPM
+  43 00-053 273             CPD
+  44 00-054 277             CPM
   45 00-055 074     CPI 111
      00-056 157
   46            
-  47 00-057 002     RLC
-  48 00-060 012     RRC
-  49 00-061 022     RAL
-  50 00-062 032     RAR
+  47 00-057 002             RLC
+  48 00-060 012             RRC
+  49 00-061 022             RAL
+  50 00-062 032             RAR
   51            
   52                ; Program Counter and Stack Control Instructions
   53            LOOP:
@@ -132,22 +132,22 @@ Line Addr.  DAT Source Line
   74                ; RST 0 ; Not supported at the moment
   75            
   76            ROUTINE:
-  77 00-151 007     RET
-  78 00-152 003     RFC
-  79 00-153 043     RTC
-  80 00-154 013     RFZ
-  81 00-155 053     RTZ
-  82 00-156 023     RFS
-  83 00-157 063     RTS
-  84 00-160 033     RFP
-  85 00-161 073     RTP
+  77 00-151 007             RET
+  78 00-152 003             RFC
+  79 00-153 043             RTC
+  80 00-154 013             RFZ
+  81 00-155 053             RTZ
+  82 00-156 023             RFS
+  83 00-157 063             RTS
+  84 00-160 033             RFP
+  85 00-161 073             RTP
   86            
   87                ; Input Ouput Instructions
-  88 00-162 105     INP 2
-  89 00-163 121     OUT 000
+  88 00-162 105             INP 2
+  89 00-163 121             OUT 000
   90            
   91                ; Machine Instruction
-  92 00-164 001     HLT
+  92 00-164 001             HLT
   93            
   94            SOMEDATA:
   95 00-165 000     DATA 000,001,002,003,004    ; End of line comment

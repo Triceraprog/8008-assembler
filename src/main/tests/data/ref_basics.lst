@@ -2,7 +2,7 @@ AS8 assembler for intel 8008, t.e.jones Version 1.0
 Options: listfile=1 debug=0 binaryout=0 singlelist=0
 octalnums=0 markascii=0
 Infile=data/basics.asm
-Assembly Performed: Sat Feb 12 00:41:01 2022
+Assembly Performed: Sun Feb 13 00:05:45 2022
 
 
 Line Addr.  CodeBytes   Source Line
@@ -101,7 +101,7 @@ Line Addr.  CodeBytes   Source Line
   92 00-164 001             HLT
   93                    
   94                    SOMEDATA:
-  95 00-165 000 001 002      DATA 000,001,002,003,004    ; End of line comment
+  95 00-165 000 001 002     DATA 000,001,002,003,004    ; End of line comment
      00-170 003 004
   96 00-172                 DATA *2
 Symbol Count: 5

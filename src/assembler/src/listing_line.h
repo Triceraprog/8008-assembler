@@ -20,7 +20,7 @@ public:
 
 private:
     std::string line;
-    int column_for_padding = 25;
+    int column_for_padding = 24;
 
     void padding(int column);
 };
