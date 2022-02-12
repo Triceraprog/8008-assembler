@@ -21,14 +21,16 @@ set(ASSEMBLER_LIB_FILES
         src/first_pass.cpp src/first_pass.h
         src/second_pass.cpp src/second_pass.h
         src/errors.cpp src/errors.h
-        src/listing.cpp src/listing.h)
+        src/listing.cpp src/listing.h
+        src/listing_line.cpp src/listing_line.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp
         tests/utils_tests.cpp
         tests/byte_writer_tests.cpp
         tests/data_extractions_tests.cpp
-        tests/opcodes_tests.cpp)
+        tests/opcodes_tests.cpp
+        tests/listing_line_tests.cpp)
 
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})
 
