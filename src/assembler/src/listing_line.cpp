@@ -3,35 +3,42 @@
 #include <iomanip>
 #include <sstream>
 
-ListingLine::ListingLine(int line_number)
-{
-    line.reserve(128);
+ListingLine::ListingLine() { line.reserve(128); }
 
+ListingLine::ListingLine(int line_number) : ListingLine()
+{
     std::stringstream str;
     str << std::setw(4) << line_number << " ";
 
     line = std::move(str.str());
 }
 
-ListingLine::ListingLine(int line_number, int line_address)
+ListingLine::ListingLine(int line_number, int line_address) : ListingLine()
 {
-    line.reserve(128);
-
     std::stringstream str;
     str << std::setw(4) << line_number << " ";
+    line = std::move(str.str());
 
+    add_address(line_address);
+}
+
+void ListingLine::add_address(int line_address)
+{
+    padding(5);
+
+    std::stringstream str;
     str << std::setfill('0') << std::oct;
     str << std::setw(2) << ((line_address >> 8) & 0xFF) << "-";
     str << std::setw(3) << (line_address & 0xFF);
 
-    line = std::move(str.str());
+    line += str.str();
 }
 
 void ListingLine::add_byte(int byte)
 {
     if (line.size() < 12)
     {
-        add_padding(12);
+        padding(12);
     }
     else
     {
@@ -46,11 +53,11 @@ void ListingLine::add_byte(int byte)
 
 void ListingLine::add_line_content(std::string_view line_content)
 {
-    add_padding(24);
+    padding(25);
     line += line_content;
 }
 
-void ListingLine::add_padding(int column)
+void ListingLine::padding(int column)
 {
     if (line.size() < column)
     {

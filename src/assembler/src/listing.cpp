@@ -1,5 +1,6 @@
 #include "listing.h"
 
+#include "listing_line.h"
 #include "opcodes.h"
 
 #include <cstring>
@@ -30,6 +31,7 @@ namespace
     }
 
 }
+
 Listing::Listing(FILE* output, const Options& options) : output(output), options(options)
 {
     if (options.single_byte_list)
@@ -146,39 +148,33 @@ void Listing::data(int line_number, int line_address, const std::string& line_co
     }
     else
     {
-        write_line_number(line_number);
-        write_address(line_address);
         {
             int index = 0;
 
-            std::string data_line;
-
             // First line
+            ListingLine first_line{line_number, line_address};
             for (int data : data_list | std::views::take(3))
             {
-                data_line += " ";
-                data_line += to_octal_str(data);
+                first_line.add_byte(data);
                 index += 1;
                 line_address += 1;
             }
-            auto spaces = (3 - std::min<unsigned int>(data_list.size(), 3));
-            data_line += std::string(4 * spaces + 2, ' ');
-            data_line += line_content;
-            fprintf(output, "%s\n", data_line.c_str());
+            first_line.add_line_content(line_content);
+            fprintf(output, "%s\n", first_line.str().c_str());
 
             // Next lines
             while (data_list.size() > index)
             {
-                data_line = "     ";
-                data_line += to_octal_address_str(line_address);
+                ListingLine next_line;
+                next_line.add_address(line_address);
+
                 for (int data : data_list | std::views::drop(index) | std::views::take(3))
                 {
-                    data_line += " ";
-                    data_line += to_octal_str(data);
+                    next_line.add_byte(data);
                     index += 1;
                     line_address += 1;
                 }
-                fprintf(output, "%s\n", data_line.c_str());
+                fprintf(output, "%s\n", next_line.str().c_str());
             }
         }
     }
