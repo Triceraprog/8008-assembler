@@ -10,28 +10,6 @@
 #include <sstream>
 #include <vector>
 
-namespace
-{
-    std::string to_octal_str(int data)
-    {
-        std::stringstream str;
-        str << std::setfill('0') << std::setw(3) << std::oct << data;
-
-        return str.str();
-    }
-
-    std::string to_octal_address_str(int address)
-    {
-        std::stringstream str;
-        str << std::setfill('0') << std::oct;
-        str << std::setw(2) << ((address >> 8) & 0xFF) << "-";
-        str << std::setw(3) << (address & 0xFF);
-
-        return str.str();
-    }
-
-}
-
 Listing::Listing(FILE* output, const Options& options) : output(output), options(options)
 {
     if (options.single_byte_list)
@@ -119,16 +97,19 @@ void Listing::opcode_line_with_space_2_arg(int line_number, int line_address, co
 void Listing::one_byte_of_data_with_address(int line_number, int line_address, int data,
                                             const std::string& line_content) const
 {
-    write_line_preamble(line_number, line_address);
-    fprintf(output, "%03o %s\n", data, line_content.c_str());
+    ListingLine line{line_number, line_address};
+    line.short_format();
+    line.add_byte(data);
+    line.add_line_content(line_content);
+    fprintf(output, "%s\n", line.str().c_str());
 }
 
-void Listing::one_byte_of_data_continued(int line_number, int line_address, int data) const
+void Listing::one_byte_of_data_continued(int line_address, int data) const
 {
-    fprintf(output, "     ");
-    write_address(line_address);
-    fprintf(output, " ");
-    fprintf(output, "%03o\n", data);
+    ListingLine line;
+    line.add_address(line_address);
+    line.add_byte(data);
+    fprintf(output, "%s\n", line.str().c_str());
 }
 
 void Listing::data(int line_number, int line_address, const std::string& line_content,
@@ -136,19 +117,12 @@ void Listing::data(int line_number, int line_address, const std::string& line_co
 {
     if (options.single_byte_list)
     {
-        ListingLine first_line{line_number, line_address};
-        first_line.short_format();
-        first_line.add_byte(data_list[0]);
-        first_line.add_line_content(line_content);
-        fprintf(output, "%s\n", first_line.str().c_str());
+        one_byte_of_data_with_address(line_number, line_address, data_list[0], line_content);
 
         for (int data : data_list | std::views::drop(1))
         {
             line_address += 1;
-
-            ListingLine next_line{line_number, line_address};
-            next_line.add_byte(data);
-            fprintf(output, "%s\n", next_line.str().c_str());
+            one_byte_of_data_continued(line_address, data);
         }
     }
     else

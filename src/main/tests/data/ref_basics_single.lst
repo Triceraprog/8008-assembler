@@ -151,10 +151,10 @@ Line Addr.  DAT Source Line
   93            
   94            SOMEDATA:
   95 00-165 000     DATA 000,001,002,003,004    ; End of line comment
-  95 00-166 001
-  95 00-167 002
-  95 00-170 003
-  95 00-171 004
+     00-166 001
+     00-167 002
+     00-170 003
+     00-171 004
   96 00-172         DATA *2
 Symbol Count: 5
     Symbol  Oct Val  DecVal
