@@ -3,9 +3,33 @@
 #include "opcodes.h"
 
 #include <cstring>
+#include <iomanip>
+#include <iostream>
 #include <ranges>
+#include <sstream>
 #include <vector>
 
+namespace
+{
+    std::string to_octal_str(int data)
+    {
+        std::stringstream str;
+        str << std::setfill('0') << std::setw(3) << std::oct << data;
+
+        return str.str();
+    }
+
+    std::string to_octal_address_str(int address)
+    {
+        std::stringstream str;
+        str << std::setfill('0') << std::oct;
+        str << std::setw(2) << ((address >> 8) & 0xFF) << "-";
+        str << std::setw(3) << (address & 0xFF);
+
+        return str.str();
+    }
+
+}
 Listing::Listing(FILE* output, const Options& options) : output(output), options(options)
 {
     if (options.single_byte_list)
@@ -127,43 +151,39 @@ void Listing::data(int line_number, int line_address, const std::string& line_co
     }
     else
     {
-        int line_address_h = (line_address >> 8) & 0xFF;
-        int line_address_l = line_address & 0xFF;
-
         write_line_number(line_number);
         write_address(line_address);
         {
             int index = 0;
 
+            std::string data_line;
+
             // First line
             for (int data : data_list | std::views::take(3))
             {
-                fprintf(output, " ");
-                write_octal(data);
+                data_line += " ";
+                data_line += to_octal_str(data);
                 index += 1;
                 line_address += 1;
             }
-            auto spaces = (3 - std::min<int>(data_list.size(), 3));
-            while (spaces)
-            {
-                fprintf(output, "    ");
-                spaces -= 1;
-            }
-            fprintf(output, "  %s\n", line_content.c_str());
+            auto spaces = (3 - std::min<unsigned int>(data_list.size(), 3));
+            data_line += std::string(4 * spaces + 2, ' ');
+            data_line += line_content;
+            fprintf(output, "%s\n", data_line.c_str());
 
             // Next lines
             while (data_list.size() > index)
             {
-                fprintf(output, "     ");
-                write_address(line_address);
+                data_line = "     ";
+                data_line += to_octal_address_str(line_address);
                 for (int data : data_list | std::views::drop(index) | std::views::take(3))
                 {
-                    fprintf(output, " ");
-                    write_octal(data);
+                    data_line += " ";
+                    data_line += to_octal_str(data);
                     index += 1;
                     line_address += 1;
                 }
-                fprintf(output, "\n");
+                fprintf(output, "%s\n", data_line.c_str());
             }
         }
     }
