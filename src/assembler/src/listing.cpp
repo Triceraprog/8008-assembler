@@ -10,30 +10,31 @@
 #include <sstream>
 #include <vector>
 
-Listing::Listing(FILE* output, const Options& options) : output(output), options(options) {}
+Listing::Listing(std::ostream& output, const Options& options) : output(output), options(options) {}
 
 void Listing::write_listing_header()
 {
     time_t result = time(nullptr);
     std::string compile_time{asctime(localtime(&result))};
 
-    fprintf(output, "AS8 assembler for intel 8008, t.e.jones Version 1.0\n");
-    fprintf(output, "Options: listfile=%d debug=%d ", options.generate_list_file, options.debug);
-    fprintf(output, "binaryout=%d singlelist=%d\n", options.generate_binary_file,
-            options.single_byte_list);
-    fprintf(output, "octalnums=%d markascii=%d\n", options.input_num_as_octal,
-            options.mark_8_ascii);
-    fprintf(output, "Infile=%s\n", options.input_filename.c_str());
-    fprintf(output, "Assembly Performed: %s\n\n", compile_time.c_str());
+    output << "AS8 assembler for intel 8008, t.e.jones Version 1.0\n";
+    output << "Options: listfile=" << options.generate_list_file << " debug=" << options.debug
+           << " binaryout=" << options.generate_binary_file
+           << " singlelist=" << options.single_byte_list << "\n";
+
+    output << "octalnums=" << options.input_num_as_octal << " markascii=" << options.mark_8_ascii
+           << "\n";
+    output << "Infile=" << options.input_filename << "\n";
+    output << "Assembly Performed: " << compile_time << "\n\n";
     if (options.single_byte_list)
     {
-        fprintf(output, "Line Addr.  DAT Source Line\n");
-        fprintf(output, "---- ------ --- ----------------------------------\n");
+        output << "Line Addr.  DAT Source Line\n";
+        output << "---- ------ --- ----------------------------------\n";
     }
     else
     {
-        fprintf(output, "Line Addr.  CodeBytes   Source Line\n");
-        fprintf(output, "---- ------ ----------- ----------------------------------\n");
+        output << "Line Addr.  CodeBytes   Source Line\n";
+        output << "---- ------ ----------- ----------------------------------\n";
     }
 }
 
@@ -45,7 +46,7 @@ void Listing::simple_line(int line_number, const std::string& line_content, cons
         line.short_format();
     }
     line.add_line_content(line_content);
-    fprintf(output, "%s\n", line.str().c_str());
+    output << line.str() << "\n";
 }
 
 void Listing::reserved_data(int line_number, int line_address, const std::string& line_content,
@@ -57,7 +58,7 @@ void Listing::reserved_data(int line_number, int line_address, const std::string
         line.short_format();
     }
     line.add_line_content(line_content);
-    fprintf(output, "%s\n", line.str().c_str());
+    output << line.str() << "\n";
 }
 
 void Listing::opcode_line_with_space(int line_number, int line_address, const Opcode& opcode,
@@ -66,7 +67,7 @@ void Listing::opcode_line_with_space(int line_number, int line_address, const Op
     ListingLine line{line_number, line_address};
     line.add_byte(opcode.code);
     line.add_line_content(line_content);
-    fprintf(output, "%s\n", line.str().c_str());
+    output << line.str() << "\n";
 }
 
 void Listing::opcode_line_with_space_1_arg(int line_number, int line_address, const Opcode& opcode,
@@ -76,7 +77,7 @@ void Listing::opcode_line_with_space_1_arg(int line_number, int line_address, co
     line.add_byte(opcode.code);
     line.add_byte(arg1);
     line.add_line_content(line_content);
-    fprintf(output, "%s\n", line.str().c_str());
+    output << line.str() << "\n";
 }
 
 void Listing::opcode_line_with_space_2_arg(int line_number, int line_address, const Opcode& opcode,
@@ -87,7 +88,7 @@ void Listing::opcode_line_with_space_2_arg(int line_number, int line_address, co
     line.add_byte(arg1);
     line.add_byte(arg2);
     line.add_line_content(line_content);
-    fprintf(output, "%s\n", line.str().c_str());
+    output << line.str() << "\n";
 }
 
 void Listing::one_byte_of_data_with_address(int line_number, int line_address, int data,
@@ -97,7 +98,7 @@ void Listing::one_byte_of_data_with_address(int line_number, int line_address, i
     line.short_format();
     line.add_byte(data);
     line.add_line_content(line_content);
-    fprintf(output, "%s\n", line.str().c_str());
+    output << line.str() << "\n";
 }
 
 void Listing::one_byte_of_data_continued(int line_address, int data) const
@@ -105,7 +106,7 @@ void Listing::one_byte_of_data_continued(int line_address, int data) const
     ListingLine line;
     line.add_address(line_address);
     line.add_byte(data);
-    fprintf(output, "%s\n", line.str().c_str());
+    output << line.str() << "\n";
 }
 
 void Listing::data(int line_number, int line_address, const std::string& line_content,
@@ -135,7 +136,7 @@ void Listing::data(int line_number, int line_address, const std::string& line_co
                 line_address += 1;
             }
             first_line.add_line_content(line_content);
-            fprintf(output, "%s\n", first_line.str().c_str());
+            output << first_line.str() << "\n";
 
             // Next lines
             while (data_list.size() > index)
@@ -149,7 +150,7 @@ void Listing::data(int line_number, int line_address, const std::string& line_co
                     index += 1;
                     line_address += 1;
                 }
-                fprintf(output, "%s\n", next_line.str().c_str());
+                output << next_line.str() << "\n";
             }
         }
     }

@@ -2,7 +2,6 @@
 
 #include "options.h"
 
-#include <cstdio>
 #include <iostream>
 
 Files::Files(const Options& options)
@@ -63,7 +62,8 @@ void Files::open_files(const Options& options)
 
     if (options.generate_list_file)
     {
-        if ((lfp = fopen(list_filename.c_str(), "wt")) == nullptr)
+        listing_stream.open(list_filename.c_str(), std::ios::out);
+        if (listing_stream.fail())
         {
             throw CannotOpenFile(options.input_filename, "output list file");
         }

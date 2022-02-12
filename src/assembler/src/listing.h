@@ -3,7 +3,6 @@
 
 #include "options.h"
 
-#include <cstdio>
 #include <vector>
 
 struct Opcode;
@@ -11,7 +10,7 @@ struct Opcode;
 class Listing
 {
 public:
-    Listing(FILE* output, const Options& options);
+    Listing(std::ostream& output, const Options& options);
     void write_listing_header();
     void simple_line(int line_number, const std::string& line_content, bool short_format);
     void data(int line_number, int line_address, const std::string& line_content,
@@ -30,7 +29,7 @@ public:
                                       int arg1, int arg2, const std::string& line_content);
 
 private:
-    FILE* output;
+    std::ostream& output;
     const Options& options;
 };
 

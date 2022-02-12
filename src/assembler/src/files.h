@@ -13,9 +13,9 @@ public:
     explicit Files(const Options& options);
     ~Files();
 
-    FILE* lfp{};
     std::fstream input_stream;
     std::fstream output_stream;
+    std::fstream listing_stream;
 
 private:
     void set_output_filenames(const Options& options);

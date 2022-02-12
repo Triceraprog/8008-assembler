@@ -1,5 +1,8 @@
 #include "symbol_table.h"
 
+#include <iomanip>
+#include <iostream>
+
 void SymbolTable::define_symbol(const std::string_view symbol_name, int value)
 {
     std::string upper{symbol_name};
@@ -25,11 +28,11 @@ std::tuple<bool, int> SymbolTable::get_symbol_value(const std::string_view symbo
     return {false, 0};
 }
 
-void SymbolTable::list_symbols(FILE* lfp)
+void SymbolTable::list_symbols(std::ostream& output)
 {
-    fprintf(lfp, "Symbol Count: %lu\n", symbols.size());
-    fprintf(lfp, "    Symbol  Oct Val  DecVal\n");
-    fprintf(lfp, "    ------  -------  ------\n");
+    output << "Symbol Count: " << symbols.size() << "\n";
+    output << "    Symbol  Oct Val  DecVal\n";
+    output << "    ------  -------  ------\n";
     for (auto& sorted_label : insertion_order)
     {
         std::string upper{sorted_label};
@@ -40,11 +43,18 @@ void SymbolTable::list_symbols(FILE* lfp)
         {
             const auto high = (value >> 8) & 0xFF;
             const auto low = value & 0xFF;
-            fprintf(lfp, "%10s   %2o %03o  %5d\n", sorted_label.c_str(), high, low, value);
+            output << std::setw(10) << sorted_label.c_str() << "   ";
+            output << std::setw(2) << std::oct << high << " ";
+            output << std::setw(3) << std::setfill('0') << std::oct << low << "  ";
+            output << std::setw(5) << std::setfill(' ') << std::dec << value;
+            output << "\n";
         }
         else
         {
-            fprintf(lfp, "%10s      %03o  %5d\n", sorted_label.c_str(), value, value);
+            output << std::setw(10) << sorted_label.c_str() << "      ";
+            output << std::setw(3) << std::setfill('0') << std::oct << value << "  ";
+            output << std::setw(5) << std::setfill(' ') << std::dec << value;
+            output << "\n";
         }
     }
 }
