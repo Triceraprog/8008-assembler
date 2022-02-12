@@ -136,14 +136,19 @@ void Listing::data(int line_number, int line_address, const std::string& line_co
 {
     if (options.single_byte_list)
     {
-        one_byte_of_data_with_address(line_number, line_address, data_list[0], line_content);
+        ListingLine first_line{line_number, line_address};
+        first_line.short_format();
+        first_line.add_byte(data_list[0]);
+        first_line.add_line_content(line_content);
+        fprintf(output, "%s\n", first_line.str().c_str());
+
         for (int data : data_list | std::views::drop(1))
         {
             line_address += 1;
-            write_line_number(line_number);
-            write_address(line_address);
-            fprintf(output, " ");
-            fprintf(output, "%03o\n", data);
+
+            ListingLine next_line{line_number, line_address};
+            next_line.add_byte(data);
+            fprintf(output, "%s\n", next_line.str().c_str());
         }
     }
     else

@@ -22,6 +22,8 @@ ListingLine::ListingLine(int line_number, int line_address) : ListingLine()
     add_address(line_address);
 }
 
+void ListingLine::short_format() { column_for_padding = 16; }
+
 void ListingLine::add_address(int line_address)
 {
     padding(5);
@@ -53,7 +55,7 @@ void ListingLine::add_byte(int byte)
 
 void ListingLine::add_line_content(std::string_view line_content)
 {
-    padding(25);
+    padding(column_for_padding);
     line += line_content;
 }
 

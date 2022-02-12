@@ -46,3 +46,14 @@ TEST(ListingLine, with_line_address_and_three_bytes)
 
     ASSERT_THAT(line.str(), Eq("1234 20-123 100 200 300  DATA 100,200,300"));
 }
+
+
+TEST(ListingLine, with_line_address_and_short_format_byte)
+{
+    auto line = ListingLine(1, 1);
+    line.short_format();
+    line.add_byte(0100);
+    line.add_line_content("DATA 100");
+
+    ASSERT_THAT(line.str(), Eq("   1 00-001 100 DATA 100"));
+}
