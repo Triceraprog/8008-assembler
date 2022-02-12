@@ -78,7 +78,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                     /* we will go ahead and check for more. */
                     if (options.generate_list_file)
                     {
-                        listing.simple_line(line_number, input_line);
+                        listing.simple_line(line_number, input_line, options.single_byte_list);
                     }
                     break;
                 case PseudoOpcodeEnum::DATA: {
@@ -90,7 +90,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                         /* if n is negative, that number of bytes are just reserved */
                         if (options.generate_list_file)
                         {
-                            listing.reserved_data(line_number, line_address, input_line);
+                            listing.reserved_data(line_number, line_address, input_line,
+                                                  options.single_byte_list);
                         }
                         current_address += 0 - data_length;
                     }
@@ -136,8 +137,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                             writer.write_byte(opcode.code, current_address++);
                             if (options.generate_list_file)
                             {
-                                listing.opcode_line_with_space(line_number, line_address,
-                                                               opcode, input_line);
+                                listing.opcode_line_with_space(line_number, line_address, opcode,
+                                                               input_line);
                             }
                             break;
                         case 1: {
@@ -154,7 +155,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                             {
                                 if (options.single_byte_list)
                                 {
-                                    listing.one_byte_of_data_with_address(line_number, line_address, code, input_line);
+                                    listing.one_byte_of_data_with_address(line_number, line_address,
+                                                                          code, input_line);
                                     line_address++;
                                     listing.one_byte_of_data_continued(line_address,
                                                                        evaluated_arg1);
@@ -162,8 +164,9 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                                 else
                                 {
 
-                                    listing.opcode_line_with_space_1_arg(line_number, line_address, opcode,
-                                            evaluated_arg1, input_line);
+                                    listing.opcode_line_with_space_1_arg(line_number, line_address,
+                                                                         opcode, evaluated_arg1,
+                                                                         input_line);
                                 }
                             }
                         }
@@ -186,7 +189,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                             {
                                 if (options.single_byte_list)
                                 {
-                                    listing.one_byte_of_data_with_address(line_number, line_address, code, input_line);
+                                    listing.one_byte_of_data_with_address(line_number, line_address,
+                                                                          code, input_line);
                                     line_address++;
                                     listing.one_byte_of_data_continued(line_address, low_byte);
                                     line_address++;
@@ -194,8 +198,9 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                                 }
                                 else
                                 {
-                                    listing.opcode_line_with_space_2_arg(line_number, line_address, opcode, low_byte,
-                                            high_byte, input_line);
+                                    listing.opcode_line_with_space_2_arg(line_number, line_address,
+                                                                         opcode, low_byte,
+                                                                         high_byte, input_line);
                                 }
                             }
                         }

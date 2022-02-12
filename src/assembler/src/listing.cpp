@@ -10,18 +10,7 @@
 #include <sstream>
 #include <vector>
 
-Listing::Listing(FILE* output, const Options& options) : output(output), options(options)
-{
-    if (options.single_byte_list)
-    {
-        single_space_pad[0] = 0;
-    }
-
-    else
-    {
-        strcpy(single_space_pad, "        ");
-    }
-}
+Listing::Listing(FILE* output, const Options& options) : output(output), options(options) {}
 
 void Listing::write_listing_header()
 {
@@ -48,29 +37,27 @@ void Listing::write_listing_header()
     }
 }
 
-void Listing::write_line_number(int line_number) const { fprintf(output, "%4d ", line_number); }
-void Listing::write_address(int address) const
+void Listing::simple_line(int line_number, const std::string& line_content, const bool short_format)
 {
-    fprintf(output, "%02o-%03o", ((address >> 8) & 0xFF), (address & 0xFF));
+    ListingLine line{line_number};
+    if (short_format)
+    {
+        line.short_format();
+    }
+    line.add_line_content(line_content);
+    fprintf(output, "%s\n", line.str().c_str());
 }
 
-void Listing::simple_line(int line_number, const std::string& line_content)
+void Listing::reserved_data(int line_number, int line_address, const std::string& line_content,
+                            const bool short_format)
 {
-    write_line_number(line_number);
-    fprintf(output, "           %s%s\n", single_space_pad, line_content.c_str());
-}
-
-void Listing::write_line_preamble(int line_number, int line_address) const
-{
-    write_line_number(line_number);
-    write_address(line_address);
-    fprintf(output, " ");
-}
-
-void Listing::reserved_data(int line_number, int line_address, const std::string& line_content)
-{
-    write_line_preamble(line_number, line_address);
-    fprintf(output, "    %s%s\n", single_space_pad, line_content.c_str());
+    ListingLine line{line_number, line_address};
+    if (short_format)
+    {
+        line.short_format();
+    }
+    line.add_line_content(line_content);
+    fprintf(output, "%s\n", line.str().c_str());
 }
 
 void Listing::opcode_line_with_space(int line_number, int line_address, const Opcode& opcode,
@@ -85,15 +72,22 @@ void Listing::opcode_line_with_space(int line_number, int line_address, const Op
 void Listing::opcode_line_with_space_1_arg(int line_number, int line_address, const Opcode& opcode,
                                            int arg1, const std::string& line_content)
 {
-    write_line_preamble(line_number, line_address);
-    fprintf(output, "%03o %03o     %s\n", opcode.code, arg1, line_content.c_str());
+    ListingLine line{line_number, line_address};
+    line.add_byte(opcode.code);
+    line.add_byte(arg1);
+    line.add_line_content(line_content);
+    fprintf(output, "%s\n", line.str().c_str());
 }
 
 void Listing::opcode_line_with_space_2_arg(int line_number, int line_address, const Opcode& opcode,
                                            int arg1, int arg2, const std::string& line_content)
 {
-    write_line_preamble(line_number, line_address);
-    fprintf(output, "%03o %03o %03o %s\n", opcode.code, arg1, arg2, line_content.c_str());
+    ListingLine line{line_number, line_address};
+    line.add_byte(opcode.code);
+    line.add_byte(arg1);
+    line.add_byte(arg2);
+    line.add_line_content(line_content);
+    fprintf(output, "%s\n", line.str().c_str());
 }
 
 void Listing::one_byte_of_data_with_address(int line_number, int line_address, int data,
