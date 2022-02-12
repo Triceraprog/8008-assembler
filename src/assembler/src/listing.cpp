@@ -80,49 +80,44 @@ void Listing::simple_line(int line_number, const std::string& line_content)
     fprintf(output, "           %s%s\n", single_space_pad, line_content.c_str());
 }
 
-void Listing::write_octal(int data) const { fprintf(output, "%03o", data); }
-
-void Listing::reserved_data(int line_number, int line_address, const std::string& line_content)
+void Listing::write_line_preamble(int line_number, int line_address) const
 {
     write_line_number(line_number);
     write_address(line_address);
     fprintf(output, " ");
+}
+
+void Listing::reserved_data(int line_number, int line_address, const std::string& line_content)
+{
+    write_line_preamble(line_number, line_address);
     fprintf(output, "    %s%s\n", single_space_pad, line_content.c_str());
 }
 
 void Listing::opcode_line_with_space(int line_number, int line_address, const Opcode& opcode,
                                      const std::string& line_content)
 {
-    write_line_number(line_number);
-    write_address(line_address);
-    fprintf(output, " ");
+    write_line_preamble(line_number, line_address);
     fprintf(output, "%03o %s%s\n", opcode.code, single_space_pad, line_content.c_str());
 }
 
 void Listing::opcode_line_with_space_1_arg(int line_number, int line_address, const Opcode& opcode,
                                            int arg1, const std::string& line_content)
 {
-    write_line_number(line_number);
-    write_address(line_address);
-    fprintf(output, " ");
+    write_line_preamble(line_number, line_address);
     fprintf(output, "%03o %03o     %s\n", opcode.code, arg1, line_content.c_str());
 }
 
 void Listing::opcode_line_with_space_2_arg(int line_number, int line_address, const Opcode& opcode,
                                            int arg1, int arg2, const std::string& line_content)
 {
-    write_line_number(line_number);
-    write_address(line_address);
-    fprintf(output, " ");
+    write_line_preamble(line_number, line_address);
     fprintf(output, "%03o %03o %03o %s\n", opcode.code, arg1, arg2, line_content.c_str());
 }
 
 void Listing::one_byte_of_data_with_address(int line_number, int line_address, int data,
                                             const std::string& line_content) const
 {
-    write_line_number(line_number);
-    write_address(line_address);
-    fprintf(output, " ");
+    write_line_preamble(line_number, line_address);
     fprintf(output, "%03o %s\n", data, line_content.c_str());
 }
 
