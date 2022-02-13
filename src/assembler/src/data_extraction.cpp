@@ -2,8 +2,6 @@
 #include "evaluator.h"
 #include "options.h"
 #include "symbol_table.h"
-#include <cstdlib>
-#include <iostream>
 #include <regex>
 
 namespace
@@ -35,16 +33,11 @@ int decode_data(const Options& options, const SymbolTable& symbol_table,
     if (data_part.front() == '*')
     {
         // 'DATA *NNN' reserve NNN bytes.
-        try
-        {
-            int number_to_reserve = std::stoi(data_part.substr(1).data());
-            return 0 - number_to_reserve;
-        }
-        catch (...)
-        {
-            std::cerr << " in line %s can't read number to reserve\n";
-            exit(-1);
-        }
+        // int number_to_reserve = std::stoi(data_part.substr(1).data());
+        const auto first_comment = data_part.find_first_of(';');
+        auto without_comment = std::string{data_part.substr(0, first_comment)};
+        int number_to_reserve = evaluate_argument(options, symbol_table, without_comment.substr(1));
+        return 0 - number_to_reserve;
     }
     if ((data_part.front() == '\'') || (data_part.front() == '"'))
     {
