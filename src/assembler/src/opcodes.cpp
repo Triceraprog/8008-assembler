@@ -129,6 +129,26 @@ PseudoOpcodeEnum opcode_to_enum(std::string_view opcode)
     return std::get<1>(*found_op_code);
 }
 
+int get_opcode_size(const Opcode& opcode)
+{
+    int opcode_byte_size;
+    switch (opcode.rule)
+    {
+        case 0:
+        case 3:
+        case 4:
+            opcode_byte_size = 1;
+            break;
+        case 1:
+            opcode_byte_size = 2;
+            break;
+        case 2:
+            opcode_byte_size = 3;
+            break;
+    }
+    return opcode_byte_size;
+}
+
 UndefinedOpcode::UndefinedOpcode(const std::string& opcode)
 {
     reason = "undefined opcode " + opcode;

@@ -26,11 +26,12 @@ enum class PseudoOpcodeEnum
 
 std::tuple<bool, Opcode&> find_opcode(std::string_view opcode_name);
 PseudoOpcodeEnum opcode_to_enum(std::string_view opcode);
+int get_opcode_size(const Opcode& opcode);
 
 class UndefinedOpcode : public ExceptionWithReason
 {
 public:
-    UndefinedOpcode(const std::string& opcode);
+    explicit UndefinedOpcode(const std::string& opcode);
 };
 
 #endif //INC_8008_ASSEMBLER_OPCODES_H

@@ -5,7 +5,6 @@
 #include "evaluator.h"
 #include "files.h"
 #include "line_tokenizer.h"
-#include "listing.h"
 #include "opcodes.h"
 #include "options.h"
 #include "symbol_table.h"
@@ -17,7 +16,6 @@
 
 namespace
 {
-
     void define_symbol_or_fail(const Options& options, SymbolTable& symbol_table,
                                LineTokenizer& tokens, int current_address)
     {
@@ -50,26 +48,6 @@ namespace
         symbol_table.define_symbol(tokens.label, val);
     }
 
-    int get_opcode_size(const Opcode& opcode)
-    {
-        int opcode_byte_size;
-        switch (opcode.rule)
-        {
-            case 0:
-            case 3:
-            case 4:
-                opcode_byte_size = 1;
-                break;
-            case 1:
-                opcode_byte_size = 2;
-                break;
-            case 2:
-                opcode_byte_size = 3;
-                break;
-        }
-        return opcode_byte_size;
-    }
-
     void verify_cpu(const std::string& cpu_arg)
     {
         if ((!ci_equals(cpu_arg, "8008")) && (!ci_equals(cpu_arg, "i8008")))
@@ -86,8 +64,6 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
     {
         std::cout << "Pass number One:  Read and Define Symbols\n";
     }
-
-    listing.write_listing_header();
 
     int current_line_count = 0;
     int current_address = 0;
@@ -139,7 +115,7 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
                 try
                 {
                     std::vector<int> data_list;
-                    data_size = decode_data(options, symbol_table, input_line.c_str(), data_list);
+                    data_size = decode_data(options, symbol_table, input_line, data_list);
                 }
                 catch (const std::exception& ex)
                 {

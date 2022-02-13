@@ -42,6 +42,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
         std::cout << "Pass number Two:  Re-read and assemble codes\n";
     }
 
+    listing.write_listing_header();
+
     int line_number = 0;
     int current_address = 0;
     int line_address;
