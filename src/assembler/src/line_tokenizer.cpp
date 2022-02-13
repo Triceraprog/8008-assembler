@@ -69,8 +69,6 @@ namespace
 {
     std::string clean_line(const std::string& input_line)
     {
-        using namespace std::string_literals;
-
         std::string clean{input_line};
 
         auto pos = clean.find_first_of(";/\n\x0a");
@@ -89,8 +87,6 @@ namespace
 
 LineTokenizer parse_line(const Options& options, const std::string& line, int line_count)
 {
-    using namespace std::string_literals;
-
     std::string cleaned_line = clean_line(line);
 
     LineTokenizer tokens(cleaned_line);
