@@ -109,7 +109,8 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
                 case PseudoOpcodeEnum::DATA: {
                     int data_size;
                     std::vector<int> data_list;
-                    data_size = decode_data(options, symbol_table, input_line, data_list);
+                    data_size =
+                            decode_data_with_keyword(options, symbol_table, input_line, data_list);
 
                     if (options.debug)
                     {

@@ -86,7 +86,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                 case PseudoOpcodeEnum::DATA: {
                     std::vector<int> data_list;
                     int data_length =
-                            decode_data(options, symbol_table, input_line.c_str(), data_list);
+                            decode_data_with_keyword(options, symbol_table, input_line, data_list);
                     if (data_length < 0)
                     {
                         /* if n is negative, that number of bytes are just reserved */

@@ -10,24 +10,12 @@ namespace
     std::regex except_comma{R"(([^,\s]*))"};
 }
 
-int decode_data(const Options& options, const SymbolTable& symbol_table,
-                const std::string_view line, std::vector<int>& out_data)
+int decode_data(const Options& options, const SymbolTable& symbol_table, std::string_view data_part,
+                std::vector<int>& out_data)
 {
-    std::string line_as_string{line};
-    std::smatch data_match;
-    bool found = std::regex_search(line_as_string, data_match, data_rule);
-
-    if (!found)
-    {
-        throw InternalError("can't find data code");
-    }
-
-    auto after_data_position = data_match.position() + data_match.length();
-    auto data_part = line.substr(after_data_position);
-
     if (data_part.empty())
     {
-        return 0;
+        throw EmptyData();
     }
 
     if (data_part.front() == '*')
@@ -132,6 +120,24 @@ int decode_data(const Options& options, const SymbolTable& symbol_table,
     }
 }
 
+int decode_data_with_keyword(const Options& options, const SymbolTable& symbol_table,
+                             std::string_view line, std::vector<int>& out_data)
+{
+    std::string line_as_string{line};
+    std::smatch data_match;
+    bool found = std::regex_search(line_as_string, data_match, data_rule);
+
+    if (!found)
+    {
+        throw InternalError("can't find data code");
+    }
+
+    auto after_data_position = data_match.position() + data_match.length();
+    auto data_part = line.substr(after_data_position);
+
+    return decode_data(options, symbol_table, data_part, out_data);
+}
+
 DataTooLong::DataTooLong()
 {
     reason = "DATA max length is 12 bytes. Use a second line for more data.";
@@ -141,3 +147,5 @@ UnknownEscapeSequence::UnknownEscapeSequence(char escape)
 {
     reason = "unknown escape sequence \\" + std::string(1, escape);
 }
+
+EmptyData::EmptyData() { reason = "DATA has no parameter."; }
