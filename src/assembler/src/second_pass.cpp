@@ -65,12 +65,12 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
             }
 
             LineTokenizer tokens = parse_line(options, input_line, line_number);
-            auto arg_count = tokens.arg_count;
+            auto arg_count = tokens.arguments.size();
 
             switch (opcode_to_enum(tokens.opcode))
             {
                 case PseudoOpcodeEnum::ORG:
-                    current_address = evaluate_argument(options, symbol_table, tokens.arg1);
+                    current_address = evaluate_argument(options, symbol_table, tokens.arguments[0]);
                     // no break
                 case PseudoOpcodeEnum::EMPTY:
                 case PseudoOpcodeEnum::EQU:
@@ -125,7 +125,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                     }
                     if (arg_count == 1)
                     {
-                        evaluated_arg1 = evaluate_argument(options, symbol_table, tokens.arg1);
+                        evaluated_arg1 =
+                                evaluate_argument(options, symbol_table, tokens.arguments[0]);
                     }
 
                     /* Now, each opcode, is categorized into different
@@ -147,7 +148,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                             /* single byte, must follow */
                             if ((evaluated_arg1 > 255) || (evaluated_arg1 < 0))
                             {
-                                throw ExpectedArgumentWithinLimits(255, tokens.arg1,
+                                throw ExpectedArgumentWithinLimits(255, tokens.arguments[0],
                                                                    evaluated_arg1);
                             }
                             int code = opcode.code;
@@ -178,7 +179,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                             const int MAX_ADDRESS = 1024 * 16;
                             if ((evaluated_arg1 > MAX_ADDRESS) || (evaluated_arg1 < 0))
                             {
-                                throw ExpectedArgumentWithinLimits(MAX_ADDRESS, tokens.arg1,
+                                throw ExpectedArgumentWithinLimits(MAX_ADDRESS, tokens.arguments[0],
                                                                    evaluated_arg1);
                             }
                             int code = opcode.code;
@@ -213,7 +214,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
 
                             if ((evaluated_arg1 > max_port) || (evaluated_arg1 < 0))
                             {
-                                throw ExpectedArgumentWithinLimits(max_port, tokens.arg1,
+                                throw ExpectedArgumentWithinLimits(max_port, tokens.arguments[0],
                                                                    evaluated_arg1);
                             }
 
@@ -231,7 +232,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                         case 4: {
                             if ((evaluated_arg1 > 7) || (evaluated_arg1 < 0))
                             {
-                                throw ExpectedArgumentWithinLimits(7, tokens.arg1, evaluated_arg1);
+                                throw ExpectedArgumentWithinLimits(7, tokens.arguments[0],
+                                                                   evaluated_arg1);
                             }
 
                             auto code = (opcode.code | (evaluated_arg1 << 3));

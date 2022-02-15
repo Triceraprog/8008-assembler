@@ -30,7 +30,7 @@ namespace
         int val;
         if (ci_equals(tokens.opcode, "equ") || ci_equals(tokens.opcode, "org"))
         {
-            val = evaluate_argument(options, symbol_table, tokens.arg1);
+            val = evaluate_argument(options, symbol_table, tokens.arguments[0]);
         }
         else
         {
@@ -101,10 +101,10 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
                 case PseudoOpcodeEnum::END:
                     break;
                 case PseudoOpcodeEnum::CPU:
-                    verify_cpu(tokens.arg1);
+                    verify_cpu(tokens.arguments[0]);
                     break;
                 case PseudoOpcodeEnum::ORG:
-                    current_address = evaluate_argument(options, symbol_table, tokens.arg1);
+                    current_address = evaluate_argument(options, symbol_table, tokens.arguments[0]);
                     break;
                 case PseudoOpcodeEnum::DATA: {
                     int data_size;

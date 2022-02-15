@@ -3,6 +3,7 @@
 
 #include <deque>
 #include <string>
+#include <vector>
 
 class Options;
 
@@ -13,10 +14,8 @@ public:
 
     std::string label;
     std::string opcode;
-    std::string arg1;
-    std::string arg2;
+    std::vector<std::string> arguments;
 
-    std::uint32_t arg_count{};
     bool warning_on_label{false};
 
 private:

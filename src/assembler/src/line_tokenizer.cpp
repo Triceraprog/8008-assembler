@@ -26,7 +26,8 @@ LineTokenizer::LineTokenizer(const std::string& line)
     std::deque<std::string> parsed;
     std::ranges::transform(begin, end, std::back_inserter(parsed),
                            [](const auto& elt) { return elt.str(); });
-    arg_count = std::max(0, static_cast<int>(parsed.size()) - (used_first_column ? 2 : 1));
+    auto arg_count = std::max(0, static_cast<int>(parsed.size()) - (used_first_column ? 2 : 1));
+    arguments.reserve(arg_count);
 
     if (used_first_column)
     {
@@ -34,8 +35,14 @@ LineTokenizer::LineTokenizer(const std::string& line)
         adjust_label();
     }
     opcode = consume_parsed(parsed);
-    arg1 = consume_parsed(parsed);
-    arg2 = consume_parsed(parsed);
+    if (arg_count >= 1)
+    {
+        arguments.push_back(consume_parsed(parsed));
+    }
+    if (arg_count >= 2)
+    {
+        arguments.push_back(consume_parsed(parsed));
+    }
 }
 
 std::string LineTokenizer::consume_parsed(std::deque<std::string>& parsed)
@@ -97,18 +104,22 @@ LineTokenizer parse_line(const Options& options, const std::string& line, int li
                   << tokens.label << " lacking colon, and not 'equ' pseudo-op.\n";
     }
 
-    if ((tokens.arg_count > 2) && (!ci_equals(tokens.opcode, "data")))
+    if ((tokens.arguments.size() > 2) && (!ci_equals(tokens.opcode, "data")))
     {
         std::cerr << "WARNING: extra text on line " << line_count << " " << line << "\n";
     }
 
     if (options.debug)
     {
+        auto arg_count = tokens.arguments.size();
         std::cout << "label=<" << tokens.label << "> ";
         std::cout << "opcode=<" << tokens.opcode << "> ";
-        std::cout << "args=<" << tokens.arg_count << "> ";
-        std::cout << "arg1=<" << tokens.arg1 << "> ";
-        std::cout << "arg2=<" << tokens.arg2 << ">\n";
+        std::cout << "args=<" << arg_count << "> ";
+
+        for (int index = 0; index < arg_count; index += 1)
+        {
+            std::cout << "arg" << index << "=<" << tokens.arguments[index] << "> ";
+        }
     }
 
     return tokens;
