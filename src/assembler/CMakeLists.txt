@@ -30,7 +30,7 @@ set(ASSEMBLER_TEST_FILES
         tests/byte_writer_tests.cpp
         tests/data_extractions_tests.cpp
         tests/opcodes_tests.cpp
-        tests/listing_line_tests.cpp)
+        tests/listing_line_tests.cpp tests/line_tokenizer_tests.cpp)
 
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})
 

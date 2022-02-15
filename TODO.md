@@ -1,3 +1,8 @@
+- Change line tokenizer so that it parses all arguments
+  - Add tests
+  - Better matching of quoted strings, escape chars and comments
+  - Extract as many argument as needed (for DATA)
+  - Extract the comment part
 - Use the first pass parsing in the second pass.
   - First do not recompute the addresses
   - The keep the tokens
