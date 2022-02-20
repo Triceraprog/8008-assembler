@@ -3,11 +3,62 @@
 #include "utils.h"
 
 #include <iostream>
-#include <regex>
+#include <utility>
 
 namespace
 {
-    std::regex line_tokens_scan{R"(([^\s,]+))"};
+    struct LineParser
+    {
+        explicit LineParser(std::string view) : view{std::move(view)} {}
+
+        void skip_spaces()
+        {
+            auto first_not_space = view.find_first_not_of(" \t");
+            if (first_not_space != std::string::npos)
+            {
+                view = view.substr(first_not_space);
+            }
+            else
+            {
+                view.resize(0);
+            }
+        }
+
+        std::string next_string()
+        {
+            skip_spaces();
+            auto first_space = view.find_first_of(" \t;");
+            if (first_space == std::string::npos)
+            {
+                auto result = view;
+                view.resize(0);
+                return result;
+            }
+            auto result = std::string{view.substr(0, first_space)};
+            view = view.substr(first_space + 1);
+            skip_spaces();
+            return result;
+        }
+
+        std::string next_argument()
+        {
+            auto first_comma = view.find_first_of(",;");
+            if (first_comma == std::string::npos)
+            {
+                auto result = view;
+                view.resize(0);
+                return std::string{trim_string(result)};
+            }
+            auto result = std::string{view.substr(0, first_comma)};
+            view = view.substr(first_comma + 1);
+            return result;
+        }
+
+        [[nodiscard]] bool empty() const { return view.empty(); }
+
+    private:
+        std::string view;
+    };
 }
 
 LineTokenizer::LineTokenizer(const std::string& line)
@@ -20,39 +71,23 @@ LineTokenizer::LineTokenizer(const std::string& line)
     auto c = line[0];
     auto used_first_column = (c != ' ') && (c != '\t') && (c != 0x00);
 
-    auto begin = std::sregex_iterator(line.begin(), line.end(), line_tokens_scan);
-    auto end = std::sregex_iterator();
-
-    std::deque<std::string> parsed;
-    std::ranges::transform(begin, end, std::back_inserter(parsed),
-                           [](const auto& elt) { return elt.str(); });
-    auto arg_count = std::max(0, static_cast<int>(parsed.size()) - (used_first_column ? 2 : 1));
-    arguments.reserve(arg_count);
+    LineParser line_parser{line};
+    line_parser.skip_spaces();
 
     if (used_first_column)
     {
-        label = consume_parsed(parsed);
+        label = line_parser.next_string();
         adjust_label();
     }
-    opcode = consume_parsed(parsed);
-    while (arg_count > 0)
-    {
-        arguments.push_back(consume_parsed(parsed));
-        arg_count -= 1;
-    }
-}
 
-std::string LineTokenizer::consume_parsed(std::deque<std::string>& parsed)
-{
-    if (parsed.empty())
+    if (!line_parser.empty())
     {
-        return "";
+        opcode = line_parser.next_string();
     }
-    else
+
+    while (!line_parser.empty())
     {
-        std::string result = parsed.front();
-        parsed.pop_front();
-        return result;
+        arguments.push_back(line_parser.next_argument());
     }
 }
 
@@ -80,9 +115,6 @@ namespace
         {
             clean.resize(std::max(0, static_cast<int>(pos - 1)));
         }
-
-        std::ranges::replace_if(
-                clean, [](const auto c) { return c == ','; }, ' ');
 
         return clean;
     }

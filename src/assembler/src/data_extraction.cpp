@@ -2,39 +2,33 @@
 #include "evaluator.h"
 #include "options.h"
 #include "symbol_table.h"
-#include <regex>
 
-namespace
+int decode_data(const Options& options, const SymbolTable& symbol_table,
+                const std::vector<std::string>& tokens, std::vector<int>& out_data)
 {
-    std::regex data_rule{"[dD][aA][tT][aA]\\s*"};
-    std::regex except_comma{R"(([^,\s]*))"};
-}
-
-int decode_data(const Options& options, const SymbolTable& symbol_table, std::string_view data_part,
-                std::vector<int>& out_data)
-{
-    if (data_part.empty())
+    if (tokens.empty())
     {
         throw EmptyData();
     }
 
-    if (data_part.front() == '*')
+    auto first_argument = tokens.front();
+    if (first_argument.front() == '*')
     {
         // 'DATA *NNN' reserve NNN bytes.
         // int number_to_reserve = std::stoi(data_part.substr(1).data());
-        const auto first_comment = data_part.find_first_of(';');
-        auto without_comment = std::string{data_part.substr(0, first_comment)};
+        const auto first_comment = first_argument.find_first_of(';');
+        auto without_comment = std::string{first_argument.substr(0, first_comment)};
         int number_to_reserve = evaluate_argument(options, symbol_table, without_comment.substr(1));
         return 0 - number_to_reserve;
     }
-    if ((data_part.front() == '\'') || (data_part.front() == '"'))
+    if ((first_argument.front() == '\'') || (first_argument.front() == '"'))
     {
         // DATA "..." or DATA '...' declares a string of characters
         // Warning: there's a syntax limitation. If a comment contains a quote, then
         // the result will be wrong.
-        const char quote_to_find = data_part.front();
-        auto last_quote_position = data_part.find_last_of(quote_to_find);
-        auto string_content = data_part.substr(1, last_quote_position - 1);
+        const char quote_to_find = first_argument.front();
+        auto last_quote_position = first_argument.find_last_of(quote_to_find);
+        auto string_content = first_argument.substr(1, last_quote_position - 1);
 
         bool escape_char = false;
 
@@ -88,26 +82,14 @@ int decode_data(const Options& options, const SymbolTable& symbol_table, std::st
     else
     {
         /* DATA xxx,xxx,xxx,xxx */
-        const auto first_comment = data_part.find_first_of(';');
-        auto without_comment = std::string{data_part.substr(0, first_comment)};
+        const auto first_comment = first_argument.find_first_of(';');
+        auto without_comment = std::string{first_argument.substr(0, first_comment)};
 
         int byte_count = 0;
 
-        auto begin =
-                std::sregex_iterator(without_comment.begin(), without_comment.end(), except_comma);
-        auto end = std::sregex_iterator();
-
-        for (auto it = begin; it != end; it++)
+        for (const auto& argument : tokens)
         {
-            std::string sub = it->str();
-
-            if (sub.empty())
-            {
-                continue;
-            }
-
-            out_data.push_back(evaluate_argument(options, symbol_table, sub));
-
+            out_data.push_back(evaluate_argument(options, symbol_table, argument));
             byte_count += 1;
 
             if (byte_count > 12)
@@ -118,24 +100,6 @@ int decode_data(const Options& options, const SymbolTable& symbol_table, std::st
 
         return byte_count;
     }
-}
-
-int decode_data_with_keyword(const Options& options, const SymbolTable& symbol_table,
-                             std::string_view line, std::vector<int>& out_data)
-{
-    std::string line_as_string{line};
-    std::smatch data_match;
-    bool found = std::regex_search(line_as_string, data_match, data_rule);
-
-    if (!found)
-    {
-        throw InternalError("can't find data code");
-    }
-
-    auto after_data_position = data_match.position() + data_match.length();
-    auto data_part = line.substr(after_data_position);
-
-    return decode_data(options, symbol_table, data_part, out_data);
 }
 
 DataTooLong::DataTooLong()

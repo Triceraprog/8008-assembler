@@ -76,3 +76,21 @@ TEST(LineTokenizer, parse_data_integer_arguments)
     ASSERT_THAT(tokenizer.arguments[2], Eq("$30"));
     ASSERT_THAT(tokenizer.arguments[3], Eq("40"));
 }
+
+TEST(LineTokenizer, parse_data_reservation)
+{
+    LineTokenizer tokenizer{" DATA *4"};
+    ASSERT_THAT(tokenizer.label, IsEmpty());
+    ASSERT_THAT(tokenizer.opcode, Eq("DATA"));
+    ASSERT_THAT(tokenizer.arguments, SizeIs(1));
+    ASSERT_THAT(tokenizer.arguments[0], Eq("*4"));
+}
+
+TEST(LineTokenizer, parse_string_with_spaces)
+{
+    LineTokenizer tokenizer{" DATA \" STRING \""};
+    ASSERT_THAT(tokenizer.label, IsEmpty());
+    ASSERT_THAT(tokenizer.opcode, Eq("DATA"));
+    ASSERT_THAT(tokenizer.arguments, SizeIs(1));
+    ASSERT_THAT(tokenizer.arguments[0], Eq("\" STRING \""));
+}
