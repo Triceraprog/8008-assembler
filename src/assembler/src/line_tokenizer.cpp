@@ -35,13 +35,10 @@ LineTokenizer::LineTokenizer(const std::string& line)
         adjust_label();
     }
     opcode = consume_parsed(parsed);
-    if (arg_count >= 1)
+    while (arg_count > 0)
     {
         arguments.push_back(consume_parsed(parsed));
-    }
-    if (arg_count >= 2)
-    {
-        arguments.push_back(consume_parsed(parsed));
+        arg_count -= 1;
     }
 }
 

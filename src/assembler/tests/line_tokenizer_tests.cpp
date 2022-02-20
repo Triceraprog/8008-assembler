@@ -64,3 +64,15 @@ TEST(LineTokenizer, parse_opcode_with_two_arguments_and_label)
     ASSERT_THAT(tokenizer.arguments[0], Eq("A"));
     ASSERT_THAT(tokenizer.arguments[1], Eq("$01"));
 }
+
+TEST(LineTokenizer, parse_data_integer_arguments)
+{
+    LineTokenizer tokenizer{" DATA 1,010,$30,40"};
+    ASSERT_THAT(tokenizer.label, IsEmpty());
+    ASSERT_THAT(tokenizer.opcode, Eq("DATA"));
+    ASSERT_THAT(tokenizer.arguments, SizeIs(4));
+    ASSERT_THAT(tokenizer.arguments[0], Eq("1"));
+    ASSERT_THAT(tokenizer.arguments[1], Eq("010"));
+    ASSERT_THAT(tokenizer.arguments[2], Eq("$30"));
+    ASSERT_THAT(tokenizer.arguments[3], Eq("40"));
+}
