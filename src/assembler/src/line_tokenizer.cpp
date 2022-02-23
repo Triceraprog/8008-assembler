@@ -11,19 +11,6 @@ namespace
     {
         explicit LineParser(std::string view) : view{std::move(view)} {}
 
-        void skip_spaces()
-        {
-            auto first_not_space = view.find_first_not_of(" \t");
-            if (first_not_space != std::string::npos)
-            {
-                view = view.substr(first_not_space);
-            }
-            else
-            {
-                view.resize(0);
-            }
-        }
-
         std::string next_string()
         {
             skip_spaces();
@@ -38,9 +25,9 @@ namespace
             {
                 return consume_full_view();
             }
+
             auto result = std::string{view.substr(0, first_space)};
             view = view.substr(first_space + 1);
-            skip_spaces();
             return result;
         }
 
@@ -86,6 +73,19 @@ namespace
             return consume_full_view();
         }
 
+        void skip_spaces()
+        {
+            auto first_not_space = view.find_first_not_of(" \t");
+            if (first_not_space != std::string::npos)
+            {
+                view = view.substr(first_not_space);
+            }
+            else
+            {
+                view.resize(0);
+            }
+        }
+
         std::string consume_full_view()
         {
             auto result = view;
@@ -108,7 +108,6 @@ LineTokenizer::LineTokenizer(const std::string& line)
     auto used_first_column = (first_char != ' ') && (first_char != '\t') && (first_char != 0x00);
 
     LineParser line_parser{line};
-    line_parser.skip_spaces();
 
     if (used_first_column)
     {
@@ -122,8 +121,6 @@ LineTokenizer::LineTokenizer(const std::string& line)
         label = std::move(next);
         adjust_label();
     }
-
-    line_parser.skip_spaces();
 
     if (!line_parser.empty())
     {
