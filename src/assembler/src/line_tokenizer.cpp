@@ -185,31 +185,13 @@ void LineTokenizer::adjust_label()
     }
 }
 
-namespace
-{
-    std::string clean_line(const std::string& input_line)
-    {
-        std::string clean{input_line};
-
-        auto pos = clean.find_first_of(";/\n\x0a");
-        if (pos != std::string::npos)
-        {
-            clean.resize(std::max(0, static_cast<int>(pos - 1)));
-        }
-
-        return clean;
-    }
-}
-
 LineTokenizer parse_line(const Options& options, const std::string& line, int line_count)
 {
-    std::string cleaned_line = clean_line(line);
-
-    LineTokenizer tokens(cleaned_line);
+    LineTokenizer tokens(line);
 
     if (tokens.warning_on_label)
     {
-        std::cerr << "WARNING: in line " << line_count << " " << cleaned_line << " label "
+        std::cerr << "WARNING: in line " << line_count << " " << line << " label "
                   << tokens.label << " lacking colon, and not 'equ' pseudo-op.\n";
     }
 
