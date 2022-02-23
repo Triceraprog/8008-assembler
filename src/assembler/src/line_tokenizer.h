@@ -15,6 +15,7 @@ public:
     std::string label;
     std::string opcode;
     std::vector<std::string> arguments;
+    std::string comment;
 
     bool warning_on_label{false};
 

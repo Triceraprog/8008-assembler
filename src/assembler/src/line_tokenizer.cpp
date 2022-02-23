@@ -27,12 +27,16 @@ namespace
         std::string next_string()
         {
             skip_spaces();
+
+            if (is_comment())
+            {
+                return consume_full_view();
+            }
+
             auto first_space = view.find_first_of(" \t;");
             if (first_space == std::string::npos)
             {
-                auto result = view;
-                view.resize(0);
-                return result;
+                return consume_full_view();
             }
             auto result = std::string{view.substr(0, first_space)};
             view = view.substr(first_space + 1);
@@ -51,9 +55,7 @@ namespace
             auto first_comma = view.find_first_of(",;");
             if (first_comma == std::string::npos)
             {
-                auto result = view;
-                view.resize(0);
-                return std::string{trim_string(result)};
+                return consume_full_view();
             }
             auto result = view.substr(0, first_comma);
             view = view.substr(first_comma + 1);
@@ -63,6 +65,8 @@ namespace
         [[nodiscard]] bool empty() const { return view.empty(); }
 
     private:
+        [[nodiscard]] bool is_comment() const { return view.front() == ';'; }
+
         std::string next_quoted_string()
         {
             const char quote_type = view.front();
@@ -79,6 +83,11 @@ namespace
                     return result;
                 }
             }
+            return consume_full_view();
+        }
+
+        std::string consume_full_view()
+        {
             auto result = view;
             view.resize(0);
             return std::string{trim_string(result)};
@@ -95,21 +104,37 @@ LineTokenizer::LineTokenizer(const std::string& line)
         return;
     }
 
-    auto c = line[0];
-    auto used_first_column = (c != ' ') && (c != '\t') && (c != 0x00);
+    auto first_char = line[0];
+    auto used_first_column = (first_char != ' ') && (first_char != '\t') && (first_char != 0x00);
 
     LineParser line_parser{line};
     line_parser.skip_spaces();
 
     if (used_first_column)
     {
-        label = line_parser.next_string();
+        auto next = line_parser.next_string();
+
+        if (next.front() == ';')
+        {
+            comment = std::move(next);
+            return;
+        }
+        label = std::move(next);
         adjust_label();
     }
 
+    line_parser.skip_spaces();
+
     if (!line_parser.empty())
     {
-        opcode = line_parser.next_string();
+        auto next = line_parser.next_string();
+
+        if (next.front() == ';')
+        {
+            comment = std::move(next);
+            return;
+        }
+        opcode = std::move(next);
     }
 
     while (!line_parser.empty())

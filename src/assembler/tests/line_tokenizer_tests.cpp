@@ -131,3 +131,21 @@ TEST(LineTokenizer, parses_string_with_comma)
     ASSERT_THAT(tokenizer.arguments, SizeIs(1));
     ASSERT_THAT(tokenizer.arguments[0], Eq("\"D1,D2\""));
 }
+
+TEST(LineTokenizer, extracts_single_comment)
+{
+    LineTokenizer tokenizer{"; Comment from the start of the line"};
+    ASSERT_THAT(tokenizer.label, IsEmpty());
+    ASSERT_THAT(tokenizer.opcode, IsEmpty());
+    ASSERT_THAT(tokenizer.arguments, SizeIs(0));
+    ASSERT_THAT(tokenizer.comment, Eq("; Comment from the start of the line"));
+}
+
+TEST(LineTokenizer, extracts_single_comment_after_column_zero)
+{
+    LineTokenizer tokenizer{" ; Comment after_column_0"};
+    ASSERT_THAT(tokenizer.label, IsEmpty());
+    ASSERT_THAT(tokenizer.opcode, IsEmpty());
+    ASSERT_THAT(tokenizer.arguments, SizeIs(0));
+    ASSERT_THAT(tokenizer.comment, Eq("; Comment after_column_0"));
+}
