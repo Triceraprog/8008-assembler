@@ -23,11 +23,14 @@ int decode_data(const Options& options, const SymbolTable& symbol_table,
     }
     if ((first_argument.front() == '\'') || (first_argument.front() == '"'))
     {
-        // DATA "..." or DATA '...' declares a string of characters
-        // Warning: there's a syntax limitation. If a comment contains a quote, then
-        // the result will be wrong.
+        // DATA "..." or DATA '...' declare strings of characters
+        // The argument has already been extracted (by the LineTokenizer), so it is assured
+        // to be a quoted string.
+        // It is possible that the string is open-ended on the right (no closing quote)
         const char quote_to_find = first_argument.front();
-        auto last_quote_position = first_argument.find_last_of(quote_to_find);
+        auto last_quote_position = first_argument.back() == quote_to_find
+                                           ? first_argument.length() - 1
+                                           : first_argument.length();
         auto string_content = first_argument.substr(1, last_quote_position - 1);
 
         bool escape_char = false;
@@ -68,7 +71,7 @@ int decode_data(const Options& options, const SymbolTable& symbol_table,
             }
         }
 
-        /* If "markascii" option is set, highest bit of these ascii bytes are forced to 1. */
+        /* If "markascii" option is set, the highest bit of these ascii bytes are forced to 1. */
         if (options.mark_8_ascii)
         {
             for (auto& p : out_data)
