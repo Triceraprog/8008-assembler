@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <utility>
+#include <cassert>
 
 namespace
 {
@@ -24,7 +25,11 @@ namespace
             {
                 return consume_full_view();
             }
-            return consume_view(first_space);
+            if (view[first_space] == ';')
+            {
+                return consume_view_and_keep_next(first_space);
+            }
+            return consume_view_and_skip_next(first_space);
         }
 
         std::string next_argument()
@@ -45,7 +50,11 @@ namespace
             {
                 return consume_full_view();
             }
-            return consume_view(first_comma);
+            if (view[first_comma] == ';')
+            {
+                return consume_view_and_keep_next(first_comma);
+            }
+            return consume_view_and_skip_next(first_comma);
         }
 
         [[nodiscard]] bool empty() const { return view.empty(); }
@@ -64,11 +73,10 @@ namespace
                 }
                 else if (view[index] == quote_type)
                 {
-                    return consume_view(index + 1); // End of quoted string
+                    return consume_view_and_skip_next(index + 1); // End of quoted string
                 }
             }
             // We don't care about the presence of the closing quote if it's the end of the string
-            // But it means it will parse the trailing spaces.
             return consume_full_view();
         }
 
@@ -92,11 +100,19 @@ namespace
             return std::string{trim_string(result)};
         }
 
-        std::string consume_view(std::size_t length_to_consume)
+        std::string consume_view_and_skip_next(std::size_t length_to_consume)
         {
             auto result = view.substr(0, length_to_consume);
             view = view.substr(std::min(length_to_consume + 1, view.size()));
-            return result;
+            return std::string{trim_string(result)};
+        }
+
+        std::string consume_view_and_keep_next(std::size_t length_to_consume)
+        {
+            assert(length_to_consume > 0);
+            auto result = view.substr(0, length_to_consume);
+            view = view.substr(std::min(length_to_consume, view.size()));
+            return std::string{trim_string(result)};
         }
 
         std::string view;

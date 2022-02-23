@@ -132,15 +132,6 @@ TEST(LineTokenizer, parses_string_with_comma)
     ASSERT_THAT(tokenizer.arguments[0], Eq("\"D1,D2\""));
 }
 
-TEST(LineTokenizer, parses_skips_empty_string_before_comment)
-{
-    LineTokenizer tokenizer{" RET   ; Comment"};
-    ASSERT_THAT(tokenizer.label, IsEmpty());
-    ASSERT_THAT(tokenizer.opcode, Eq("RET"));
-    ASSERT_THAT(tokenizer.arguments, SizeIs(0));
-}
-
-
 TEST(LineTokenizer, extracts_single_comment)
 {
     LineTokenizer tokenizer{"; Comment from the start of the line"};
@@ -157,4 +148,42 @@ TEST(LineTokenizer, extracts_single_comment_after_column_zero)
     ASSERT_THAT(tokenizer.opcode, IsEmpty());
     ASSERT_THAT(tokenizer.arguments, SizeIs(0));
     ASSERT_THAT(tokenizer.comment, Eq("; Comment after_column_0"));
+}
+
+TEST(LineTokenizer, extracts_comment_after_label)
+{
+    LineTokenizer tokenizer{"LABEL: ; Comment"};
+    ASSERT_THAT(tokenizer.label, Eq("LABEL"));
+    ASSERT_THAT(tokenizer.opcode, IsEmpty());
+    ASSERT_THAT(tokenizer.arguments, SizeIs(0));
+    ASSERT_THAT(tokenizer.comment, Eq("; Comment"));
+}
+
+TEST(LineTokenizer, extracts_comment_after_opcode)
+{
+    LineTokenizer tokenizer{" RET ; Comment"};
+    ASSERT_THAT(tokenizer.label, IsEmpty());
+    ASSERT_THAT(tokenizer.opcode, Eq("RET"));
+    ASSERT_THAT(tokenizer.arguments, SizeIs(0));
+    ASSERT_THAT(tokenizer.comment, Eq("; Comment"));
+}
+
+TEST(LineTokenizer, extracts_comment_after_opcode_without_space)
+{
+    LineTokenizer tokenizer{" RET; Comment"};
+    ASSERT_THAT(tokenizer.label, IsEmpty());
+    ASSERT_THAT(tokenizer.opcode, Eq("RET"));
+    ASSERT_THAT(tokenizer.arguments, SizeIs(0));
+    ASSERT_THAT(tokenizer.comment, Eq("; Comment"));
+}
+
+TEST(LineTokenizer, extracts_comment_after_label_and_data_with_quoted_semi_comma)
+{
+    LineTokenizer tokenizer{"LABEL: DATA ';',0 ; Comment"};
+    ASSERT_THAT(tokenizer.label, Eq("LABEL"));
+    ASSERT_THAT(tokenizer.opcode, Eq("DATA"));
+    ASSERT_THAT(tokenizer.arguments, SizeIs(2));
+    ASSERT_THAT(tokenizer.arguments[0], Eq("';'"));
+    ASSERT_THAT(tokenizer.arguments[1], Eq("0"));
+    ASSERT_THAT(tokenizer.comment, Eq("; Comment"));
 }

@@ -11,3 +11,4 @@
 - New syntax support alongside old syntax
 - Check name of executable and if as8, enters a compatible mode if needed
 - If the accumulator results in a negative number, various weird things happen, because it's passed as int (wrong hex, wrong lst)
+- data extractor is presented parsed string: it simplifies the work
