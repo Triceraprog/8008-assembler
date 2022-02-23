@@ -2,9 +2,9 @@
 #include "options.h"
 #include "utils.h"
 
+#include <cassert>
 #include <iostream>
 #include <utility>
-#include <cassert>
 
 namespace
 {
@@ -12,27 +12,14 @@ namespace
     {
         explicit LineParser(std::string view) : view{std::move(view)} {}
 
-        std::string next_string()
-        {
-            skip_spaces();
-            if (is_comment())
-            {
-                return consume_full_view();
-            }
+        std::string next_string() { return next_with_delimiters(" \t;"); }
+        std::string next_argument() { return next_with_delimiters(",;"); }
+        [[nodiscard]] bool empty() const { return view.empty(); }
 
-            auto first_space = view.find_first_of(" \t;");
-            if (first_space == std::string::npos)
-            {
-                return consume_full_view();
-            }
-            if (view[first_space] == ';')
-            {
-                return consume_view_and_keep_next(first_space);
-            }
-            return consume_view_and_skip_next(first_space);
-        }
+    private:
+        [[nodiscard]] bool is_comment() const { return view.front() == ';'; }
 
-        std::string next_argument()
+        std::string next_with_delimiters(std::string_view delimiters)
         {
             skip_spaces();
             if (is_comment())
@@ -45,22 +32,17 @@ namespace
                 return next_quoted_string();
             }
 
-            auto first_comma = view.find_first_of(",;");
-            if (first_comma == std::string::npos)
+            auto first_delimiter = view.find_first_of(delimiters);
+            if (first_delimiter == std::string::npos)
             {
                 return consume_full_view();
             }
-            if (view[first_comma] == ';')
+            if (view[first_delimiter] == ';')
             {
-                return consume_view_and_keep_next(first_comma);
+                return consume_view_and_keep_next(first_delimiter);
             }
-            return consume_view_and_skip_next(first_comma);
+            return consume_view_and_skip_next(first_delimiter);
         }
-
-        [[nodiscard]] bool empty() const { return view.empty(); }
-
-    private:
-        [[nodiscard]] bool is_comment() const { return view.front() == ';'; }
 
         std::string next_quoted_string()
         {
@@ -191,8 +173,8 @@ LineTokenizer parse_line(const Options& options, const std::string& line, int li
 
     if (tokens.warning_on_label)
     {
-        std::cerr << "WARNING: in line " << line_count << " " << line << " label "
-                  << tokens.label << " lacking colon, and not 'equ' pseudo-op.\n";
+        std::cerr << "WARNING: in line " << line_count << " " << line << " label " << tokens.label
+                  << " lacking colon, and not 'equ' pseudo-op.\n";
     }
 
     if ((tokens.arguments.size() > 2) && (!ci_equals(tokens.opcode, "data")))
