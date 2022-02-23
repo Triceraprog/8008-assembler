@@ -14,7 +14,6 @@ namespace
         std::string next_string()
         {
             skip_spaces();
-
             if (is_comment())
             {
                 return consume_full_view();
@@ -25,15 +24,17 @@ namespace
             {
                 return consume_full_view();
             }
-
-            auto result = std::string{view.substr(0, first_space)};
-            view = view.substr(first_space + 1);
-            return result;
+            return consume_view(first_space);
         }
 
         std::string next_argument()
         {
             skip_spaces();
+            if (is_comment())
+            {
+                return consume_full_view();
+            }
+
             if ((view.front() == '\'') || (view.front() == '"'))
             {
                 return next_quoted_string();
@@ -44,9 +45,7 @@ namespace
             {
                 return consume_full_view();
             }
-            auto result = view.substr(0, first_comma);
-            view = view.substr(first_comma + 1);
-            return result;
+            return consume_view(first_comma);
         }
 
         [[nodiscard]] bool empty() const { return view.empty(); }
@@ -65,11 +64,11 @@ namespace
                 }
                 else if (view[index] == quote_type)
                 {
-                    auto result = view.substr(0, index + 1);
-                    view = view.substr(std::min(index + 2, view.size()));
-                    return result;
+                    return consume_view(index + 1); // End of quoted string
                 }
             }
+            // We don't care about the presence of the closing quote if it's the end of the string
+            // But it means it will parse the trailing spaces.
             return consume_full_view();
         }
 
@@ -91,6 +90,13 @@ namespace
             auto result = view;
             view.resize(0);
             return std::string{trim_string(result)};
+        }
+
+        std::string consume_view(std::size_t length_to_consume)
+        {
+            auto result = view.substr(0, length_to_consume);
+            view = view.substr(std::min(length_to_consume + 1, view.size()));
+            return result;
         }
 
         std::string view;
@@ -136,7 +142,17 @@ LineTokenizer::LineTokenizer(const std::string& line)
 
     while (!line_parser.empty())
     {
-        arguments.push_back(line_parser.next_argument());
+        auto next = line_parser.next_argument();
+
+        if (next.front() == ';')
+        {
+            comment = std::move(next);
+            return;
+        }
+        if (!next.empty())
+        {
+            arguments.push_back(std::move(next));
+        }
     }
 }
 
@@ -167,7 +183,6 @@ namespace
 
         return clean;
     }
-
 }
 
 LineTokenizer parse_line(const Options& options, const std::string& line, int line_count)

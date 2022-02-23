@@ -132,6 +132,15 @@ TEST(LineTokenizer, parses_string_with_comma)
     ASSERT_THAT(tokenizer.arguments[0], Eq("\"D1,D2\""));
 }
 
+TEST(LineTokenizer, parses_skips_empty_string_before_comment)
+{
+    LineTokenizer tokenizer{" RET   ; Comment"};
+    ASSERT_THAT(tokenizer.label, IsEmpty());
+    ASSERT_THAT(tokenizer.opcode, Eq("RET"));
+    ASSERT_THAT(tokenizer.arguments, SizeIs(0));
+}
+
+
 TEST(LineTokenizer, extracts_single_comment)
 {
     LineTokenizer tokenizer{"; Comment from the start of the line"};
