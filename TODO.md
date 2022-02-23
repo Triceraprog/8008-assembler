@@ -1,8 +1,5 @@
 - Change line tokenizer so that it parses all arguments
-  - Add tests
-  - Better matching of quoted strings, escape chars and comments
-  - Extract as many argument as needed (for DATA)
-  - Extract the comment part
+  - Extract the comment part (; in a string is not starting a comment)
 - Use the first pass parsing in the second pass.
   - First do not recompute the addresses
   - The keep the tokens
@@ -13,5 +10,4 @@
 - Micral N specific instructions
 - New syntax support alongside old syntax
 - Check name of executable and if as8, enters a compatible mode if needed
-- Better syntax matching for comments and quoted strings.
 - If the accumulator results in a negative number, various weird things happen, because it's passed as int (wrong hex, wrong lst)

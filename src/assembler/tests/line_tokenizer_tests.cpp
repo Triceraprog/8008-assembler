@@ -94,3 +94,40 @@ TEST(LineTokenizer, parse_string_with_spaces)
     ASSERT_THAT(tokenizer.arguments, SizeIs(1));
     ASSERT_THAT(tokenizer.arguments[0], Eq("\" STRING \""));
 }
+
+TEST(LineTokenizer, parse_two_strings)
+{
+    LineTokenizer tokenizer{R"( DATA "STRING1","STRING2")"};
+    ASSERT_THAT(tokenizer.label, IsEmpty());
+    ASSERT_THAT(tokenizer.opcode, Eq("DATA"));
+    ASSERT_THAT(tokenizer.arguments, SizeIs(2));
+    ASSERT_THAT(tokenizer.arguments[0], Eq("\"STRING1\""));
+    ASSERT_THAT(tokenizer.arguments[1], Eq("\"STRING2\""));
+}
+
+TEST(LineTokenizer, parses_char)
+{
+    LineTokenizer tokenizer{" DATA 'A'"};
+    ASSERT_THAT(tokenizer.label, IsEmpty());
+    ASSERT_THAT(tokenizer.opcode, Eq("DATA"));
+    ASSERT_THAT(tokenizer.arguments, SizeIs(1));
+    ASSERT_THAT(tokenizer.arguments[0], Eq("'A'"));
+}
+
+TEST(LineTokenizer, parses_escaped_quote)
+{
+    LineTokenizer tokenizer{" DATA '\"'"};
+    ASSERT_THAT(tokenizer.label, IsEmpty());
+    ASSERT_THAT(tokenizer.opcode, Eq("DATA"));
+    ASSERT_THAT(tokenizer.arguments, SizeIs(1));
+    ASSERT_THAT(tokenizer.arguments[0], Eq("'\"'"));
+}
+
+TEST(LineTokenizer, parses_string_with_comma)
+{
+    LineTokenizer tokenizer{R"( DATA "D1,D2")"};
+    ASSERT_THAT(tokenizer.label, IsEmpty());
+    ASSERT_THAT(tokenizer.opcode, Eq("DATA"));
+    ASSERT_THAT(tokenizer.arguments, SizeIs(1));
+    ASSERT_THAT(tokenizer.arguments[0], Eq("\"D1,D2\""));
+}

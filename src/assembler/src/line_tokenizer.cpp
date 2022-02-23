@@ -42,6 +42,12 @@ namespace
 
         std::string next_argument()
         {
+            skip_spaces();
+            if ((view.front() == '\'') || (view.front() == '"'))
+            {
+                return next_quoted_string();
+            }
+
             auto first_comma = view.find_first_of(",;");
             if (first_comma == std::string::npos)
             {
@@ -49,7 +55,7 @@ namespace
                 view.resize(0);
                 return std::string{trim_string(result)};
             }
-            auto result = std::string{view.substr(0, first_comma)};
+            auto result = view.substr(0, first_comma);
             view = view.substr(first_comma + 1);
             return result;
         }
@@ -57,6 +63,27 @@ namespace
         [[nodiscard]] bool empty() const { return view.empty(); }
 
     private:
+        std::string next_quoted_string()
+        {
+            const char quote_type = view.front();
+            for (std::size_t index = 1; index < view.length(); index += 1)
+            {
+                if (view[index] == '\\')
+                {
+                    index += 1; // Quoted char, skip next char
+                }
+                else if (view[index] == quote_type)
+                {
+                    auto result = view.substr(0, index + 1);
+                    view = view.substr(std::min(index + 2, view.size()));
+                    return result;
+                }
+            }
+            auto result = view;
+            view.resize(0);
+            return std::string{trim_string(result)};
+        }
+
         std::string view;
     };
 }
