@@ -17,7 +17,7 @@ protected:
 class ParsingException : public ExceptionWithReason
 {
 public:
-    explicit ParsingException(const std::exception& ex, int line_number, std::string& line);
+    explicit ParsingException(const std::exception& ex, int line_number, const std::string& line);
 };
 
 class InternalError : public ExceptionWithReason
