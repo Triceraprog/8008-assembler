@@ -61,8 +61,6 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
             switch (opcode_to_enum(tokens.opcode))
             {
                 case PseudoOpcodeEnum::ORG:
-                    current_address = evaluate_argument(options, symbol_table, tokens.arguments[0]);
-                    // no break
                 case PseudoOpcodeEnum::EMPTY:
                 case PseudoOpcodeEnum::EQU:
                 case PseudoOpcodeEnum::CPU:
@@ -86,7 +84,6 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                             listing.reserved_data(line_number, line_address, input_line,
                                                   options.single_byte_list);
                         }
-                        current_address += 0 - data_length;
                     }
                     else
                     {
