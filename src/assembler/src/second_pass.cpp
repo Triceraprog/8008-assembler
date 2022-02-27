@@ -8,6 +8,7 @@
 #include "listing.h"
 #include "opcodes.h"
 #include "options.h"
+#include "parsed_line.h"
 #include "symbol_table.h"
 #include "utils.h"
 
@@ -16,12 +17,6 @@
 
 namespace
 {
-    void stream_rewind(std::fstream& fstream)
-    {
-        fstream.clear();
-        fstream.seekg(std::ios::beg);
-    }
-
     bool correct_argument_count(const Opcode& opcode, uint32_t arg_count)
     {
         return ((opcode.rule == 0) && (arg_count != 0)) ||
@@ -32,7 +27,7 @@ namespace
 }
 
 void second_pass(const Options& options, const SymbolTable& symbol_table, Files& files,
-                 Listing& listing)
+                 std::vector<ParsedLine>& parsed_lines, Listing& listing)
 {
     /* Symbols are defined. Second pass. */
     int evaluated_arg1;
@@ -44,27 +39,26 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
 
     listing.write_listing_header();
 
-    int line_number = 0;
     int current_address = 0;
     int line_address;
 
     ByteWriter writer(files.output_stream,
                       options.generate_binary_file ? ByteWriter::BINARY : ByteWriter::HEX);
 
-    stream_rewind(files.input_stream);
-    for (std::string input_line; std::getline(files.input_stream, input_line);)
+    for (auto& parsed_line : parsed_lines)
     {
+        const auto& input_line = parsed_line.line;
+        int line_number = parsed_line.line_number;
         try
         {
             line_address = current_address;
-            line_number++;
 
             if (options.verbose || options.debug)
             {
                 printf("     0x%X \"%s\"\n", current_address, input_line.c_str());
             }
 
-            LineTokenizer tokens = parse_line(options, input_line, line_number);
+            auto& tokens = parsed_line.tokens;
             auto arg_count = tokens.arguments.size();
 
             switch (opcode_to_enum(tokens.opcode))

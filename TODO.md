@@ -1,6 +1,5 @@
 - Use the first pass parsing in the second pass.
   - First do not recompute the addresses
-  - The keep the tokens
   - Then extract the behaviors
 - Option to output an expended, simple assembly code with a syntax for another assembler, especially as8
 - Macro system

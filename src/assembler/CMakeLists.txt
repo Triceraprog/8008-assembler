@@ -22,7 +22,8 @@ set(ASSEMBLER_LIB_FILES
         src/second_pass.cpp src/second_pass.h
         src/errors.cpp src/errors.h
         src/listing.cpp src/listing.h
-        src/listing_line.cpp src/listing_line.h)
+        src/listing_line.cpp src/listing_line.h
+        src/parsed_line.cpp src/parsed_line.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp
