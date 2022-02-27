@@ -1,5 +1,7 @@
 - Use the first pass parsing in the second pass.
   - Extract the behaviors
+    - Add Instruction with first_pass/second_pass methods
+    - First pass returns the updated address
 - Option to output an expended, simple assembly code with a syntax for another assembler, especially as8
 - Macro system
 - Pseudo instructions

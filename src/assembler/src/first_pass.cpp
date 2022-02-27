@@ -18,8 +18,10 @@
 namespace
 {
     void define_symbol_or_fail(const Options& options, SymbolTable& symbol_table,
-                               LineTokenizer& tokens, int current_address)
+                               const ParsedLine& parsed_line)
     {
+        const auto& tokens = parsed_line.tokens;
+        const auto current_address = parsed_line.line_address;
         /* Check if the label was already defined. */
         if (auto symbol_value = symbol_table.get_symbol_value(tokens.label);
             std::get<0>(symbol_value))
@@ -47,6 +49,16 @@ namespace
         }
 
         symbol_table.define_symbol(tokens.label, val);
+    }
+
+    void handle_potential_label(const Options& options, SymbolTable& symbol_table,
+                                const ParsedLine& parsed_line)
+    {
+        const auto& tokens = parsed_line.tokens;
+        if (!tokens.label.empty())
+        {
+            define_symbol_or_fail(options, symbol_table, parsed_line);
+        }
     }
 
     void verify_cpu(const std::string& cpu_arg)
@@ -79,23 +91,23 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
         }
 
         /* this function breaks line into separate parts */
-        LineTokenizer tokens = parse_line(options, input_line, current_line_count);
-        parsed_lines.push_back({current_line_count, current_address, tokens, input_line});
-
-        if (!tokens.label.empty())
         {
-            try
-            {
-                define_symbol_or_fail(options, symbol_table, tokens, current_address);
-            }
-            catch (const std::exception& ex)
-            {
-                throw ParsingException(ex, current_line_count, input_line);
-            }
+            LineTokenizer tokens = parse_line(options, input_line, current_line_count);
+            parsed_lines.push_back({current_line_count, current_address, tokens, input_line});
         }
 
         try
         {
+            handle_potential_label(options, symbol_table, parsed_lines.back());
+        }
+        catch (const std::exception& ex)
+        {
+            throw ParsingException(ex, current_line_count, input_line);
+        }
+
+        try
+        {
+            const auto& tokens = parsed_lines.back().tokens;
             auto opcode_enum = opcode_to_enum(tokens.opcode);
             switch (opcode_enum)
             {
