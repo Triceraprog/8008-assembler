@@ -17,7 +17,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
 class ExpectedArgumentWithinLimits : public ExceptionWithReason
 {
 public:
-    ExpectedArgumentWithinLimits(int limit, std::string& content, int evaluated);
+    ExpectedArgumentWithinLimits(int limit, const std::string& content, int evaluated);
 };
 
 class UnexpectedArgumentCount : public ExceptionWithReason

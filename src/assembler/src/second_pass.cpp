@@ -44,7 +44,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
     for (auto& parsed_line : parsed_lines)
     {
         const auto& input_line = parsed_line.line;
-        int line_number = parsed_line.line_number;
+        const int line_number = parsed_line.line_number;
         int line_address = parsed_line.line_address;
         int current_address = line_address;
 
@@ -55,8 +55,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                 printf("     0x%X \"%s\"\n", line_address, input_line.c_str());
             }
 
-            auto& tokens = parsed_line.tokens;
-            auto arg_count = tokens.arguments.size();
+            const auto& tokens = parsed_line.tokens;
+            const auto arg_count = tokens.arguments.size();
 
             switch (opcode_to_enum(tokens.opcode))
             {
@@ -74,7 +74,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                     break;
                 case PseudoOpcodeEnum::DATA: {
                     std::vector<int> data_list;
-                    int data_length =
+                    const int data_length =
                             decode_data(options, symbol_table, tokens.arguments, data_list);
                     if (data_length < 0)
                     {
@@ -100,7 +100,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                 }
                 break;
                 case PseudoOpcodeEnum::OTHER: {
-                    auto [found, opcode] = find_opcode(tokens.opcode);
+                    const auto [found, opcode] = find_opcode(tokens.opcode);
                     if (!found)
                     {
                         throw UndefinedOpcode(tokens.opcode);
@@ -139,7 +139,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                                 throw ExpectedArgumentWithinLimits(255, tokens.arguments[0],
                                                                    evaluated_arg1);
                             }
-                            int code = opcode.code;
+                            const int code = opcode.code;
                             writer.write_byte(code, current_address++);
                             writer.write_byte(evaluated_arg1, current_address++);
                             if (options.generate_list_file)
@@ -170,9 +170,9 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                                 throw ExpectedArgumentWithinLimits(MAX_ADDRESS, tokens.arguments[0],
                                                                    evaluated_arg1);
                             }
-                            int code = opcode.code;
-                            int low_byte = (0xFF & evaluated_arg1);
-                            int high_byte = (0xFF & (evaluated_arg1 >> 8));
+                            const int code = opcode.code;
+                            const int low_byte = (0xFF & evaluated_arg1);
+                            const int high_byte = (0xFF & (evaluated_arg1 >> 8));
                             writer.write_byte(code, current_address++);
                             writer.write_byte(low_byte, current_address++);
                             writer.write_byte(high_byte, current_address++);
@@ -198,7 +198,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                         break;
                         case 3: {
                             /* have an input or output instruction */
-                            int max_port = (opcode.mnemonic[0] == 'i') ? 7 : 23;
+                            const int max_port = (opcode.mnemonic[0] == 'i') ? 7 : 23;
 
                             if ((evaluated_arg1 > max_port) || (evaluated_arg1 < 0))
                             {
@@ -206,7 +206,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                                                                    evaluated_arg1);
                             }
 
-                            int code = opcode.code + (evaluated_arg1 << 1);
+                            const int code = opcode.code + (evaluated_arg1 << 1);
                             writer.write_byte(code, current_address++);
                             if (options.generate_list_file)
                             {
@@ -224,7 +224,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                                                                    evaluated_arg1);
                             }
 
-                            auto code = (opcode.code | (evaluated_arg1 << 3));
+                            const auto code = (opcode.code | (evaluated_arg1 << 3));
                             writer.write_byte(code, current_address++);
                             if (options.generate_list_file)
                             {
@@ -252,7 +252,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
     writer.write_end();
 }
 
-ExpectedArgumentWithinLimits::ExpectedArgumentWithinLimits(int limit, std::string& content,
+ExpectedArgumentWithinLimits::ExpectedArgumentWithinLimits(int limit, const std::string& content,
                                                            int evaluated)
 {
     reason = "expected argument between 0 and " + std::to_string(limit) + " instead got " +
