@@ -4,7 +4,6 @@
 #include "errors.h"
 #include "evaluator.h"
 #include "files.h"
-#include "line_tokenizer.h"
 #include "listing.h"
 #include "opcodes.h"
 #include "options.h"
@@ -39,9 +38,6 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
 
     listing.write_listing_header();
 
-    int current_address = 0;
-    int line_address;
-
     ByteWriter writer(files.output_stream,
                       options.generate_binary_file ? ByteWriter::BINARY : ByteWriter::HEX);
 
@@ -49,13 +45,14 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
     {
         const auto& input_line = parsed_line.line;
         int line_number = parsed_line.line_number;
+        int line_address = parsed_line.line_address;
+        int current_address = line_address;
+
         try
         {
-            line_address = current_address;
-
             if (options.verbose || options.debug)
             {
-                printf("     0x%X \"%s\"\n", current_address, input_line.c_str());
+                printf("     0x%X \"%s\"\n", line_address, input_line.c_str());
             }
 
             auto& tokens = parsed_line.tokens;

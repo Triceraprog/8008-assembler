@@ -8,6 +8,7 @@
 struct ParsedLine
 {
     int line_number;
+    int line_address;
     LineTokenizer tokens;
     std::string line;
 };

@@ -12,7 +12,6 @@
 #include "utils.h"
 
 #include <iostream>
-#include <memory>
 #include <string>
 #include <tuple>
 
@@ -81,7 +80,7 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
 
         /* this function breaks line into separate parts */
         LineTokenizer tokens = parse_line(options, input_line, current_line_count);
-        parsed_lines.push_back({current_line_count, tokens, input_line});
+        parsed_lines.push_back({current_line_count, current_address, tokens, input_line});
 
         if (!tokens.label.empty())
         {
