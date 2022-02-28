@@ -23,7 +23,8 @@ set(ASSEMBLER_LIB_FILES
         src/errors.cpp src/errors.h
         src/listing.cpp src/listing.h
         src/listing_line.cpp src/listing_line.h
-        src/parsed_line.cpp src/parsed_line.h)
+        src/parsed_line.cpp src/parsed_line.h
+        src/instruction.cpp src/instruction.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp
@@ -31,7 +32,9 @@ set(ASSEMBLER_TEST_FILES
         tests/byte_writer_tests.cpp
         tests/data_extractions_tests.cpp
         tests/opcodes_tests.cpp
-        tests/listing_line_tests.cpp tests/line_tokenizer_tests.cpp)
+        tests/listing_line_tests.cpp
+        tests/line_tokenizer_tests.cpp
+        tests/instruction_tests.cpp)
 
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})
 

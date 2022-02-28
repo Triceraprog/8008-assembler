@@ -4,6 +4,7 @@
 #include "errors.h"
 #include "evaluator.h"
 #include "files.h"
+#include "instruction.h"
 #include "line_tokenizer.h"
 #include "opcodes.h"
 #include "options.h"
@@ -18,46 +19,37 @@
 namespace
 {
     void define_symbol_or_fail(const Options& options, SymbolTable& symbol_table,
-                               const ParsedLine& parsed_line)
+                               const std::string& label, const int line_address,
+                               const Instruction& instruction)
     {
-        const auto& tokens = parsed_line.tokens;
-        const auto current_address = parsed_line.line_address;
+        const auto current_address = line_address;
         /* Check if the label was already defined. */
-        if (auto symbol_value = symbol_table.get_symbol_value(tokens.label);
-            std::get<0>(symbol_value))
+        if (auto symbol_value = symbol_table.get_symbol_value(label); std::get<0>(symbol_value))
         {
-            throw AlreadyDefinedSymbol(tokens.label, std::get<1>(symbol_value));
+            throw AlreadyDefinedSymbol(label, std::get<1>(symbol_value));
         }
 
-        /* Or define it. */
-        int val;
-        if (ci_equals(tokens.opcode, "equ") || ci_equals(tokens.opcode, "org"))
-        {
-            val = evaluate_argument(options, symbol_table, tokens.arguments[0]);
-        }
-        else
-        {
-            val = current_address;
-        }
+        int val = instruction.get_evaluation(options, symbol_table, current_address);
 
         if (options.debug)
         {
             std::cout << "at address=" << current_address;
             std::cout << std::hex << std::uppercase << "=" << current_address;
-            std::cout << " defining " << tokens.label << " = " << std::dec << val;
+            std::cout << " defining " << label << " = " << std::dec << val;
             std::cout << " =0x" << std::hex << std::uppercase << val << "\n";
         }
 
-        symbol_table.define_symbol(tokens.label, val);
+        symbol_table.define_symbol(label, val);
     }
 
     void handle_potential_label(const Options& options, SymbolTable& symbol_table,
-                                const ParsedLine& parsed_line)
+                                const ParsedLine& parsed_line, const Instruction& instruction)
     {
         const auto& tokens = parsed_line.tokens;
         if (!tokens.label.empty())
         {
-            define_symbol_or_fail(options, symbol_table, parsed_line);
+            define_symbol_or_fail(options, symbol_table, tokens.label, parsed_line.line_address,
+                                  instruction);
         }
     }
 
@@ -96,9 +88,12 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
             parsed_lines.push_back({current_line_count, current_address, tokens, input_line});
         }
 
+        Instruction instruction{parsed_lines.back().tokens.opcode,
+                                parsed_lines.back().tokens.arguments};
+
         try
         {
-            handle_potential_label(options, symbol_table, parsed_lines.back());
+            handle_potential_label(options, symbol_table, parsed_lines.back(), instruction);
         }
         catch (const std::exception& ex)
         {
