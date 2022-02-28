@@ -15,38 +15,39 @@
 
 namespace
 {
-    void define_symbol_or_fail(const Options& options, SymbolTable& symbol_table,
-                               const std::string& label, const int line_address,
-                               const Instruction& instruction)
+    void throws_is_already_defined(const SymbolTable& symbol_table, const std::string& label)
     {
-        const auto current_address = line_address;
-        /* Check if the label was already defined. */
         if (auto symbol_value = symbol_table.get_symbol_value(label); std::get<0>(symbol_value))
         {
             throw AlreadyDefinedSymbol(label, std::get<1>(symbol_value));
         }
+    }
 
-        int val = instruction.get_evaluation(options, symbol_table, current_address);
+    void define_symbol_or_fail(const Options& options, SymbolTable& symbol_table,
+                               const std::string& label, const int line_address,
+                               const Instruction& instruction)
+    {
+        throws_is_already_defined(symbol_table, label);
+
+        int val = instruction.get_evaluation(options, symbol_table, line_address);
+        symbol_table.define_symbol(label, val);
 
         if (options.debug)
         {
-            std::cout << "at address=" << current_address;
-            std::cout << std::hex << std::uppercase << "=" << current_address;
+            std::cout << "at address=" << line_address;
+            std::cout << std::hex << std::uppercase << "=" << line_address;
             std::cout << " defining " << label << " = " << std::dec << val;
             std::cout << " =0x" << std::hex << std::uppercase << val << "\n";
         }
-
-        symbol_table.define_symbol(label, val);
     }
 
     void handle_potential_label(const Options& options, SymbolTable& symbol_table,
                                 const ParsedLine& parsed_line, const Instruction& instruction)
     {
-        const auto& tokens = parsed_line.tokens;
-        if (!tokens.label.empty())
+        if (!parsed_line.tokens.label.empty())
         {
-            define_symbol_or_fail(options, symbol_table, tokens.label, parsed_line.line_address,
-                                  instruction);
+            define_symbol_or_fail(options, symbol_table, parsed_line.tokens.label,
+                                  parsed_line.line_address, instruction);
         }
     }
 }
@@ -98,4 +99,3 @@ AlreadyDefinedSymbol::AlreadyDefinedSymbol(const std::string& symbol, int value)
 {
     reason = "label '" + symbol + "' was already defined as " + std::to_string(value);
 }
-
