@@ -55,7 +55,8 @@ namespace
 void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
                 std::vector<ParsedLine>& parsed_lines, Listing& listing)
 {
-    /* In the first pass, we just parse through lines to build a symbol table */
+    // In the first pass, we parse through lines to build a symbol table
+    // What is parsed is kept into the "parsed_lines" container for the second pass.
     if (options.debug || options.verbose)
     {
         std::cout << "Pass number One:  Read and Define Symbols\n";
