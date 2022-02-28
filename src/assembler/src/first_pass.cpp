@@ -1,12 +1,9 @@
 #include "first_pass.h"
 
-#include "data_extraction.h"
 #include "errors.h"
-#include "evaluator.h"
 #include "files.h"
 #include "instruction.h"
 #include "line_tokenizer.h"
-#include "opcodes.h"
 #include "options.h"
 #include "parsed_line.h"
 #include "symbol_table.h"
@@ -52,14 +49,6 @@ namespace
                                   instruction);
         }
     }
-
-    void verify_cpu(const std::string& cpu_arg)
-    {
-        if ((!ci_equals(cpu_arg, "8008")) && (!ci_equals(cpu_arg, "i8008")))
-        {
-            throw InvalidCPU();
-        }
-    }
 }
 
 void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
@@ -82,8 +71,10 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
             std::cout << "\"" << input_line << "\"\n";
         }
 
-        /* this function breaks line into separate parts */
         {
+            // "tokens" is in a scope to avoid leaking. It's only available through the
+            // parsed_lines container. This is because instruction is taking a reference
+            // on the arguments. That might need to be changed.
             LineTokenizer tokens = parse_line(options, input_line, current_line_count);
             parsed_lines.push_back({current_line_count, current_address, tokens, input_line});
         }
@@ -94,53 +85,7 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
         try
         {
             handle_potential_label(options, symbol_table, parsed_lines.back(), instruction);
-        }
-        catch (const std::exception& ex)
-        {
-            throw ParsingException(ex, current_line_count, input_line);
-        }
-
-        try
-        {
-            const auto& tokens = parsed_lines.back().tokens;
-            auto opcode_enum = opcode_to_enum(tokens.opcode);
-            switch (opcode_enum)
-            {
-                case PseudoOpcodeEnum::EMPTY:
-                case PseudoOpcodeEnum::EQU:
-                case PseudoOpcodeEnum::END:
-                    break;
-                case PseudoOpcodeEnum::CPU:
-                    verify_cpu(tokens.arguments[0]);
-                    break;
-                case PseudoOpcodeEnum::ORG:
-                    current_address = evaluate_argument(options, symbol_table, tokens.arguments[0]);
-                    break;
-                case PseudoOpcodeEnum::DATA: {
-                    std::vector<int> data_list;
-                    int data_size = decode_data(options, symbol_table, tokens.arguments, data_list);
-
-                    if (options.debug)
-                    {
-                        std::cout << "got " << data_size << " items in data list\n";
-                    }
-
-                    /* a negative number denotes that much space to save, but not specifying data */
-                    current_address += std::abs(data_size);
-                }
-                break;
-                case PseudoOpcodeEnum::OTHER: {
-                    if (auto [found, opcode] = find_opcode(tokens.opcode); found)
-                    {
-                        current_address += get_opcode_size(opcode);
-                    }
-                    else
-                    {
-                        throw UndefinedOpcode(tokens.opcode);
-                    }
-                    break;
-                }
-            }
+            current_address = instruction.first_pass(options, symbol_table, current_address);
         }
         catch (const std::exception& ex)
         {
@@ -154,4 +99,3 @@ AlreadyDefinedSymbol::AlreadyDefinedSymbol(const std::string& symbol, int value)
     reason = "label '" + symbol + "' was already defined as " + std::to_string(value);
 }
 
-InvalidCPU::InvalidCPU() { reason = R"(cpu only allowed is "8008" or "i8008")"; }

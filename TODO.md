@@ -1,7 +1,9 @@
 - Use the first pass parsing in the second pass.
   - Extract the behaviors
     - Add Instruction with first_pass/second_pass methods
-    - First pass returns the updated address
+    - Second pass fills the output buffer
+    - What about making the listing a separate pass?
+    - What about missing args for EQU/ORG/DATA/CPU/... ?
 - Option to output an expended, simple assembly code with a syntax for another assembler, especially as8
 - Macro system
 - Pseudo instructions

@@ -20,10 +20,4 @@ public:
     AlreadyDefinedSymbol(const std::string& symbol, int value);
 };
 
-class InvalidCPU : public ExceptionWithReason
-{
-public:
-    InvalidCPU();
-};
-
 #endif //INC_8008_ASSEMBLER_FIRST_PASS_H
