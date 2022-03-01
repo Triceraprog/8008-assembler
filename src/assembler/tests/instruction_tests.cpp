@@ -13,6 +13,19 @@ struct InstructionFixture : public Test
 {
     Options options;
     SymbolTable symbol_table;
+
+    static Instruction get_instruction_empty() { return Instruction{{}, {}}; }
+    static Instruction get_instruction_end() { return Instruction{"END", {}}; }
+    static Instruction get_instruction_equ() { return Instruction{"EQU", {"0x2000"}}; }
+    static Instruction get_instruction_org() { return Instruction{"ORG", {"0x1000"}}; }
+    static Instruction get_instruction_cpu_known() { return Instruction{"CPU", {"8008"}}; }
+    static Instruction get_instruction_cpu_unknown() { return Instruction{"CPU", {"unknown_cpu"}}; }
+    static Instruction get_instruction_data() { return Instruction{"DATA", {"1", "2", "3"}}; }
+    static Instruction get_instruction_nop() { return Instruction{"LAA", {}}; }
+    static Instruction get_instruction_invalid_opcode()
+    {
+        return Instruction{"INVALID_OPCODE", {}};
+    }
 };
 
 struct InstructionEvaluationFixture : public InstructionFixture
@@ -33,10 +46,7 @@ struct SecondPassFixture : public InstructionFixture
 
 TEST_F(InstructionEvaluationFixture, returns_the_address_if_empty)
 {
-    std::string opcode{};
-    std::vector<std::string> arguments{};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_empty();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.get_evaluation(options, symbol_table, current_address),
@@ -45,10 +55,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_empty)
 
 TEST_F(InstructionEvaluationFixture, returns_the_address_if_end)
 {
-    std::string opcode{"END"};
-    std::vector<std::string> arguments{};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_end();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.get_evaluation(options, symbol_table, current_address),
@@ -57,10 +64,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_end)
 
 TEST_F(InstructionEvaluationFixture, returns_the_address_if_cpu)
 {
-    std::string opcode{"CPU"};
-    std::vector<std::string> arguments{"8008"};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_cpu_known();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.get_evaluation(options, symbol_table, current_address),
@@ -69,10 +73,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_cpu)
 
 TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_org)
 {
-    std::string opcode{"ORG"};
-    std::vector<std::string> arguments{"0x1000"};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_org();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.get_evaluation(options, symbol_table, current_address), Eq(0x1000));
@@ -80,10 +81,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_org)
 
 TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_equ)
 {
-    std::string opcode{"EQU"};
-    std::vector<std::string> arguments{"0x2000"};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_equ();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.get_evaluation(options, symbol_table, current_address), Eq(0x2000));
@@ -91,10 +89,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_equ)
 
 TEST_F(FirstPassFixture, does_not_advance_address_for_empty)
 {
-    std::string opcode{};
-    std::vector<std::string> arguments{};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_empty();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address),
@@ -103,10 +98,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_empty)
 
 TEST_F(FirstPassFixture, does_not_advance_address_for_end)
 {
-    std::string opcode{"END"};
-    std::vector<std::string> arguments{};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_end();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address),
@@ -115,10 +107,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_end)
 
 TEST_F(FirstPassFixture, does_not_advance_address_for_equ)
 {
-    std::string opcode{"EQU"};
-    std::vector<std::string> arguments{};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_equ();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address),
@@ -127,10 +116,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_equ)
 
 TEST_F(FirstPassFixture, sets_address_for_org)
 {
-    std::string opcode{"ORG"};
-    std::vector<std::string> arguments{"0x1000"};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_org();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address), Eq(0x1000));
@@ -138,10 +124,7 @@ TEST_F(FirstPassFixture, sets_address_for_org)
 
 TEST_F(FirstPassFixture, throws_if_wrong_CPU)
 {
-    std::string opcode{"CPU"};
-    std::vector<std::string> arguments{"unknown_cpu"};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_cpu_unknown();
 
     const int current_address = 0xff;
     int return_value = 0;
@@ -152,10 +135,7 @@ TEST_F(FirstPassFixture, throws_if_wrong_CPU)
 
 TEST_F(FirstPassFixture, does_not_advance_address_for_correct_cpu)
 {
-    std::string opcode{"CPU"};
-    std::vector<std::string> arguments{"8008"};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_cpu_known();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address),
@@ -164,10 +144,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_correct_cpu)
 
 TEST_F(FirstPassFixture, advance_address_with_declared_data)
 {
-    std::string opcode{"DATA"};
-    std::vector<std::string> arguments{"1", "2", "3"};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_data();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address),
@@ -176,10 +153,7 @@ TEST_F(FirstPassFixture, advance_address_with_declared_data)
 
 TEST_F(FirstPassFixture, throws_if_unknown_opcode)
 {
-    std::string opcode{"INVALID_OPCODE"};
-    std::vector<std::string> arguments{};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_invalid_opcode();
 
     const int current_address = 0xff;
     int return_value = 0;
@@ -190,10 +164,7 @@ TEST_F(FirstPassFixture, throws_if_unknown_opcode)
 
 TEST_F(FirstPassFixture, advances_one_byte_if_nop)
 {
-    std::string opcode{"LAA"};
-    std::vector<std::string> arguments{};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_nop();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address),
@@ -202,10 +173,7 @@ TEST_F(FirstPassFixture, advances_one_byte_if_nop)
 
 TEST_F(SecondPassFixture, does_not_output_byte_if_empty)
 {
-    std::string opcode{};
-    std::vector<std::string> arguments{};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_empty();
 
     const int current_address = 0;
     const int line_number = 1000;
@@ -218,10 +186,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_empty)
 
 TEST_F(SecondPassFixture, does_not_output_byte_if_end)
 {
-    std::string opcode{"END"};
-    std::vector<std::string> arguments{};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_end();
 
     const int current_address = 0;
     const int line_number = 1000;
@@ -234,10 +199,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_end)
 
 TEST_F(SecondPassFixture, does_not_output_byte_if_equ)
 {
-    std::string opcode{"EQU"};
-    std::vector<std::string> arguments{};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_equ();
 
     const int current_address = 0;
     const int line_number = 1000;
@@ -250,10 +212,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_equ)
 
 TEST_F(SecondPassFixture, does_not_output_byte_if_org)
 {
-    std::string opcode{"ORG"};
-    std::vector<std::string> arguments{"0x1000"};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_org();
 
     const int current_address = 0;
     const int line_number = 1000;
@@ -266,10 +225,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_org)
 
 TEST_F(SecondPassFixture, outputs_declared_data)
 {
-    std::string opcode{"DATA"};
-    std::vector<std::string> arguments{"1", "2", "3"};
-
-    Instruction instruction{opcode, arguments};
+    auto instruction = get_instruction_data();
 
     const int current_address = 0;
     const int line_number = 1000;

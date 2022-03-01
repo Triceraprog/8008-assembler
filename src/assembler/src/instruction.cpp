@@ -8,6 +8,7 @@
 #include "utils.h"
 
 #include <iostream>
+#include <utility>
 
 namespace
 {
@@ -20,8 +21,8 @@ namespace
     }
 }
 
-Instruction::Instruction(const std::string& opcode, const std::vector<std::string>& arguments)
-    : opcode{opcode}, arguments{arguments}
+Instruction::Instruction(const std::string& opcode, std::vector<std::string> arguments)
+    : opcode{opcode}, arguments{std::move(arguments)}
 {
     opcode_enum = opcode_to_enum(opcode);
 }
