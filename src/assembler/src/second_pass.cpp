@@ -29,8 +29,6 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                  std::vector<ParsedLine>& parsed_lines, Listing& listing)
 {
     /* Symbols are defined. Second pass. */
-    int evaluated_arg1;
-
     if (options.verbose || options.debug)
     {
         std::cout << "Pass number Two:  Re-read and assemble codes\n";
@@ -100,6 +98,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                 }
                 break;
                 case PseudoOpcodeEnum::OTHER: {
+                    int evaluated_arg1;
                     const auto [found, opcode] = find_opcode(tokens.opcode);
                     if (!found)
                     {
