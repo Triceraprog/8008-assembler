@@ -1,9 +1,9 @@
 #include "second_pass.h"
 #include "byte_writer.h"
-#include "data_extraction.h"
 #include "errors.h"
 #include "evaluator.h"
 #include "files.h"
+#include "instruction.h"
 #include "listing.h"
 #include "opcodes.h"
 #include "options.h"
@@ -11,6 +11,7 @@
 #include "symbol_table.h"
 #include "utils.h"
 
+#include <cassert>
 #include <cstdio>
 #include <iostream>
 
@@ -56,6 +57,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
             const auto& tokens = parsed_line.tokens;
             const auto arg_count = tokens.arguments.size();
 
+            Instruction instruction{tokens.opcode, tokens.arguments};
+
             switch (opcode_to_enum(tokens.opcode))
             {
                 case PseudoOpcodeEnum::ORG:
@@ -71,30 +74,9 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                     }
                     break;
                 case PseudoOpcodeEnum::DATA: {
-                    std::vector<int> data_list;
-                    const int data_length =
-                            decode_data(options, symbol_table, tokens.arguments, data_list);
-                    if (data_length < 0)
-                    {
-                        /* if n is negative, that number of bytes are just reserved */
-                        if (options.generate_list_file)
-                        {
-                            listing.reserved_data(line_number, line_address, input_line,
-                                                  options.single_byte_list);
-                        }
-                    }
-                    else
-                    {
-                        for (const auto& data : data_list)
-                        {
-                            writer.write_byte(data, current_address);
-                            current_address += 1;
-                        }
-                        if (options.generate_list_file)
-                        {
-                            listing.data(line_number, line_address, input_line, data_list);
-                        }
-                    }
+                    assert(line_address == current_address);
+                    instruction.second_pass(options, symbol_table, listing, writer, input_line,
+                                            line_number, line_address);
                 }
                 break;
                 case PseudoOpcodeEnum::OTHER: {

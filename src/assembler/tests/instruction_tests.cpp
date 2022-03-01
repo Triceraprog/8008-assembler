@@ -1,9 +1,10 @@
 #include "instruction.h"
 
+#include "byte_writer.h"
+#include "listing.h"
 #include "options.h"
 #include "symbol_table.h"
 
-#include "first_pass.h"
 #include "gmock/gmock.h"
 
 using namespace testing;
@@ -20,6 +21,14 @@ struct InstructionEvaluationFixture : public InstructionFixture
 
 struct FirstPassFixture : public InstructionFixture
 {
+};
+
+struct SecondPassFixture : public InstructionFixture
+{
+    std::stringstream byte_buffer;
+    std::stringstream listing_buffer;
+    ByteWriter byte_writer{byte_buffer, ByteWriter::BINARY};
+    Listing listing{listing_buffer, options};
 };
 
 TEST_F(InstructionEvaluationFixture, returns_the_address_if_empty)
@@ -80,7 +89,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_equ)
     ASSERT_THAT(instruction.get_evaluation(options, symbol_table, current_address), Eq(0x2000));
 }
 
-TEST_F(FirstPassFixture, first_pass_does_not_advance_address_for_empty)
+TEST_F(FirstPassFixture, does_not_advance_address_for_empty)
 {
     std::string opcode{};
     std::vector<std::string> arguments{};
@@ -92,7 +101,7 @@ TEST_F(FirstPassFixture, first_pass_does_not_advance_address_for_empty)
                 Eq(current_address));
 }
 
-TEST_F(FirstPassFixture, first_pass_does_not_advance_address_for_end)
+TEST_F(FirstPassFixture, does_not_advance_address_for_end)
 {
     std::string opcode{"END"};
     std::vector<std::string> arguments{};
@@ -104,7 +113,7 @@ TEST_F(FirstPassFixture, first_pass_does_not_advance_address_for_end)
                 Eq(current_address));
 }
 
-TEST_F(FirstPassFixture, first_pass_does_not_advance_address_for_equ)
+TEST_F(FirstPassFixture, does_not_advance_address_for_equ)
 {
     std::string opcode{"EQU"};
     std::vector<std::string> arguments{};
@@ -116,7 +125,7 @@ TEST_F(FirstPassFixture, first_pass_does_not_advance_address_for_equ)
                 Eq(current_address));
 }
 
-TEST_F(FirstPassFixture, first_pass_sets_address_for_org)
+TEST_F(FirstPassFixture, sets_address_for_org)
 {
     std::string opcode{"ORG"};
     std::vector<std::string> arguments{"0x1000"};
@@ -127,7 +136,7 @@ TEST_F(FirstPassFixture, first_pass_sets_address_for_org)
     ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address), Eq(0x1000));
 }
 
-TEST_F(FirstPassFixture, first_pass_throws_if_wrong_CPU)
+TEST_F(FirstPassFixture, throws_if_wrong_CPU)
 {
     std::string opcode{"CPU"};
     std::vector<std::string> arguments{"unknown_cpu"};
@@ -141,7 +150,7 @@ TEST_F(FirstPassFixture, first_pass_throws_if_wrong_CPU)
     ASSERT_THAT(return_value, Eq(0));
 }
 
-TEST_F(FirstPassFixture, first_pass_does_not_advance_address_for_correct_cpu)
+TEST_F(FirstPassFixture, does_not_advance_address_for_correct_cpu)
 {
     std::string opcode{"CPU"};
     std::vector<std::string> arguments{"8008"};
@@ -153,7 +162,7 @@ TEST_F(FirstPassFixture, first_pass_does_not_advance_address_for_correct_cpu)
                 Eq(current_address));
 }
 
-TEST_F(FirstPassFixture, first_pass_advance_address_with_declared_data)
+TEST_F(FirstPassFixture, advance_address_with_declared_data)
 {
     std::string opcode{"DATA"};
     std::vector<std::string> arguments{"1", "2", "3"};
@@ -165,7 +174,7 @@ TEST_F(FirstPassFixture, first_pass_advance_address_with_declared_data)
                 Eq(current_address + 3));
 }
 
-TEST_F(FirstPassFixture, first_pass_throws_if_unknown_opcode)
+TEST_F(FirstPassFixture, throws_if_unknown_opcode)
 {
     std::string opcode{"INVALID_OPCODE"};
     std::vector<std::string> arguments{};
@@ -179,7 +188,7 @@ TEST_F(FirstPassFixture, first_pass_throws_if_unknown_opcode)
     ASSERT_THAT(return_value, Eq(0));
 }
 
-TEST_F(FirstPassFixture, first_pass_advances_one_byte_if_nop)
+TEST_F(FirstPassFixture, advances_one_byte_if_nop)
 {
     std::string opcode{"LAA"};
     std::vector<std::string> arguments{};
@@ -189,4 +198,86 @@ TEST_F(FirstPassFixture, first_pass_advances_one_byte_if_nop)
     const int current_address = 0xff;
     ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address),
                 Eq(current_address + 1));
+}
+
+TEST_F(SecondPassFixture, does_not_output_byte_if_empty)
+{
+    std::string opcode{};
+    std::vector<std::string> arguments{};
+
+    Instruction instruction{opcode, arguments};
+
+    const int current_address = 0;
+    const int line_number = 1000;
+    instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
+                            current_address);
+    byte_writer.write_end();
+
+    ASSERT_THAT(byte_buffer.str()[0], Eq(0));
+}
+
+TEST_F(SecondPassFixture, does_not_output_byte_if_end)
+{
+    std::string opcode{"END"};
+    std::vector<std::string> arguments{};
+
+    Instruction instruction{opcode, arguments};
+
+    const int current_address = 0;
+    const int line_number = 1000;
+    instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
+                            current_address);
+    byte_writer.write_end();
+
+    ASSERT_THAT(byte_buffer.str()[0], Eq(0));
+}
+
+TEST_F(SecondPassFixture, does_not_output_byte_if_equ)
+{
+    std::string opcode{"EQU"};
+    std::vector<std::string> arguments{};
+
+    Instruction instruction{opcode, arguments};
+
+    const int current_address = 0;
+    const int line_number = 1000;
+    instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
+                            current_address);
+    byte_writer.write_end();
+
+    ASSERT_THAT(byte_buffer.str()[0], Eq(0));
+}
+
+TEST_F(SecondPassFixture, does_not_output_byte_if_org)
+{
+    std::string opcode{"ORG"};
+    std::vector<std::string> arguments{"0x1000"};
+
+    Instruction instruction{opcode, arguments};
+
+    const int current_address = 0;
+    const int line_number = 1000;
+    instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
+                            current_address);
+    byte_writer.write_end();
+
+    ASSERT_THAT(byte_buffer.str()[0], Eq(0));
+}
+
+TEST_F(SecondPassFixture, outputs_declared_data)
+{
+    std::string opcode{"DATA"};
+    std::vector<std::string> arguments{"1", "2", "3"};
+
+    Instruction instruction{opcode, arguments};
+
+    const int current_address = 0;
+    const int line_number = 1000;
+    instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
+                            current_address);
+    byte_writer.write_end();
+
+    ASSERT_THAT(byte_buffer.str()[0], Eq(1));
+    ASSERT_THAT(byte_buffer.str()[1], Eq(2));
+    ASSERT_THAT(byte_buffer.str()[2], Eq(3));
 }

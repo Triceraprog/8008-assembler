@@ -8,6 +8,9 @@
 
 class Options;
 class SymbolTable;
+class ByteWriter;
+class Listing;
+class LineTokenizer;
 
 class Instruction
 {
@@ -19,6 +22,10 @@ public:
 
     [[nodiscard]] int first_pass(const Options& options, const SymbolTable& symbol_table,
                                  int current_address) const;
+
+    void second_pass(const Options& options, const SymbolTable& symbol_table, Listing& listing,
+                     ByteWriter& writer, const std::string& input_line, int line_number,
+                     int address);
 
 private:
     std::string opcode;

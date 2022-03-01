@@ -1,9 +1,12 @@
 #include "instruction.h"
+#include "byte_writer.h"
 #include "data_extraction.h"
 #include "evaluator.h"
+#include "listing.h"
 #include "options.h"
 #include "symbol_table.h"
 #include "utils.h"
+
 #include <iostream>
 
 namespace
@@ -76,6 +79,37 @@ int Instruction::first_pass(const Options& options, const SymbolTable& symbol_ta
         }
     }
     return updated_address;
+}
+
+void Instruction::second_pass(const Options& options, const SymbolTable& symbol_table,
+                              Listing& listing, ByteWriter& writer, const std::string& input_line,
+                              int line_number, const int address)
+{
+    if (opcode_enum == PseudoOpcodeEnum::DATA)
+    {
+        std::vector<int> data_list;
+        const int data_length = decode_data(options, symbol_table, arguments, data_list);
+        if (data_length < 0)
+        {
+            /* if n is negative, that number of bytes are just reserved */
+            if (options.generate_list_file)
+            {
+                listing.reserved_data(line_number, address, input_line, options.single_byte_list);
+            }
+        }
+        else
+        {
+            for (int write_address = address; const auto& data : data_list)
+            {
+                writer.write_byte(data, write_address);
+                write_address += 1;
+            }
+            if (options.generate_list_file)
+            {
+                listing.data(line_number, address, input_line, data_list);
+            }
+        }
+    }
 }
 
 InvalidCPU::InvalidCPU() { reason = R"(cpu only allowed is "8008" or "i8008")"; }
