@@ -30,7 +30,7 @@ public:
 private:
     std::string opcode;
     PseudoOpcodeEnum opcode_enum;
-    const std::vector<std::string>& arguments;
+    const std::vector<std::string> arguments;
 };
 
 class InvalidCPU : public ExceptionWithReason
