@@ -121,7 +121,6 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
     }
     else if (opcode_enum == PseudoOpcodeEnum::OTHER)
     {
-        int evaluated_arg1;
         auto arg_count = arguments.size();
         const auto [found, found_opcode] = find_opcode(opcode);
         if (!found)
@@ -133,10 +132,6 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
         if (correct_argument_count(found_opcode, arg_count))
         {
             throw UnexpectedArgumentCount(arg_count);
-        }
-        if (arg_count == 1)
-        {
-            evaluated_arg1 = evaluate_argument(options, symbol_table, arguments[0]);
         }
 
         // Now, each opcode, is categorized into different
@@ -156,6 +151,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                 }
                 break;
             case ONE_BYTE_ARG: {
+                int evaluated_arg1 = evaluate_argument(options, symbol_table, arguments[0]);
                 if ((evaluated_arg1 > 255) || (evaluated_arg1 < 0))
                 {
                     throw ExpectedArgumentWithinLimits(255, arguments[0], evaluated_arg1);
@@ -184,6 +180,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
             break;
             case ADDRESS_ARG: {
                 const int MAX_ADDRESS = 1024 * 16;
+                int evaluated_arg1 = evaluate_argument(options, symbol_table, arguments[0]);
                 if ((evaluated_arg1 > MAX_ADDRESS) || (evaluated_arg1 < 0))
                 {
                     throw ExpectedArgumentWithinLimits(MAX_ADDRESS, arguments[0], evaluated_arg1);
@@ -215,6 +212,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
             }
             break;
             case INP_OUT: {
+                int evaluated_arg1 = evaluate_argument(options, symbol_table, arguments[0]);
                 const int max_port = (found_opcode.mnemonic[0] == 'i') ? 7 : 23;
 
                 if ((evaluated_arg1 > max_port) || (evaluated_arg1 < 0))
@@ -234,6 +232,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
             }
             break;
             case RST: {
+                int evaluated_arg1 = evaluate_argument(options, symbol_table, arguments[0]);
                 if ((evaluated_arg1 > 7) || (evaluated_arg1 < 0))
                 {
                     throw ExpectedArgumentWithinLimits(7, arguments[0], evaluated_arg1);
