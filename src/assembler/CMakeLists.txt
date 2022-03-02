@@ -24,7 +24,8 @@ set(ASSEMBLER_LIB_FILES
         src/listing.cpp src/listing.h
         src/listing_line.cpp src/listing_line.h
         src/parsed_line.cpp src/parsed_line.h
-        src/instruction.cpp src/instruction.h)
+        src/instruction.cpp src/instruction.h
+        src/opcode_action.cpp src/opcode_action.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp
@@ -34,7 +35,8 @@ set(ASSEMBLER_TEST_FILES
         tests/opcodes_tests.cpp
         tests/listing_line_tests.cpp
         tests/line_tokenizer_tests.cpp
-        tests/instruction_tests.cpp)
+        tests/instruction_tests.cpp
+        tests/opcode_action_tests.cpp)
 
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})
 

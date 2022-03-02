@@ -17,8 +17,9 @@ enum OpcodeType
 
 struct Opcode
 {
+    using OpcodeByteType = unsigned char;
     const char* mnemonic{};
-    unsigned char code{};
+    OpcodeByteType code{};
     OpcodeType rule{};
 };
 
