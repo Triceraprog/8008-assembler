@@ -147,8 +147,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
         int line_address = address;
         switch (found_opcode.rule)
         {
-            case 0:
-                /* single byte, no arguments */
+            case NO_ARG:
                 writer.write_byte(found_opcode.code, current_address);
                 if (options.generate_list_file)
                 {
@@ -156,8 +155,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                                                    input_line);
                 }
                 break;
-            case 1: {
-                /* single byte, must follow */
+            case ONE_BYTE_ARG: {
                 if ((evaluated_arg1 > 255) || (evaluated_arg1 < 0))
                 {
                     throw ExpectedArgumentWithinLimits(255, arguments[0], evaluated_arg1);
@@ -184,8 +182,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                 }
             }
             break;
-            case 2: {
-                /* two byte address to follow */
+            case ADDRESS_ARG: {
                 const int MAX_ADDRESS = 1024 * 16;
                 if ((evaluated_arg1 > MAX_ADDRESS) || (evaluated_arg1 < 0))
                 {
@@ -217,8 +214,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                 }
             }
             break;
-            case 3: {
-                /* have an input or output instruction */
+            case INP_OUT: {
                 const int max_port = (found_opcode.mnemonic[0] == 'i') ? 7 : 23;
 
                 if ((evaluated_arg1 > max_port) || (evaluated_arg1 < 0))
@@ -237,7 +233,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                 }
             }
             break;
-            case 4: {
+            case RST: {
                 if ((evaluated_arg1 > 7) || (evaluated_arg1 < 0))
                 {
                     throw ExpectedArgumentWithinLimits(7, arguments[0], evaluated_arg1);

@@ -6,11 +6,20 @@
 #include <string_view>
 #include <tuple>
 
+enum OpcodeType
+{
+    NO_ARG,
+    ONE_BYTE_ARG,
+    ADDRESS_ARG,
+    INP_OUT,
+    RST,
+};
+
 struct Opcode
 {
     const char* mnemonic{};
     unsigned char code{};
-    int rule{};
+    OpcodeType rule{};
 };
 
 enum class PseudoOpcodeEnum
