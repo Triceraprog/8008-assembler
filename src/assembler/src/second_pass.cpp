@@ -5,12 +5,10 @@
 #include "files.h"
 #include "instruction.h"
 #include "listing.h"
-#include "opcodes.h"
 #include "options.h"
 #include "parsed_line.h"
 #include "symbol_table.h"
 
-#include <cassert>
 #include <cstdio>
 #include <iostream>
 
@@ -33,7 +31,6 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
         const auto& input_line = parsed_line.line;
         const int line_number = parsed_line.line_number;
         int line_address = parsed_line.line_address;
-        int current_address = line_address;
 
         try
         {
@@ -43,31 +40,9 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
             }
 
             const auto& tokens = parsed_line.tokens;
-
             Instruction instruction{tokens.opcode, tokens.arguments};
-
-            switch (opcode_to_enum(tokens.opcode))
-            {
-                case PseudoOpcodeEnum::ORG:
-                case PseudoOpcodeEnum::EMPTY:
-                case PseudoOpcodeEnum::EQU:
-                case PseudoOpcodeEnum::CPU:
-                case PseudoOpcodeEnum::END:
-                    instruction.second_pass(options, symbol_table, listing, writer, input_line,
-                                            line_number, line_address);
-                    break;
-                case PseudoOpcodeEnum::DATA:
-                    assert(line_address == current_address);
-                    instruction.second_pass(options, symbol_table, listing, writer, input_line,
-                                            line_number, line_address);
-                    break;
-                case PseudoOpcodeEnum::OTHER:
-                    assert(line_address == current_address);
-                    instruction.second_pass(options, symbol_table, listing, writer, input_line,
-                                            line_number, line_address);
-
-                    break;
-            }
+            instruction.second_pass(options, symbol_table, listing, writer, input_line, line_number,
+                                    line_address);
         }
         catch (const CannotFindSymbol& ex)
         {
