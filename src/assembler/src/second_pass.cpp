@@ -53,12 +53,8 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                 case PseudoOpcodeEnum::EQU:
                 case PseudoOpcodeEnum::CPU:
                 case PseudoOpcodeEnum::END:
-                    /* For END, could break here, but rather than break, */
-                    /* we will go ahead and check for more. */
-                    if (options.generate_list_file)
-                    {
-                        listing.simple_line(line_number, input_line, options.single_byte_list);
-                    }
+                    instruction.second_pass(options, symbol_table, listing, writer, input_line,
+                                            line_number, line_address);
                     break;
                 case PseudoOpcodeEnum::DATA:
                     assert(line_address == current_address);

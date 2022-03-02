@@ -259,6 +259,16 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                 throw InternalError(input_line);
         }
     }
+    else
+    {
+        // ORG, EMPTY, EQU, CPU, END
+        // For END, could break here, but rather than break,
+        // we will go ahead and check for more.
+        if (options.generate_list_file)
+        {
+            listing.simple_line(line_number, input_line, options.single_byte_list);
+        }
+    }
 }
 
 InvalidCPU::InvalidCPU() { reason = R"(cpu only allowed is "8008" or "i8008")"; }
