@@ -13,7 +13,7 @@
 #include <iostream>
 
 void second_pass(const Options& options, const SymbolTable& symbol_table, Files& files,
-                 std::vector<ParsedLine>& parsed_lines, Listing& listing)
+                 const std::vector<ParsedLine>& parsed_lines, Listing& listing)
 {
     /* Symbols are defined. Second pass. */
     if (options.verbose || options.debug)

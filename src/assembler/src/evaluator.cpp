@@ -132,7 +132,7 @@ namespace
         void add_operation(char op) { operations.push_back(op); }
         void add_operand(std::string_view operand) { operands.emplace_back(operand); }
 
-        int resolve(const Options& options, const SymbolTable& table)
+        [[nodiscard]] int resolve(const Options& options, const SymbolTable& table) const
         {
             if (operands.size() != operations.size())
             {

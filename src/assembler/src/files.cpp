@@ -75,7 +75,6 @@ void Files::open_files(const Options& options)
 }
 
 CannotOpenFile::CannotOpenFile(const std::string& filename, const std::string& file_type_name)
-{
-    reason = "Can't open " + filename + " as " + file_type_name;
-}
+    : reason{"Can't open " + filename + " as " + file_type_name}
+{}
 const char* CannotOpenFile::what() const noexcept { return reason.c_str(); }

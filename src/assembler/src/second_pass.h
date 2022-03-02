@@ -12,6 +12,6 @@ class Listing;
 class ParsedLine;
 
 void second_pass(const Options& options, const SymbolTable& symbol_table, Files& files,
-                 std::vector<ParsedLine>& parsed_lines, Listing& listing);
+                 const std::vector<ParsedLine>& parsed_lines, Listing& listing);
 
 #endif //INC_8008_ASSEMBLER_SECOND_PASS_H

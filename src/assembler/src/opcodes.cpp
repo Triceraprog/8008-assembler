@@ -117,7 +117,7 @@ PseudoOpcodeEnum opcode_to_enum(std::string_view opcode)
         return PseudoOpcodeEnum::EMPTY;
     }
     auto found_op_code = std::ranges::find_if(association, [&opcode](const auto& t) {
-        auto& [opcode_str, opcode_enum] = t;
+        const auto& [opcode_str, opcode_enum] = t;
         return ci_equals(opcode, opcode_str);
     });
 

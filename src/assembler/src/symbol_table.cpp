@@ -38,7 +38,7 @@ void SymbolTable::list_symbols(std::ostream& output)
         std::string upper{sorted_label};
         transform(upper.begin(), upper.end(), upper.begin(), toupper);
 
-        auto& [label, value] = *symbols.find(upper);
+        auto value = std::get<1>(*symbols.find(upper));
         if (value > 255)
         {
             const auto high = (value >> 8) & 0xFF;

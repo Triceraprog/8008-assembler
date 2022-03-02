@@ -68,4 +68,4 @@ void ListingLine::padding(int column)
     }
 }
 
-std::string ListingLine::str() { return line; }
+std::string ListingLine::str() const { return line; }

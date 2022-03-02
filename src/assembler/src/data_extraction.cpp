@@ -2,6 +2,7 @@
 #include "evaluator.h"
 #include "options.h"
 #include "symbol_table.h"
+#include <algorithm>
 
 int decode_data(const Options& options, const SymbolTable& symbol_table,
                 const std::vector<std::string>& tokens, std::vector<int>& out_data)
@@ -74,10 +75,8 @@ int decode_data(const Options& options, const SymbolTable& symbol_table,
         /* If "markascii" option is set, the highest bit of these ascii bytes are forced to 1. */
         if (options.mark_8_ascii)
         {
-            for (auto& p : out_data)
-            {
-                p |= 0x80;
-            }
+            std::ranges::transform(out_data.begin(), out_data.end(), out_data.begin(),
+                                   [](const auto p) { return p | 0x80; });
         }
 
         return static_cast<int>(out_data.size());

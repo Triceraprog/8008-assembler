@@ -14,7 +14,7 @@ public:
     void add_byte(int byte);
     void add_address(int line_address);
 
-    std::string str();
+    std::string str() const;
 
     void short_format();
 
