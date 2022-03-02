@@ -45,10 +45,4 @@ public:
     explicit UnexpectedArgumentCount(uint32_t arg_count);
 };
 
-class ExpectedArgumentWithinLimits : public ExceptionWithReason
-{
-public:
-    ExpectedArgumentWithinLimits(int limit, const std::string& content, int evaluated);
-};
-
 #endif //INC_8008_ASSEMBLER_INSTRUCTION_H

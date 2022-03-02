@@ -14,21 +14,21 @@ class ByteWriter;
 class OpcodeAction
 {
 public:
+    virtual void emit_byte_stream(ByteWriter& byte_writer) const = 0;
     virtual ~OpcodeAction() = default;
 };
 
 std::unique_ptr<OpcodeAction> create_opcode_action(const Options& options,
-                                                   const SymbolTable& symbol_table,
-                                                   unsigned char opcode, int address,
-                                                   const std::vector<std::string>& arguments,
-                                                   std::string_view mnemonic);
+                                                   const SymbolTable& symbol_table, Opcode opcode,
+                                                   int address,
+                                                   const std::vector<std::string>& arguments);
 
 class OpcodeActionNoArg : public OpcodeAction
 {
 public:
-    explicit OpcodeActionNoArg(unsigned char opcode, int address);
+    explicit OpcodeActionNoArg(Opcode::OpcodeByteType opcode_byte, int address);
 
-    void emit_byte_stream(ByteWriter& byte_writer) const;
+    void emit_byte_stream(ByteWriter& byte_writer) const override;
 
 private:
     Opcode::OpcodeByteType opcode;
@@ -39,10 +39,10 @@ class OpcodeActionOneByteArg : public OpcodeAction
 {
 public:
     OpcodeActionOneByteArg(const Options& options, const SymbolTable& symbol_table,
-                           unsigned char opcode, int address,
+                           Opcode::OpcodeByteType opcode_byte, int address,
                            const std::vector<std::string>& arguments);
 
-    void emit_byte_stream(ByteWriter& byte_writer) const;
+    void emit_byte_stream(ByteWriter& byte_writer) const override;
 
 private:
     Opcode::OpcodeByteType opcode;
@@ -54,10 +54,10 @@ class OpcodeActionTwoByteArg : public OpcodeAction
 {
 public:
     OpcodeActionTwoByteArg(const Options& options, const SymbolTable& symbol_table,
-                           unsigned char opcode, int address,
+                           Opcode::OpcodeByteType opcode_byte, int address,
                            const std::vector<std::string>& arguments);
 
-    void emit_byte_stream(ByteWriter& byte_writer) const;
+    void emit_byte_stream(ByteWriter& byte_writer) const override;
 
 private:
     Opcode::OpcodeByteType opcode;
@@ -69,10 +69,10 @@ class OpcodeActionInpOut : public OpcodeAction
 {
 public:
     OpcodeActionInpOut(const Options& options, const SymbolTable& symbol_table,
-                       unsigned char opcode, int address, const std::vector<std::string>& arguments,
-                       std::string_view mnemonic);
+                       Opcode::OpcodeByteType opcode_byte, int address,
+                       const std::vector<std::string>& arguments, std::string_view mnemonic);
 
-    void emit_byte_stream(ByteWriter& byte_writer) const;
+    void emit_byte_stream(ByteWriter& byte_writer) const override;
 
 private:
     Opcode::OpcodeByteType opcode;
@@ -82,14 +82,21 @@ private:
 class OpcodeActionRst : public OpcodeAction
 {
 public:
-    OpcodeActionRst(const Options& options, const SymbolTable& symbol_table, unsigned char opcode,
-                    int address, const std::vector<std::string>& arguments);
+    OpcodeActionRst(const Options& options, const SymbolTable& symbol_table,
+                    Opcode::OpcodeByteType opcode_byte, int address,
+                    const std::vector<std::string>& arguments);
 
-    void emit_byte_stream(ByteWriter& byte_writer) const;
+    void emit_byte_stream(ByteWriter& byte_writer) const override;
 
 private:
     Opcode::OpcodeByteType opcode;
     int address;
+};
+
+class ExpectedArgumentWithinLimits : public ExceptionWithReason
+{
+public:
+    ExpectedArgumentWithinLimits(int limit, const std::string& content, int evaluated);
 };
 
 #endif //INC_8008_ASSEMBLER_OPCODE_ACTION_H

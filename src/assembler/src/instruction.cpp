@@ -3,6 +3,7 @@
 #include "data_extraction.h"
 #include "evaluator.h"
 #include "listing.h"
+#include "opcode_action.h"
 #include "options.h"
 #include "symbol_table.h"
 #include "utils.h"
@@ -138,12 +139,15 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
         // "rules" which states how arguments are combined
         // with opcode to get machine codes.
 
+        auto opcode_action =
+                create_opcode_action(options, symbol_table, found_opcode, address, arguments);
+
         int current_address = address;
         int line_address = address;
         switch (found_opcode.rule)
         {
             case NO_ARG:
-                writer.write_byte(found_opcode.code, current_address);
+                opcode_action->emit_byte_stream(writer);
                 if (options.generate_list_file)
                 {
                     listing.opcode_line_with_space(line_number, line_address, found_opcode,
@@ -271,11 +275,4 @@ InvalidCPU::InvalidCPU() { reason = R"(cpu only allowed is "8008" or "i8008")"; 
 UnexpectedArgumentCount::UnexpectedArgumentCount(uint32_t arg_count)
 {
     reason = "unexpected number of arguments: " + std::to_string(arg_count);
-}
-
-ExpectedArgumentWithinLimits::ExpectedArgumentWithinLimits(int limit, const std::string& content,
-                                                           int evaluated)
-{
-    reason = "expected argument between 0 and " + std::to_string(limit) + " instead got " +
-             content + "=" + std::to_string(evaluated);
 }

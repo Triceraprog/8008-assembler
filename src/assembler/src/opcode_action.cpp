@@ -2,10 +2,9 @@
 
 #include "byte_writer.h"
 #include "evaluator.h"
-#include "instruction.h"
 
-OpcodeActionNoArg::OpcodeActionNoArg(unsigned char opcode, const int address)
-    : opcode{opcode}, address{address}
+OpcodeActionNoArg::OpcodeActionNoArg(Opcode::OpcodeByteType opcode_byte, const int address)
+    : opcode{opcode_byte}, address{address}
 {}
 
 void OpcodeActionNoArg::emit_byte_stream(ByteWriter& byte_writer) const
@@ -15,9 +14,9 @@ void OpcodeActionNoArg::emit_byte_stream(ByteWriter& byte_writer) const
 
 OpcodeActionOneByteArg::OpcodeActionOneByteArg(const Options& options,
                                                const SymbolTable& symbol_table,
-                                               unsigned char opcode, int address,
+                                               Opcode::OpcodeByteType opcode_byte, int address,
                                                const std::vector<std::string>& arguments)
-    : opcode{opcode}, address{address}
+    : opcode{opcode_byte}, address{address}
 {
     evaluated_argument = evaluate_argument(options, symbol_table, arguments[0]);
     if ((evaluated_argument > 255) || (evaluated_argument < 0))
@@ -34,9 +33,9 @@ void OpcodeActionOneByteArg::emit_byte_stream(ByteWriter& byte_writer) const
 
 OpcodeActionTwoByteArg::OpcodeActionTwoByteArg(const Options& options,
                                                const SymbolTable& symbol_table,
-                                               unsigned char opcode, int address,
+                                               Opcode::OpcodeByteType opcode_byte, int address,
                                                const std::vector<std::string>& arguments)
-    : opcode{opcode}, address{address}
+    : opcode{opcode_byte}, address{address}
 {
     const int MAX_ADDRESS = 1024 * 16;
     evaluated_argument = evaluate_argument(options, symbol_table, arguments[0]);
@@ -57,7 +56,7 @@ void OpcodeActionTwoByteArg::emit_byte_stream(ByteWriter& byte_writer) const
 }
 
 OpcodeActionInpOut::OpcodeActionInpOut(const Options& options, const SymbolTable& symbol_table,
-                                       unsigned char opcode, int address,
+                                       Opcode::OpcodeByteType opcode_byte, int address,
                                        const std::vector<std::string>& arguments,
                                        std::string_view mnemonic)
     : address{address}
@@ -70,7 +69,7 @@ OpcodeActionInpOut::OpcodeActionInpOut(const Options& options, const SymbolTable
         throw ExpectedArgumentWithinLimits(max_port, arguments[0], argument);
     }
 
-    this->opcode = opcode + (argument << 1);
+    opcode = opcode_byte + (argument << 1);
 }
 
 void OpcodeActionInpOut::emit_byte_stream(ByteWriter& byte_writer) const
@@ -79,9 +78,9 @@ void OpcodeActionInpOut::emit_byte_stream(ByteWriter& byte_writer) const
 }
 
 OpcodeActionRst::OpcodeActionRst(const Options& options, const SymbolTable& symbol_table,
-                                 unsigned char opcode, int address,
+                                 Opcode::OpcodeByteType opcode_byte, int address,
                                  const std::vector<std::string>& arguments)
-    : opcode{opcode}, address{address}
+    : opcode{opcode_byte}, address{address}
 {
     int argument = evaluate_argument(options, symbol_table, arguments[0]);
     if ((argument > 7) || (argument < 0))
@@ -95,4 +94,36 @@ OpcodeActionRst::OpcodeActionRst(const Options& options, const SymbolTable& symb
 void OpcodeActionRst::emit_byte_stream(ByteWriter& byte_writer) const
 {
     byte_writer.write_byte(opcode, address);
+}
+
+std::unique_ptr<OpcodeAction> create_opcode_action(const Options& options,
+                                                   const SymbolTable& symbol_table, Opcode opcode,
+                                                   int address,
+                                                   const std::vector<std::string>& arguments)
+{
+    switch (opcode.rule)
+    {
+        case NO_ARG:
+            return std::make_unique<OpcodeActionNoArg>(opcode.code, address);
+        case ONE_BYTE_ARG:
+            return std::make_unique<OpcodeActionOneByteArg>(options, symbol_table, opcode.code,
+                                                            address, arguments);
+        case ADDRESS_ARG:
+            return std::make_unique<OpcodeActionTwoByteArg>(options, symbol_table, opcode.code,
+                                                            address, arguments);
+        case INP_OUT:
+            return std::make_unique<OpcodeActionInpOut>(options, symbol_table, opcode.code, address,
+                                                        arguments, opcode.mnemonic);
+        case RST:
+            return std::make_unique<OpcodeActionRst>(options, symbol_table, opcode.code, address,
+                                                     arguments);
+    }
+    return nullptr;
+}
+
+ExpectedArgumentWithinLimits::ExpectedArgumentWithinLimits(int limit, const std::string& content,
+                                                           int evaluated)
+{
+    reason = "expected argument between 0 and " + std::to_string(limit) + " instead got " +
+             content + "=" + std::to_string(evaluated);
 }

@@ -4,6 +4,7 @@
     - Second pass fills the output buffer
     - What about making the listing a separate pass?
     - What about missing args for EQU/ORG/DATA/CPU/... ?
+- Do we really need ByteWriter::write_byte ? Or just append_byte 
 - Option to output an expended, simple assembly code with a syntax for another assembler, especially as8
 - Macro system
 - Pseudo instructions
