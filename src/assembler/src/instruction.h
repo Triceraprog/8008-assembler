@@ -15,7 +15,7 @@ class LineTokenizer;
 class Instruction
 {
 public:
-    explicit Instruction(const std::string& opcode, std::vector<std::string>  arguments);
+    explicit Instruction(const std::string& opcode, std::vector<std::string> arguments);
 
     [[nodiscard]] int get_evaluation(const Options& options, const SymbolTable& symbol_table,
                                      int current_address) const;
@@ -37,6 +37,18 @@ class InvalidCPU : public ExceptionWithReason
 {
 public:
     InvalidCPU();
+};
+
+class UnexpectedArgumentCount : public ExceptionWithReason
+{
+public:
+    explicit UnexpectedArgumentCount(uint32_t arg_count);
+};
+
+class ExpectedArgumentWithinLimits : public ExceptionWithReason
+{
+public:
+    ExpectedArgumentWithinLimits(int limit, const std::string& content, int evaluated);
 };
 
 #endif //INC_8008_ASSEMBLER_INSTRUCTION_H

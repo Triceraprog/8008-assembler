@@ -236,3 +236,15 @@ TEST_F(SecondPassFixture, outputs_declared_data)
     ASSERT_THAT(byte_buffer.str()[1], Eq(2));
     ASSERT_THAT(byte_buffer.str()[2], Eq(3));
 }
+
+TEST_F(SecondPassFixture, outputs_opcode_data)
+{
+    auto instruction = get_instruction_nop();
+
+    instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
+                            current_address);
+    byte_writer.write_end();
+
+    ASSERT_THAT(byte_buffer.str()[0], Eq(static_cast<char>(0xC0)));
+    ASSERT_THAT(byte_buffer.str()[1], Eq(0));
+}

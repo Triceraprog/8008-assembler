@@ -14,16 +14,4 @@ class ParsedLine;
 void second_pass(const Options& options, const SymbolTable& symbol_table, Files& files,
                  std::vector<ParsedLine>& parsed_lines, Listing& listing);
 
-class ExpectedArgumentWithinLimits : public ExceptionWithReason
-{
-public:
-    ExpectedArgumentWithinLimits(int limit, const std::string& content, int evaluated);
-};
-
-class UnexpectedArgumentCount : public ExceptionWithReason
-{
-public:
-    explicit UnexpectedArgumentCount(uint32_t arg_count);
-};
-
 #endif //INC_8008_ASSEMBLER_SECOND_PASS_H
