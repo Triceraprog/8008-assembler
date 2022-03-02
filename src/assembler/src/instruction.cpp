@@ -139,9 +139,9 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
             evaluated_arg1 = evaluate_argument(options, symbol_table, arguments[0]);
         }
 
-        /* Now, each opcode, is categorized into different
-                     * "rules" which states how arguments are combined
-                     * with opcode to get machine codes. */
+        // Now, each opcode, is categorized into different
+        // "rules" which states how arguments are combined
+        // with opcode to get machine codes.
 
         int current_address = address;
         int line_address = address;
