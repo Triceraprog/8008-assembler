@@ -42,7 +42,12 @@ struct SecondPassFixture : public InstructionFixture
     std::stringstream listing_buffer;
     ByteWriter byte_writer{byte_buffer, ByteWriter::BINARY};
     Listing listing{listing_buffer, options};
+
+    const int current_address = 0;
+    const int line_number = 1000;
 };
+
+/// TESTS FOR THE ADDRESS EVALUATION
 
 TEST_F(InstructionEvaluationFixture, returns_the_address_if_empty)
 {
@@ -86,6 +91,8 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_equ)
     const int current_address = 0xff;
     ASSERT_THAT(instruction.get_evaluation(options, symbol_table, current_address), Eq(0x2000));
 }
+
+/// TESTS FOR THE FIRST PASS
 
 TEST_F(FirstPassFixture, does_not_advance_address_for_empty)
 {
@@ -171,12 +178,12 @@ TEST_F(FirstPassFixture, advances_one_byte_if_nop)
                 Eq(current_address + 1));
 }
 
+/// TESTS FOR THE SECOND PASS
+
 TEST_F(SecondPassFixture, does_not_output_byte_if_empty)
 {
     auto instruction = get_instruction_empty();
 
-    const int current_address = 0;
-    const int line_number = 1000;
     instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
                             current_address);
     byte_writer.write_end();
@@ -188,8 +195,6 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_end)
 {
     auto instruction = get_instruction_end();
 
-    const int current_address = 0;
-    const int line_number = 1000;
     instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
                             current_address);
     byte_writer.write_end();
@@ -201,8 +206,6 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_equ)
 {
     auto instruction = get_instruction_equ();
 
-    const int current_address = 0;
-    const int line_number = 1000;
     instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
                             current_address);
     byte_writer.write_end();
@@ -214,8 +217,6 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_org)
 {
     auto instruction = get_instruction_org();
 
-    const int current_address = 0;
-    const int line_number = 1000;
     instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
                             current_address);
     byte_writer.write_end();
@@ -227,8 +228,6 @@ TEST_F(SecondPassFixture, outputs_declared_data)
 {
     auto instruction = get_instruction_data();
 
-    const int current_address = 0;
-    const int line_number = 1000;
     instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
                             current_address);
     byte_writer.write_end();
