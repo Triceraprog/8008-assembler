@@ -150,8 +150,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                 opcode_action->emit_byte_stream(writer);
                 if (options.generate_list_file)
                 {
-                    listing.opcode_line_with_space(line_number, line_address, found_opcode,
-                                                   input_line);
+                    opcode_action->emit_listing(listing, line_number, input_line);
                 }
                 break;
             case ONE_BYTE_ARG: {
@@ -176,7 +175,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                     {
 
                         listing.opcode_line_with_space_1_arg(line_number, line_address,
-                                                             found_opcode, evaluated_arg1,
+                                                             found_opcode.code, evaluated_arg1,
                                                              input_line);
                     }
                 }
@@ -209,7 +208,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                     else
                     {
                         listing.opcode_line_with_space_2_arg(line_number, line_address,
-                                                             found_opcode, low_byte, high_byte,
+                                                             found_opcode.code, low_byte, high_byte,
                                                              input_line);
                     }
                 }
@@ -230,7 +229,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                 {
                     Opcode fixed_opcode = found_opcode;
                     fixed_opcode.code = code;
-                    listing.opcode_line_with_space(line_number, line_address, fixed_opcode,
+                    listing.opcode_line_with_space(line_number, line_address, fixed_opcode.code,
                                                    input_line);
                 }
             }
@@ -248,7 +247,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                 {
                     Opcode fixed_opcode = found_opcode;
                     fixed_opcode.code = code;
-                    listing.opcode_line_with_space(line_number, line_address, fixed_opcode,
+                    listing.opcode_line_with_space(line_number, line_address, fixed_opcode.code,
                                                    input_line);
                 }
             }

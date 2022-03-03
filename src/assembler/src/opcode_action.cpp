@@ -2,6 +2,7 @@
 
 #include "byte_writer.h"
 #include "evaluator.h"
+#include "listing.h"
 
 OpcodeActionNoArg::OpcodeActionNoArg(Opcode::OpcodeByteType opcode_byte, const int address)
     : opcode{opcode_byte}, address{address}
@@ -10,6 +11,12 @@ OpcodeActionNoArg::OpcodeActionNoArg(Opcode::OpcodeByteType opcode_byte, const i
 void OpcodeActionNoArg::emit_byte_stream(ByteWriter& byte_writer) const
 {
     byte_writer.write_byte(opcode, address);
+}
+
+void OpcodeActionNoArg::emit_listing(Listing& listing, int line_number,
+                                     std::string_view input_line) const
+{
+    listing.opcode_line_with_space(line_number, address, opcode, input_line);
 }
 
 OpcodeActionOneByteArg::OpcodeActionOneByteArg(const Options& options,
@@ -30,6 +37,9 @@ void OpcodeActionOneByteArg::emit_byte_stream(ByteWriter& byte_writer) const
     byte_writer.write_byte(opcode, address);
     byte_writer.write_byte(evaluated_argument, address + 1);
 }
+void OpcodeActionOneByteArg::emit_listing(Listing& listing, int line_number,
+                                          std::string_view input_line) const
+{}
 
 OpcodeActionTwoByteArg::OpcodeActionTwoByteArg(const Options& options,
                                                const SymbolTable& symbol_table,
@@ -54,6 +64,9 @@ void OpcodeActionTwoByteArg::emit_byte_stream(ByteWriter& byte_writer) const
     byte_writer.write_byte(low_byte, address + 1);
     byte_writer.write_byte(high_byte, address + 2);
 }
+void OpcodeActionTwoByteArg::emit_listing(Listing& listing, int line_number,
+                                          std::string_view input_line) const
+{}
 
 OpcodeActionInpOut::OpcodeActionInpOut(const Options& options, const SymbolTable& symbol_table,
                                        Opcode::OpcodeByteType opcode_byte, int address,
@@ -76,6 +89,9 @@ void OpcodeActionInpOut::emit_byte_stream(ByteWriter& byte_writer) const
 {
     byte_writer.write_byte(opcode, address);
 }
+void OpcodeActionInpOut::emit_listing(Listing& listing, int line_number,
+                                      std::string_view input_line) const
+{}
 
 OpcodeActionRst::OpcodeActionRst(const Options& options, const SymbolTable& symbol_table,
                                  Opcode::OpcodeByteType opcode_byte, int address,
@@ -95,6 +111,9 @@ void OpcodeActionRst::emit_byte_stream(ByteWriter& byte_writer) const
 {
     byte_writer.write_byte(opcode, address);
 }
+void OpcodeActionRst::emit_listing(Listing& listing, int line_number,
+                                   std::string_view input_line) const
+{}
 
 std::unique_ptr<OpcodeAction> create_opcode_action(const Options& options,
                                                    const SymbolTable& symbol_table, Opcode opcode,

@@ -61,30 +61,33 @@ void Listing::reserved_data(int line_number, int line_address, const std::string
     output << line.str() << "\n";
 }
 
-void Listing::opcode_line_with_space(int line_number, int line_address, const Opcode& opcode,
-                                     const std::string& line_content)
+void Listing::opcode_line_with_space(int line_number, int line_address,
+                                     Opcode::OpcodeByteType opcode_byte,
+                                     const std::string_view line_content)
 {
     ListingLine line{line_number, line_address};
-    line.add_byte(opcode.code);
+    line.add_byte(opcode_byte);
     line.add_line_content(line_content);
     output << line.str() << "\n";
 }
 
-void Listing::opcode_line_with_space_1_arg(int line_number, int line_address, const Opcode& opcode,
-                                           int arg1, const std::string& line_content)
+void Listing::opcode_line_with_space_1_arg(int line_number, int line_address,
+                                           Opcode::OpcodeByteType opcode_byte, int arg1,
+                                           const std::string& line_content)
 {
     ListingLine line{line_number, line_address};
-    line.add_byte(opcode.code);
+    line.add_byte(opcode_byte);
     line.add_byte(arg1);
     line.add_line_content(line_content);
     output << line.str() << "\n";
 }
 
-void Listing::opcode_line_with_space_2_arg(int line_number, int line_address, const Opcode& opcode,
-                                           int arg1, int arg2, const std::string& line_content)
+void Listing::opcode_line_with_space_2_arg(int line_number, int line_address,
+                                           Opcode::OpcodeByteType opcode_byte, int arg1, int arg2,
+                                           const std::string& line_content)
 {
     ListingLine line{line_number, line_address};
-    line.add_byte(opcode.code);
+    line.add_byte(opcode_byte);
     line.add_byte(arg1);
     line.add_byte(arg2);
     line.add_line_content(line_content);
