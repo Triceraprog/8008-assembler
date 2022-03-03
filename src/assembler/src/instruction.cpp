@@ -150,34 +150,16 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                 opcode_action->emit_byte_stream(writer);
                 if (options.generate_list_file)
                 {
-                    opcode_action->emit_listing(listing, line_number, input_line);
+                    opcode_action->emit_listing(listing, line_number, input_line,
+                                                options.single_byte_list);
                 }
                 break;
             case ONE_BYTE_ARG: {
-                int evaluated_arg1 = evaluate_argument(options, symbol_table, arguments[0]);
-                if ((evaluated_arg1 > 255) || (evaluated_arg1 < 0))
-                {
-                    throw ExpectedArgumentWithinLimits(255, arguments[0], evaluated_arg1);
-                }
-                const int code = found_opcode.code;
-                writer.write_byte(code, current_address++);
-                writer.write_byte(evaluated_arg1, current_address);
+                opcode_action->emit_byte_stream(writer);
                 if (options.generate_list_file)
                 {
-                    if (options.single_byte_list)
-                    {
-                        listing.one_byte_of_data_with_address(line_number, line_address, code,
-                                                              input_line);
-                        line_address++;
-                        listing.one_byte_of_data_continued(line_address, evaluated_arg1);
-                    }
-                    else
-                    {
-
-                        listing.opcode_line_with_space_1_arg(line_number, line_address,
-                                                             found_opcode.code, evaluated_arg1,
-                                                             input_line);
-                    }
+                    opcode_action->emit_listing(listing, line_number, input_line,
+                                                options.single_byte_list);
                 }
             }
             break;

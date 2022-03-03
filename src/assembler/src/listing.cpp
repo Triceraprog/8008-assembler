@@ -73,7 +73,7 @@ void Listing::opcode_line_with_space(int line_number, int line_address,
 
 void Listing::opcode_line_with_space_1_arg(int line_number, int line_address,
                                            Opcode::OpcodeByteType opcode_byte, int arg1,
-                                           const std::string& line_content)
+                                           const std::string_view line_content)
 {
     ListingLine line{line_number, line_address};
     line.add_byte(opcode_byte);
@@ -84,7 +84,7 @@ void Listing::opcode_line_with_space_1_arg(int line_number, int line_address,
 
 void Listing::opcode_line_with_space_2_arg(int line_number, int line_address,
                                            Opcode::OpcodeByteType opcode_byte, int arg1, int arg2,
-                                           const std::string& line_content)
+                                           const std::string_view line_content)
 {
     ListingLine line{line_number, line_address};
     line.add_byte(opcode_byte);
@@ -95,7 +95,7 @@ void Listing::opcode_line_with_space_2_arg(int line_number, int line_address,
 }
 
 void Listing::one_byte_of_data_with_address(int line_number, int line_address, int data,
-                                            const std::string& line_content) const
+                                            const std::string_view line_content) const
 {
     ListingLine line{line_number, line_address};
     line.short_format();

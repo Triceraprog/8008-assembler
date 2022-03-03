@@ -20,17 +20,16 @@ public:
     void reserved_data(int line_number, int line_address, const std::string& line_content,
                        bool short_format);
     void one_byte_of_data_with_address(int line_number, int line_address, int data,
-                                       const std::string& line_content) const;
+                                       std::string_view line_content) const;
     void one_byte_of_data_continued(int line_address, int data) const;
     void opcode_line_with_space(int line_number, int line_address,
-                                Opcode::OpcodeByteType opcode_byte,
-                                std::string_view line_content);
+                                Opcode::OpcodeByteType opcode_byte, std::string_view line_content);
     void opcode_line_with_space_1_arg(int line_number, int line_address,
                                       Opcode::OpcodeByteType opcode_byte, int arg1,
-                                      const std::string& line_content);
+                                      std::string_view line_content);
     void opcode_line_with_space_2_arg(int line_number, int line_address,
                                       Opcode::OpcodeByteType opcode_byte, int arg1, int arg2,
-                                      const std::string& line_content);
+                                      std::string_view line_content);
 
 private:
     std::ostream& output;

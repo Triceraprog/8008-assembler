@@ -13,8 +13,8 @@ void OpcodeActionNoArg::emit_byte_stream(ByteWriter& byte_writer) const
     byte_writer.write_byte(opcode, address);
 }
 
-void OpcodeActionNoArg::emit_listing(Listing& listing, int line_number,
-                                     std::string_view input_line) const
+void OpcodeActionNoArg::emit_listing(Listing& listing, int line_number, std::string_view input_line,
+                                     bool single_byte) const
 {
     listing.opcode_line_with_space(line_number, address, opcode, input_line);
 }
@@ -37,9 +37,24 @@ void OpcodeActionOneByteArg::emit_byte_stream(ByteWriter& byte_writer) const
     byte_writer.write_byte(opcode, address);
     byte_writer.write_byte(evaluated_argument, address + 1);
 }
+
 void OpcodeActionOneByteArg::emit_listing(Listing& listing, int line_number,
-                                          std::string_view input_line) const
-{}
+                                          std::string_view input_line, bool single_byte) const
+{
+    if (single_byte)
+    {
+        auto line_address = address;
+        listing.one_byte_of_data_with_address(line_number, line_address, opcode, input_line);
+        line_address++;
+        listing.one_byte_of_data_continued(line_address, evaluated_argument);
+    }
+    else
+    {
+
+        listing.opcode_line_with_space_1_arg(line_number, address, opcode, evaluated_argument,
+                                             input_line);
+    }
+}
 
 OpcodeActionTwoByteArg::OpcodeActionTwoByteArg(const Options& options,
                                                const SymbolTable& symbol_table,
@@ -65,7 +80,7 @@ void OpcodeActionTwoByteArg::emit_byte_stream(ByteWriter& byte_writer) const
     byte_writer.write_byte(high_byte, address + 2);
 }
 void OpcodeActionTwoByteArg::emit_listing(Listing& listing, int line_number,
-                                          std::string_view input_line) const
+                                          std::string_view input_line, bool single_byte) const
 {}
 
 OpcodeActionInpOut::OpcodeActionInpOut(const Options& options, const SymbolTable& symbol_table,
@@ -90,7 +105,7 @@ void OpcodeActionInpOut::emit_byte_stream(ByteWriter& byte_writer) const
     byte_writer.write_byte(opcode, address);
 }
 void OpcodeActionInpOut::emit_listing(Listing& listing, int line_number,
-                                      std::string_view input_line) const
+                                      std::string_view input_line, bool single_byte) const
 {}
 
 OpcodeActionRst::OpcodeActionRst(const Options& options, const SymbolTable& symbol_table,
@@ -111,8 +126,8 @@ void OpcodeActionRst::emit_byte_stream(ByteWriter& byte_writer) const
 {
     byte_writer.write_byte(opcode, address);
 }
-void OpcodeActionRst::emit_listing(Listing& listing, int line_number,
-                                   std::string_view input_line) const
+void OpcodeActionRst::emit_listing(Listing& listing, int line_number, std::string_view input_line,
+                                   bool single_byte) const
 {}
 
 std::unique_ptr<OpcodeAction> create_opcode_action(const Options& options,
