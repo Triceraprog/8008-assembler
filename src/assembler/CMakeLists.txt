@@ -25,7 +25,12 @@ set(ASSEMBLER_LIB_FILES
         src/listing_line.cpp src/listing_line.h
         src/parsed_line.cpp src/parsed_line.h
         src/instruction.cpp src/instruction.h
-        src/opcode_action.cpp src/opcode_action.h)
+        src/opcode_action.cpp src/opcode_action.h
+        src/opcode_action_noarg.cpp src/opcode_action_noarg.h
+        src/opcode_action_onebyte_arg.cpp src/opcode_action_onebyte_arg.h
+        src/opcode_action_twobyte_arg.cpp src/opcode_action_twobyte_arg.h
+        src/opcode_action_inpout.cpp src/opcode_action_inpout.h
+        src/opcode_action_rst.cpp src/opcode_action_rst.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp
