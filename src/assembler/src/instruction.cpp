@@ -164,79 +164,33 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
             }
             break;
             case ADDRESS_ARG: {
-                const int MAX_ADDRESS = 1024 * 16;
-                int evaluated_arg1 = evaluate_argument(options, symbol_table, arguments[0]);
-                if ((evaluated_arg1 > MAX_ADDRESS) || (evaluated_arg1 < 0))
-                {
-                    throw ExpectedArgumentWithinLimits(MAX_ADDRESS, arguments[0], evaluated_arg1);
-                }
-                const int code = found_opcode.code;
-                const int low_byte = (0xFF & evaluated_arg1);
-                const int high_byte = (0xFF & (evaluated_arg1 >> 8));
-                writer.write_byte(code, current_address++);
-                writer.write_byte(low_byte, current_address++);
-                writer.write_byte(high_byte, current_address);
+                opcode_action->emit_byte_stream(writer);
                 if (options.generate_list_file)
                 {
-                    if (options.single_byte_list)
-                    {
-                        listing.one_byte_of_data_with_address(line_number, line_address, code,
-                                                              input_line);
-                        line_address++;
-                        listing.one_byte_of_data_continued(line_address, low_byte);
-                        line_address++;
-                        listing.one_byte_of_data_continued(line_address, high_byte);
-                    }
-                    else
-                    {
-                        listing.opcode_line_with_space_2_arg(line_number, line_address,
-                                                             found_opcode.code, low_byte, high_byte,
-                                                             input_line);
-                    }
+                    opcode_action->emit_listing(listing, line_number, input_line,
+                                                options.single_byte_list);
                 }
             }
             break;
             case INP_OUT: {
-                int evaluated_arg1 = evaluate_argument(options, symbol_table, arguments[0]);
-                const int max_port = (found_opcode.mnemonic[0] == 'i') ? 7 : 23;
+                opcode_action->emit_byte_stream(writer);
 
-                if ((evaluated_arg1 > max_port) || (evaluated_arg1 < 0))
-                {
-                    throw ExpectedArgumentWithinLimits(max_port, arguments[0], evaluated_arg1);
-                }
-
-                const int code = found_opcode.code + (evaluated_arg1 << 1);
-                writer.write_byte(code, current_address);
                 if (options.generate_list_file)
                 {
-                    Opcode fixed_opcode = found_opcode;
-                    fixed_opcode.code = code;
-                    listing.opcode_line_with_space(line_number, line_address, fixed_opcode.code,
-                                                   input_line);
+                    opcode_action->emit_listing(listing, line_number, input_line,
+                                                options.single_byte_list);
                 }
             }
             break;
             case RST: {
-                int evaluated_arg1 = evaluate_argument(options, symbol_table, arguments[0]);
-                if ((evaluated_arg1 > 7) || (evaluated_arg1 < 0))
-                {
-                    throw ExpectedArgumentWithinLimits(7, arguments[0], evaluated_arg1);
-                }
-
-                const auto code = (found_opcode.code | (evaluated_arg1 << 3));
-                writer.write_byte(code, current_address);
+                opcode_action->emit_byte_stream(writer);
                 if (options.generate_list_file)
                 {
-                    Opcode fixed_opcode = found_opcode;
-                    fixed_opcode.code = code;
-                    listing.opcode_line_with_space(line_number, line_address, fixed_opcode.code,
-                                                   input_line);
+                    opcode_action->emit_listing(listing, line_number, input_line,
+                                                options.single_byte_list);
                 }
             }
             break;
-            default:
-                // Uncovered case.
-                throw InternalError(input_line);
         }
     }
     else
