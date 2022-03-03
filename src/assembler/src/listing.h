@@ -2,11 +2,10 @@
 #define INC_8008_ASSEMBLER_LISTING_H
 
 #include "opcodes.h"
-#include "options.h"
 
 #include <vector>
 
-struct Opcode;
+class Options;
 
 class Listing
 {
