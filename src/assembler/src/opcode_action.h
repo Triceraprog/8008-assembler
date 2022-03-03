@@ -113,4 +113,10 @@ public:
     ExpectedArgumentWithinLimits(int limit, const std::string& content, int evaluated);
 };
 
+class UnexpectedArgumentCount : public ExceptionWithReason
+{
+public:
+    explicit UnexpectedArgumentCount(uint32_t arg_count);
+};
+
 #endif //INC_8008_ASSEMBLER_OPCODE_ACTION_H

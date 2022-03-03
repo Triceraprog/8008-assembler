@@ -39,10 +39,4 @@ public:
     InvalidCPU();
 };
 
-class UnexpectedArgumentCount : public ExceptionWithReason
-{
-public:
-    explicit UnexpectedArgumentCount(uint32_t arg_count);
-};
-
 #endif //INC_8008_ASSEMBLER_INSTRUCTION_H

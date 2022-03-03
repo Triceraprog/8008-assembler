@@ -20,14 +20,6 @@ namespace
             throw InvalidCPU();
         }
     }
-
-    bool correct_argument_count(const Opcode& opcode, uint32_t arg_count)
-    {
-        return ((opcode.rule == 0) && (arg_count != 0)) ||
-               ((opcode.rule == 1) && (arg_count != 1)) ||
-               ((opcode.rule == 2) && (arg_count != 1)) ||
-               ((opcode.rule == 3) && (arg_count != 1)) || ((opcode.rule == 4) && (arg_count != 1));
-    }
 }
 
 Instruction::Instruction(const std::string& opcode, std::vector<std::string> arguments)
@@ -122,75 +114,19 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
     }
     else if (opcode_enum == PseudoOpcodeEnum::OTHER)
     {
-        auto arg_count = arguments.size();
         const auto [found, found_opcode] = find_opcode(opcode);
         if (!found)
         {
             throw UndefinedOpcode(opcode);
         }
-        /* found the opcode */
-        /* check that we have right the number of arguments */
-        if (correct_argument_count(found_opcode, arg_count))
-        {
-            throw UnexpectedArgumentCount(arg_count);
-        }
-
-        // Now, each opcode, is categorized into different
-        // "rules" which states how arguments are combined
-        // with opcode to get machine codes.
 
         auto opcode_action =
                 create_opcode_action(options, symbol_table, found_opcode, address, arguments);
 
-        int current_address = address;
-        int line_address = address;
-        switch (found_opcode.rule)
+        opcode_action->emit_byte_stream(writer);
+        if (options.generate_list_file)
         {
-            case NO_ARG:
-                opcode_action->emit_byte_stream(writer);
-                if (options.generate_list_file)
-                {
-                    opcode_action->emit_listing(listing, line_number, input_line,
-                                                options.single_byte_list);
-                }
-                break;
-            case ONE_BYTE_ARG: {
-                opcode_action->emit_byte_stream(writer);
-                if (options.generate_list_file)
-                {
-                    opcode_action->emit_listing(listing, line_number, input_line,
-                                                options.single_byte_list);
-                }
-            }
-            break;
-            case ADDRESS_ARG: {
-                opcode_action->emit_byte_stream(writer);
-                if (options.generate_list_file)
-                {
-                    opcode_action->emit_listing(listing, line_number, input_line,
-                                                options.single_byte_list);
-                }
-            }
-            break;
-            case INP_OUT: {
-                opcode_action->emit_byte_stream(writer);
-
-                if (options.generate_list_file)
-                {
-                    opcode_action->emit_listing(listing, line_number, input_line,
-                                                options.single_byte_list);
-                }
-            }
-            break;
-            case RST: {
-                opcode_action->emit_byte_stream(writer);
-                if (options.generate_list_file)
-                {
-                    opcode_action->emit_listing(listing, line_number, input_line,
-                                                options.single_byte_list);
-                }
-            }
-            break;
+            opcode_action->emit_listing(listing, line_number, input_line, options.single_byte_list);
         }
     }
     else
@@ -206,8 +142,3 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
 }
 
 InvalidCPU::InvalidCPU() { reason = R"(cpu only allowed is "8008" or "i8008")"; }
-
-UnexpectedArgumentCount::UnexpectedArgumentCount(uint32_t arg_count)
-{
-    reason = "unexpected number of arguments: " + std::to_string(arg_count);
-}

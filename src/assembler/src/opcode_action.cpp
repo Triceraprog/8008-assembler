@@ -4,6 +4,17 @@
 #include "evaluator.h"
 #include "listing.h"
 
+namespace
+{
+    bool correct_argument_count(const Opcode& opcode, uint32_t arg_count)
+    {
+        return ((opcode.rule == 0) && (arg_count != 0)) ||
+               ((opcode.rule == 1) && (arg_count != 1)) ||
+               ((opcode.rule == 2) && (arg_count != 1)) ||
+               ((opcode.rule == 3) && (arg_count != 1)) || ((opcode.rule == 4) && (arg_count != 1));
+    }
+}
+
 OpcodeActionNoArg::OpcodeActionNoArg(Opcode::OpcodeByteType opcode_byte, const int address)
     : opcode{opcode_byte}, address{address}
 {}
@@ -160,6 +171,11 @@ std::unique_ptr<OpcodeAction> create_opcode_action(const Options& options,
                                                    int address,
                                                    const std::vector<std::string>& arguments)
 {
+    if (correct_argument_count(opcode, arguments.size()))
+    {
+        throw UnexpectedArgumentCount(arguments.size());
+    }
+
     switch (opcode.rule)
     {
         case NO_ARG:
@@ -185,4 +201,9 @@ ExpectedArgumentWithinLimits::ExpectedArgumentWithinLimits(int limit, const std:
 {
     reason = "expected argument between 0 and " + std::to_string(limit) + " instead got " +
              content + "=" + std::to_string(evaluated);
+}
+
+UnexpectedArgumentCount::UnexpectedArgumentCount(uint32_t arg_count)
+{
+    reason = "unexpected number of arguments: " + std::to_string(arg_count);
 }
