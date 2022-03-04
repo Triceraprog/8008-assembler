@@ -1,7 +1,5 @@
 #include "opcodes.h"
 #include "utils.h"
-#include <algorithm>
-#include <vector>
 
 #define NUMOPCODES (sizeof(opcodes) / sizeof(opcodes[0]))
 
@@ -113,30 +111,6 @@ std::tuple<bool, Opcode&> find_opcode(std::string_view opcode_name)
     }
 
     return {true, get_opcode(index)};
-}
-
-PseudoOpcodeEnum opcode_to_enum(std::string_view opcode)
-{
-    static std::vector<std::tuple<const char*, PseudoOpcodeEnum>> association = {
-            {"equ", PseudoOpcodeEnum::EQU},   {"end", PseudoOpcodeEnum::END},
-            {"cpu", PseudoOpcodeEnum::CPU},   {"org", PseudoOpcodeEnum::ORG},
-            {"data", PseudoOpcodeEnum::DATA},
-    };
-    if (opcode.empty())
-    {
-        return PseudoOpcodeEnum::EMPTY;
-    }
-    auto found_op_code = std::ranges::find_if(association, [&opcode](const auto& t) {
-        const auto& [opcode_str, opcode_enum] = t;
-        return ci_equals(opcode, opcode_str);
-    });
-
-    if (found_op_code == association.end())
-    {
-        return PseudoOpcodeEnum::OTHER;
-    }
-
-    return std::get<1>(*found_op_code);
 }
 
 int get_opcode_size(const Opcode& opcode)

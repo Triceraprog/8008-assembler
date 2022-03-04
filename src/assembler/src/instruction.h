@@ -1,16 +1,30 @@
 #ifndef INC_8008_ASSEMBLER_INSTRUCTION_H
 #define INC_8008_ASSEMBLER_INSTRUCTION_H
 
-#include <string>
-#include <vector>
-
+#include "errors.h"
 #include "opcodes.h"
+
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <vector>
 
 class Options;
 class SymbolTable;
 class ByteWriter;
 class Listing;
 class LineTokenizer;
+
+enum class InstructionEnum
+{
+    EMPTY,
+    EQU,
+    END,
+    CPU,
+    ORG,
+    DATA,
+    OTHER,
+};
 
 class Instruction
 {
@@ -29,9 +43,11 @@ public:
 
 private:
     std::string opcode;
-    PseudoOpcodeEnum opcode_enum;
+    InstructionEnum opcode_enum;
     const std::vector<std::string> arguments;
 };
+
+InstructionEnum instruction_to_enum(std::string_view opcode);
 
 class InvalidCPU : public ExceptionWithReason
 {

@@ -47,6 +47,30 @@ struct SecondPassFixture : public InstructionFixture
     const int line_number = 1000;
 };
 
+/// TEST FOR PARSING THE INSTRUCTION
+TEST(PseudoOpcodes, can_be_parsed_as_enum)
+{
+    ASSERT_THAT(instruction_to_enum(""), Eq(InstructionEnum::EMPTY));
+
+    ASSERT_THAT(instruction_to_enum("EQU"), Eq(InstructionEnum::EQU));
+    ASSERT_THAT(instruction_to_enum("equ"), Eq(InstructionEnum::EQU));
+
+    ASSERT_THAT(instruction_to_enum("END"), Eq(InstructionEnum::END));
+    ASSERT_THAT(instruction_to_enum("end"), Eq(InstructionEnum::END));
+
+    ASSERT_THAT(instruction_to_enum("CPU"), Eq(InstructionEnum::CPU));
+    ASSERT_THAT(instruction_to_enum("cpu"), Eq(InstructionEnum::CPU));
+
+    ASSERT_THAT(instruction_to_enum("ORG"), Eq(InstructionEnum::ORG));
+    ASSERT_THAT(instruction_to_enum("org"), Eq(InstructionEnum::ORG));
+
+    ASSERT_THAT(instruction_to_enum("DATA"), Eq(InstructionEnum::DATA));
+    ASSERT_THAT(instruction_to_enum("data"), Eq(InstructionEnum::DATA));
+
+    ASSERT_THAT(instruction_to_enum("LAA"), Eq(InstructionEnum::OTHER));
+    ASSERT_THAT(instruction_to_enum("garbage"), Eq(InstructionEnum::OTHER));
+}
+
 /// TESTS FOR THE ADDRESS EVALUATION
 
 TEST_F(InstructionEvaluationFixture, returns_the_address_if_empty)

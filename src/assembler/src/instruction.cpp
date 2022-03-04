@@ -4,12 +4,15 @@
 #include "evaluator.h"
 #include "listing.h"
 #include "opcode_action.h"
+#include "opcodes.h"
 #include "options.h"
 #include "symbol_table.h"
 #include "utils.h"
 
+#include <algorithm>
 #include <iostream>
 #include <utility>
+#include <vector>
 
 namespace
 {
@@ -22,16 +25,40 @@ namespace
     }
 }
 
+InstructionEnum instruction_to_enum(std::string_view opcode)
+{
+    static std::vector<std::tuple<const char*, InstructionEnum>> association = {
+            {"equ", InstructionEnum::EQU},   {"end", InstructionEnum::END},
+            {"cpu", InstructionEnum::CPU},   {"org", InstructionEnum::ORG},
+            {"data", InstructionEnum::DATA},
+    };
+    if (opcode.empty())
+    {
+        return InstructionEnum::EMPTY;
+    }
+    auto found_op_code = std::ranges::find_if(association, [&opcode](const auto& t) {
+        const auto& [opcode_str, opcode_enum] = t;
+        return ci_equals(opcode, opcode_str);
+    });
+
+    if (found_op_code == association.end())
+    {
+        return InstructionEnum::OTHER;
+    }
+
+    return std::get<1>(*found_op_code);
+}
+
 Instruction::Instruction(const std::string& opcode, std::vector<std::string> arguments)
     : opcode{opcode}, arguments{std::move(arguments)}
 {
-    opcode_enum = opcode_to_enum(opcode);
+    opcode_enum = instruction_to_enum(opcode);
 }
 
 int Instruction::get_evaluation(const Options& options, const SymbolTable& symbol_table,
                                 int current_address) const
 {
-    if (opcode_enum == PseudoOpcodeEnum::ORG || opcode_enum == PseudoOpcodeEnum::EQU)
+    if (opcode_enum == InstructionEnum::ORG || opcode_enum == InstructionEnum::EQU)
     {
         return evaluate_argument(options, symbol_table, arguments[0]);
     }
@@ -44,18 +71,18 @@ int Instruction::first_pass(const Options& options, const SymbolTable& symbol_ta
     int updated_address;
     switch (opcode_enum)
     {
-        case PseudoOpcodeEnum::CPU:
+        case InstructionEnum::CPU:
             verify_cpu(arguments[0]);
-        case PseudoOpcodeEnum::EMPTY:
-        case PseudoOpcodeEnum::EQU:
-        case PseudoOpcodeEnum::END:
+        case InstructionEnum::EMPTY:
+        case InstructionEnum::EQU:
+        case InstructionEnum::END:
             updated_address = current_address;
             break;
-        case PseudoOpcodeEnum::ORG:
+        case InstructionEnum::ORG:
             updated_address = evaluate_argument(options, symbol_table, arguments[0]);
             break;
 
-        case PseudoOpcodeEnum::DATA: {
+        case InstructionEnum::DATA: {
             std::vector<int> data_list;
             int data_size = decode_data(options, symbol_table, arguments, data_list);
 
@@ -68,7 +95,7 @@ int Instruction::first_pass(const Options& options, const SymbolTable& symbol_ta
             updated_address = current_address + std::abs(data_size);
         }
         break;
-        case PseudoOpcodeEnum::OTHER: {
+        case InstructionEnum::OTHER: {
             if (auto [found, found_opcode] = find_opcode(opcode); found)
             {
                 updated_address = current_address + get_opcode_size(found_opcode);
@@ -87,7 +114,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                               Listing& listing, ByteWriter& writer, const std::string& input_line,
                               int line_number, const int address)
 {
-    if (opcode_enum == PseudoOpcodeEnum::DATA)
+    if (opcode_enum == InstructionEnum::DATA)
     {
         std::vector<int> data_list;
         const int data_length = decode_data(options, symbol_table, arguments, data_list);
@@ -112,7 +139,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
             }
         }
     }
-    else if (opcode_enum == PseudoOpcodeEnum::OTHER)
+    else if (opcode_enum == InstructionEnum::OTHER)
     {
         const auto [found, found_opcode] = find_opcode(opcode);
         if (!found)
