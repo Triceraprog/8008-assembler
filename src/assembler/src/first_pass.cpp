@@ -74,10 +74,9 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
         }
 
         LineTokenizer tokens = parse_line(options, input_line, current_line_count);
-        parsed_lines.push_back({current_line_count, current_address, tokens, input_line});
-
-        Instruction instruction{parsed_lines.back().tokens.opcode,
-                                parsed_lines.back().tokens.arguments};
+        Instruction instruction{tokens.opcode, tokens.arguments};
+        parsed_lines.push_back(
+                {current_line_count, current_address, tokens, instruction, input_line});
 
         try
         {

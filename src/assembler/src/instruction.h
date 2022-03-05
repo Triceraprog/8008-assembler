@@ -39,7 +39,7 @@ public:
 
     void second_pass(const Options& options, const SymbolTable& symbol_table, Listing& listing,
                      ByteWriter& writer, const std::string& input_line, int line_number,
-                     int address);
+                     int address) const;
 
 private:
     std::string opcode;

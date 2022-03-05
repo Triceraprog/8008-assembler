@@ -39,8 +39,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
                 printf("     0x%X \"%s\"\n", line_address, input_line.c_str());
             }
 
-            const auto& tokens = parsed_line.tokens;
-            Instruction instruction{tokens.opcode, tokens.arguments};
+            const auto & instruction = parsed_line.instruction;
             instruction.second_pass(options, symbol_table, listing, writer, input_line, line_number,
                                     line_address);
         }

@@ -112,7 +112,7 @@ int Instruction::first_pass(const Options& options, const SymbolTable& symbol_ta
 
 void Instruction::second_pass(const Options& options, const SymbolTable& symbol_table,
                               Listing& listing, ByteWriter& writer, const std::string& input_line,
-                              int line_number, const int address)
+                              int line_number, const int address) const
 {
     if (opcode_enum == InstructionEnum::DATA)
     {
