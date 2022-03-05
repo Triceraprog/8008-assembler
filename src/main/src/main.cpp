@@ -1,11 +1,12 @@
+#include "assembler/src/context.h"
 #include "assembler/src/errors.h"
 #include "assembler/src/files.h"
 #include "assembler/src/first_pass.h"
+#include "assembler/src/listing.h"
 #include "assembler/src/options.h"
+#include "assembler/src/parsed_line.h"
 #include "assembler/src/second_pass.h"
 #include "assembler/src/symbol_table.h"
-#include "assembler/src/listing.h"
-#include "assembler/src/parsed_line.h"
 
 #include <iostream>
 
@@ -29,8 +30,10 @@ int main(int argc, const char** argv)
         Listing listing(files.listing_stream, global_options);
         std::vector<ParsedLine> parsed_lines;
 
-        first_pass(global_options, symbol_table, files, parsed_lines, listing);
-        second_pass(global_options, symbol_table, files, parsed_lines, listing);
+        Context context{global_options, symbol_table};
+
+        first_pass(context, global_options, symbol_table, files, parsed_lines, listing);
+        second_pass(context, global_options, symbol_table, files, parsed_lines, listing);
 
         /* write symbol table to listfile */
         if (global_options.generate_list_file)

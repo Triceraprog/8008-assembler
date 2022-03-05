@@ -4,11 +4,11 @@
 #include "evaluator.h"
 #include "listing.h"
 
+#include "opcode_action_inpout.h"
 #include "opcode_action_noarg.h"
 #include "opcode_action_onebyte_arg.h"
-#include "opcode_action_twobyte_arg.h"
 #include "opcode_action_rst.h"
-#include "opcode_action_inpout.h"
+#include "opcode_action_twobyte_arg.h"
 
 namespace
 {
@@ -21,8 +21,7 @@ namespace
     }
 }
 
-std::unique_ptr<OpcodeAction> create_opcode_action(const Options& options,
-                                                   const SymbolTable& symbol_table, Opcode opcode,
+std::unique_ptr<OpcodeAction> create_opcode_action(const Context& context, Opcode opcode,
                                                    int address,
                                                    const std::vector<std::string>& arguments)
 {
@@ -36,17 +35,16 @@ std::unique_ptr<OpcodeAction> create_opcode_action(const Options& options,
         case NO_ARG:
             return std::make_unique<OpcodeActionNoArg>(opcode.code, address);
         case ONE_BYTE_ARG:
-            return std::make_unique<OpcodeActionOneByteArg>(options, symbol_table, opcode.code,
-                                                            address, arguments);
+            return std::make_unique<OpcodeActionOneByteArg>(context, opcode.code, address,
+                                                            arguments);
         case ADDRESS_ARG:
-            return std::make_unique<OpcodeActionTwoByteArg>(options, symbol_table, opcode.code,
-                                                            address, arguments);
+            return std::make_unique<OpcodeActionTwoByteArg>(context, opcode.code, address,
+                                                            arguments);
         case INP_OUT:
-            return std::make_unique<OpcodeActionInpOut>(options, symbol_table, opcode.code, address,
-                                                        arguments, opcode.mnemonic);
+            return std::make_unique<OpcodeActionInpOut>(context, opcode.code, address, arguments,
+                                                        opcode.mnemonic);
         case RST:
-            return std::make_unique<OpcodeActionRst>(options, symbol_table, opcode.code, address,
-                                                     arguments);
+            return std::make_unique<OpcodeActionRst>(context, opcode.code, address, arguments);
     }
     return nullptr;
 }

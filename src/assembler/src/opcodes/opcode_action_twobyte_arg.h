@@ -6,8 +6,7 @@
 class OpcodeActionTwoByteArg : public OpcodeAction
 {
 public:
-    OpcodeActionTwoByteArg(const Options& options, const SymbolTable& symbol_table,
-                           Opcode::OpcodeByteType opcode_byte, int address,
+    OpcodeActionTwoByteArg(const Context& context, Opcode::OpcodeByteType opcode_byte, int address,
                            const std::vector<std::string>& arguments);
 
     void emit_byte_stream(ByteWriter& byte_writer) const override;

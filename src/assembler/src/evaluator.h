@@ -1,6 +1,7 @@
 #ifndef INC_8008_ASSEMBLER_EVALUATOR_H
 #define INC_8008_ASSEMBLER_EVALUATOR_H
 
+#include "context.h"
 #include "errors.h"
 
 #include <exception>
@@ -10,8 +11,7 @@
 class Options;
 class SymbolTable;
 
-int evaluate_argument(const Options& options, const SymbolTable& symbol_table,
-                      std::string_view arg);
+int evaluate_argument(const Context& context, std::string_view arg);
 
 class CannotFindSymbol : public ExceptionWithReason
 {

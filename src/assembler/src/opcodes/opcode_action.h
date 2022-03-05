@@ -5,6 +5,7 @@
 
 #include "options.h"
 #include "symbol_table.h"
+#include "context.h"
 
 #include <memory>
 #include <string>
@@ -23,8 +24,7 @@ public:
     virtual ~OpcodeAction() = default;
 };
 
-std::unique_ptr<OpcodeAction> create_opcode_action(const Options& options,
-                                                   const SymbolTable& symbol_table, Opcode opcode,
+std::unique_ptr<OpcodeAction> create_opcode_action(const Context& context, Opcode opcode,
                                                    int address,
                                                    const std::vector<std::string>& arguments);
 

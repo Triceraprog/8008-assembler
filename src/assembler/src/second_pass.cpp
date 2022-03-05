@@ -8,12 +8,13 @@
 #include "options.h"
 #include "parsed_line.h"
 #include "symbol_table.h"
+#include "context.h"
 
 #include <cstdio>
 #include <iostream>
 
-void second_pass(const Options& options, const SymbolTable& symbol_table, Files& files,
-                 const std::vector<ParsedLine>& parsed_lines, Listing& listing)
+void second_pass(const Context& context, const Options& options, const SymbolTable& symbol_table,
+                 Files& files, const std::vector<ParsedLine>& parsed_lines, Listing& listing)
 {
     /* Symbols are defined. Second pass. */
     if (options.verbose || options.debug)
@@ -40,7 +41,7 @@ void second_pass(const Options& options, const SymbolTable& symbol_table, Files&
             }
 
             const auto & instruction = parsed_line.instruction;
-            instruction.second_pass(options, symbol_table, listing, writer, input_line, line_number,
+            instruction.second_pass(context, listing, writer, input_line, line_number,
                                     line_address);
         }
         catch (const CannotFindSymbol& ex)

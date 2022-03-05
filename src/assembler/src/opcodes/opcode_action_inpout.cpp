@@ -4,13 +4,12 @@
 #include "evaluator.h"
 #include "listing.h"
 
-OpcodeActionInpOut::OpcodeActionInpOut(const Options& options, const SymbolTable& symbol_table,
-                                       Opcode::OpcodeByteType opcode_byte, int address,
-                                       const std::vector<std::string>& arguments,
+OpcodeActionInpOut::OpcodeActionInpOut(const Context& context, Opcode::OpcodeByteType opcode_byte,
+                                       int address, const std::vector<std::string>& arguments,
                                        std::string_view mnemonic)
     : address{address}
 {
-    int argument = evaluate_argument(options, symbol_table, arguments[0]);
+    int argument = evaluate_argument(context, arguments[0]);
     const int max_port = (mnemonic[0] == 'i') ? 7 : 23;
 
     if ((argument > max_port) || (argument < 0))

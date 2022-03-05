@@ -1,5 +1,6 @@
 #include "first_pass.h"
 
+#include "context.h"
 #include "errors.h"
 #include "files.h"
 #include "instruction.h"
@@ -23,13 +24,13 @@ namespace
         }
     }
 
-    void define_symbol_or_fail(const Options& options, SymbolTable& symbol_table,
-                               const std::string& label, const int line_address,
-                               const Instruction& instruction)
+    void define_symbol_or_fail(const Context& context, const Options& options,
+                               SymbolTable& symbol_table, const std::string& label,
+                               const int line_address, const Instruction& instruction)
     {
         throws_if_already_defined(symbol_table, label);
 
-        int val = instruction.get_evaluation(options, symbol_table, line_address);
+        int val = instruction.get_evaluation(context, options, symbol_table, line_address);
         symbol_table.define_symbol(label, val);
 
         if (options.debug)
@@ -41,22 +42,24 @@ namespace
         }
     }
 
-    void handle_potential_label(const Options& options, SymbolTable& symbol_table,
-                                const ParsedLine& parsed_line, const Instruction& instruction)
+    void handle_potential_label(const Context& context, const Options& options,
+                                SymbolTable& symbol_table, const ParsedLine& parsed_line,
+                                const Instruction& instruction)
     {
         if (!parsed_line.tokens.label.empty())
         {
-            define_symbol_or_fail(options, symbol_table, parsed_line.tokens.label,
+            define_symbol_or_fail(context, options, symbol_table, parsed_line.tokens.label,
                                   parsed_line.line_address, instruction);
         }
     }
 }
 
-void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
-                std::vector<ParsedLine>& parsed_lines, Listing& listing)
+void first_pass(const Context& context, const Options& old_options, SymbolTable& symbol_table,
+                Files& files, std::vector<ParsedLine>& parsed_lines, Listing& listing)
 {
     // In the first pass, we parse through lines to build a symbol table
     // What is parsed is kept into the "parsed_lines" container for the second pass.
+    const auto& options = context.options;
     if (options.debug || options.verbose)
     {
         std::cout << "Pass number One:  Read and Define Symbols\n";
@@ -80,8 +83,10 @@ void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
 
         try
         {
-            handle_potential_label(options, symbol_table, parsed_lines.back(), instruction);
-            current_address = instruction.first_pass(options, symbol_table, current_address);
+            handle_potential_label(context, options, symbol_table, parsed_lines.back(),
+                                   instruction);
+            current_address =
+                    instruction.first_pass(context, options, symbol_table, current_address);
         }
         catch (const std::exception& ex)
         {

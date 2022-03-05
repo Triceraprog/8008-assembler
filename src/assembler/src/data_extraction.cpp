@@ -4,8 +4,8 @@
 #include "symbol_table.h"
 #include <algorithm>
 
-int decode_data(const Options& options, const SymbolTable& symbol_table,
-                const std::vector<std::string>& tokens, std::vector<int>& out_data)
+int decode_data(const Context& context, const std::vector<std::string>& tokens,
+                std::vector<int>& out_data)
 {
     if (tokens.empty())
     {
@@ -19,7 +19,7 @@ int decode_data(const Options& options, const SymbolTable& symbol_table,
         // int number_to_reserve = std::stoi(data_part.substr(1).data());
         const auto first_comment = first_argument.find_first_of(';');
         auto without_comment = std::string{first_argument.substr(0, first_comment)};
-        int number_to_reserve = evaluate_argument(options, symbol_table, without_comment.substr(1));
+        int number_to_reserve = evaluate_argument(context, without_comment.substr(1));
         return 0 - number_to_reserve;
     }
     if ((first_argument.front() == '\'') || (first_argument.front() == '"'))
@@ -73,7 +73,7 @@ int decode_data(const Options& options, const SymbolTable& symbol_table,
         }
 
         /* If "markascii" option is set, the highest bit of these ascii bytes are forced to 1. */
-        if (options.mark_8_ascii)
+        if (context.options.mark_8_ascii)
         {
             std::ranges::transform(out_data.begin(), out_data.end(), out_data.begin(),
                                    [](const auto p) { return p | 0x80; });
@@ -91,7 +91,7 @@ int decode_data(const Options& options, const SymbolTable& symbol_table,
 
         for (const auto& argument : tokens)
         {
-            out_data.push_back(evaluate_argument(options, symbol_table, argument));
+            out_data.push_back(evaluate_argument(context, argument));
             byte_count += 1;
 
             if (byte_count > 12)

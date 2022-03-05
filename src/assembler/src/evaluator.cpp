@@ -1,4 +1,5 @@
 #include "evaluator.h"
+#include "context.h"
 #include "files.h"
 #include "opcodes/opcodes.h"
 #include "options.h"
@@ -88,16 +89,16 @@ namespace
         throw CannotFindSymbol(to_parse);
     }
 
-    int operand_to_int(const Options& options, const SymbolTable& table, const std::string& operand)
+    int operand_to_int(const Context& context, const std::string& operand)
     {
         auto front = operand.front();
         if (isalpha(front) && front != '\'')
         {
-            return symbol_to_int(table, operand);
+            return symbol_to_int(context.symbolTable, operand);
         }
         else
         {
-            return string_to_int(operand, EvaluationFlags::get_flags_from_options(options));
+            return string_to_int(operand, EvaluationFlags::get_flags_from_options(context.options));
         }
     }
 
@@ -132,7 +133,7 @@ namespace
         void add_operation(char op) { operations.push_back(op); }
         void add_operand(std::string_view operand) { operands.emplace_back(operand); }
 
-        [[nodiscard]] int resolve(const Options& options, const SymbolTable& table) const
+        [[nodiscard]] int resolve(const Context& context) const
         {
             if (operands.size() != operations.size())
             {
@@ -143,9 +144,9 @@ namespace
             for (int j = 0; j < operands.size(); j++)
             {
                 const auto& operand = operands[j];
-                int val = operand_to_int(options, table, operand);
+                int val = operand_to_int(context, operand);
 
-                if (options.debug)
+                if (context.options.debug)
                 {
                     std::cout << "      for '" << operand << "' got value " << val;
                 }
@@ -165,31 +166,31 @@ namespace
 
 }
 
-int evaluate_argument(const Options& options, const SymbolTable& symbol_table, std::string_view arg)
+int evaluate_argument(const Context& context, std::string_view arg)
 {
     if (arg.starts_with("\\HB\\"))
     {
-        int value = evaluate_argument(options, symbol_table, arg.begin() + 4);
+        int value = evaluate_argument(context, arg.begin() + 4);
         return ((value >> 8) & 0xFF);
     }
     if (arg.starts_with("H(") && arg.ends_with(')'))
     {
-        int value = evaluate_argument(options, symbol_table, arg.substr(2, arg.size() - 2 - 1));
+        int value = evaluate_argument(context, arg.substr(2, arg.size() - 2 - 1));
         return ((value >> 8) & 0xFF);
     }
 
     if (arg.starts_with("\\LB\\"))
     {
-        int value = evaluate_argument(options, symbol_table, arg.begin() + 4);
+        int value = evaluate_argument(context, arg.begin() + 4);
         return (value & 0xFF);
     }
     if (arg.starts_with("L(") && arg.ends_with(')'))
     {
-        int value = evaluate_argument(options, symbol_table, arg.substr(2, arg.size() - 2 - 1));
+        int value = evaluate_argument(context, arg.substr(2, arg.size() - 2 - 1));
         return (value & 0xFF);
     }
 
-    if (options.debug)
+    if (context.options.debug)
     {
         std::cout << "evaluating " << arg << "\n";
     }
@@ -234,9 +235,9 @@ int evaluate_argument(const Options& options, const SymbolTable& symbol_table, s
         }
     }
 
-    auto result = acc.resolve(options, symbol_table);
+    auto result = acc.resolve(context);
 
-    if (options.debug)
+    if (context.options.debug)
     {
         std::cout << "     got final value " << result << "\n";
     }

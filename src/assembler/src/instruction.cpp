@@ -1,5 +1,6 @@
 #include "instruction.h"
 #include "byte_writer.h"
+#include "context.h"
 #include "data_extraction.h"
 #include "evaluator.h"
 #include "listing.h"
@@ -55,18 +56,18 @@ Instruction::Instruction(const std::string& opcode, std::vector<std::string> arg
     opcode_enum = instruction_to_enum(opcode);
 }
 
-int Instruction::get_evaluation(const Options& options, const SymbolTable& symbol_table,
-                                int current_address) const
+int Instruction::get_evaluation(const Context& context, const Options& options,
+                                const SymbolTable& symbol_table, int current_address) const
 {
     if (opcode_enum == InstructionEnum::ORG || opcode_enum == InstructionEnum::EQU)
     {
-        return evaluate_argument(options, symbol_table, arguments[0]);
+        return evaluate_argument(context, arguments[0]);
     }
     return current_address;
 }
 
-int Instruction::first_pass(const Options& options, const SymbolTable& symbol_table,
-                            const int current_address) const
+int Instruction::first_pass(const Context& context, const Options& options,
+                            const SymbolTable& symbol_table, int current_address) const
 {
     int updated_address;
     switch (opcode_enum)
@@ -79,12 +80,12 @@ int Instruction::first_pass(const Options& options, const SymbolTable& symbol_ta
             updated_address = current_address;
             break;
         case InstructionEnum::ORG:
-            updated_address = evaluate_argument(options, symbol_table, arguments[0]);
+            updated_address = evaluate_argument(context, arguments[0]);
             break;
 
         case InstructionEnum::DATA: {
             std::vector<int> data_list;
-            int data_size = decode_data(options, symbol_table, arguments, data_list);
+            int data_size = decode_data(context, arguments, data_list);
 
             if (options.debug)
             {
@@ -110,20 +111,22 @@ int Instruction::first_pass(const Options& options, const SymbolTable& symbol_ta
     return updated_address;
 }
 
-void Instruction::second_pass(const Options& options, const SymbolTable& symbol_table,
-                              Listing& listing, ByteWriter& writer, const std::string& input_line,
-                              int line_number, const int address) const
+void Instruction::second_pass(const Context& context, Listing& listing, ByteWriter& writer,
+                              const std::string& input_line, int line_number,
+                              const int address) const
 {
+    const bool generate_list_file = context.options.generate_list_file;
     if (opcode_enum == InstructionEnum::DATA)
     {
         std::vector<int> data_list;
-        const int data_length = decode_data(options, symbol_table, arguments, data_list);
+        const int data_length = decode_data(context, arguments, data_list);
         if (data_length < 0)
         {
             /* if n is negative, that number of bytes are just reserved */
-            if (options.generate_list_file)
+            if (generate_list_file)
             {
-                listing.reserved_data(line_number, address, input_line, options.single_byte_list);
+                listing.reserved_data(line_number, address, input_line,
+                                      context.options.single_byte_list);
             }
         }
         else
@@ -133,7 +136,7 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
                 writer.write_byte(data, write_address);
                 write_address += 1;
             }
-            if (options.generate_list_file)
+            if (generate_list_file)
             {
                 listing.data(line_number, address, input_line, data_list);
             }
@@ -147,13 +150,13 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
             throw UndefinedOpcode(opcode);
         }
 
-        auto opcode_action =
-                create_opcode_action(options, symbol_table, found_opcode, address, arguments);
+        auto opcode_action = create_opcode_action(context, found_opcode, address, arguments);
 
         opcode_action->emit_byte_stream(writer);
-        if (options.generate_list_file)
+        if (generate_list_file)
         {
-            opcode_action->emit_listing(listing, line_number, input_line, options.single_byte_list);
+            opcode_action->emit_listing(listing, line_number, input_line,
+                                        context.options.single_byte_list);
         }
     }
     else
@@ -161,9 +164,9 @@ void Instruction::second_pass(const Options& options, const SymbolTable& symbol_
         // ORG, EMPTY, EQU, CPU, END
         // For END, could break here, but rather than break,
         // we will go ahead and check for more.
-        if (options.generate_list_file)
+        if (generate_list_file)
         {
-            listing.simple_line(line_number, input_line, options.single_byte_list);
+            listing.simple_line(line_number, input_line, context.options.single_byte_list);
         }
     }
 }

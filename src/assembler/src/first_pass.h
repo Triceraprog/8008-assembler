@@ -10,9 +10,10 @@ class Files;
 class Options;
 class Listing;
 class ParsedLine;
+class Context;
 
-void first_pass(const Options& options, SymbolTable& symbol_table, Files& files,
-                std::vector<ParsedLine>& parsed_lines, Listing& listing);
+void first_pass(const Context& context, const Options& options, SymbolTable& symbol_table,
+                Files& files, std::vector<ParsedLine>& parsed_lines, Listing& listing);
 
 class AlreadyDefinedSymbol : public ExceptionWithReason
 {

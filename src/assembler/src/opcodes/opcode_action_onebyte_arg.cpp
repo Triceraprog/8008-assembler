@@ -4,13 +4,12 @@
 #include "evaluator.h"
 #include "listing.h"
 
-OpcodeActionOneByteArg::OpcodeActionOneByteArg(const Options& options,
-                                               const SymbolTable& symbol_table,
+OpcodeActionOneByteArg::OpcodeActionOneByteArg(const Context& context,
                                                Opcode::OpcodeByteType opcode_byte, int address,
                                                const std::vector<std::string>& arguments)
     : opcode{opcode_byte}, address{address}
 {
-    evaluated_argument = evaluate_argument(options, symbol_table, arguments[0]);
+    evaluated_argument = evaluate_argument(context, arguments[0]);
     if ((evaluated_argument > 255) || (evaluated_argument < 0))
     {
         throw ExpectedArgumentWithinLimits(255, arguments[0], evaluated_argument);

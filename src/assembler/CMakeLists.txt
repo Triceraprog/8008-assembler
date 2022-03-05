@@ -30,7 +30,8 @@ set(ASSEMBLER_LIB_FILES
         src/opcodes/opcode_action_onebyte_arg.cpp src/opcodes/opcode_action_onebyte_arg.h
         src/opcodes/opcode_action_twobyte_arg.cpp src/opcodes/opcode_action_twobyte_arg.h
         src/opcodes/opcode_action_inpout.cpp src/opcodes/opcode_action_inpout.h
-        src/opcodes/opcode_action_rst.cpp src/opcodes/opcode_action_rst.h)
+        src/opcodes/opcode_action_rst.cpp src/opcodes/opcode_action_rst.h
+        src/context.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp

@@ -4,12 +4,11 @@
 #include "evaluator.h"
 #include "listing.h"
 
-OpcodeActionRst::OpcodeActionRst(const Options& options, const SymbolTable& symbol_table,
-                                 Opcode::OpcodeByteType opcode_byte, int address,
-                                 const std::vector<std::string>& arguments)
+OpcodeActionRst::OpcodeActionRst(const Context& context, Opcode::OpcodeByteType opcode_byte,
+                                 int address, const std::vector<std::string>& arguments)
     : opcode{opcode_byte}, address{address}
 {
-    int argument = evaluate_argument(options, symbol_table, arguments[0]);
+    int argument = evaluate_argument(context, arguments[0]);
     if ((argument > 7) || (argument < 0))
     {
         throw ExpectedArgumentWithinLimits(7, arguments[0], argument);

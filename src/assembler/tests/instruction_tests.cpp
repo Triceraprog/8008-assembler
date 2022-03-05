@@ -1,6 +1,7 @@
 #include "instruction.h"
 
 #include "byte_writer.h"
+#include "context.h"
 #include "listing.h"
 #include "options.h"
 #include "symbol_table.h"
@@ -13,6 +14,7 @@ struct InstructionFixture : public Test
 {
     Options options;
     SymbolTable symbol_table;
+    Context context{options, symbol_table};
 
     static Instruction get_instruction_empty() { return Instruction{{}, {}}; }
     static Instruction get_instruction_end() { return Instruction{"END", {}}; }
@@ -78,7 +80,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_empty)
     auto instruction = get_instruction_empty();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.get_evaluation(options, symbol_table, current_address),
+    ASSERT_THAT(instruction.get_evaluation(context, options, symbol_table, current_address),
                 Eq(current_address));
 }
 
@@ -87,7 +89,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_end)
     auto instruction = get_instruction_end();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.get_evaluation(options, symbol_table, current_address),
+    ASSERT_THAT(instruction.get_evaluation(context, options, symbol_table, current_address),
                 Eq(current_address));
 }
 
@@ -96,7 +98,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_cpu)
     auto instruction = get_instruction_cpu_known();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.get_evaluation(options, symbol_table, current_address),
+    ASSERT_THAT(instruction.get_evaluation(context, options, symbol_table, current_address),
                 Eq(current_address));
 }
 
@@ -105,7 +107,8 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_org)
     auto instruction = get_instruction_org();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.get_evaluation(options, symbol_table, current_address), Eq(0x1000));
+    ASSERT_THAT(instruction.get_evaluation(context, options, symbol_table, current_address),
+                Eq(0x1000));
 }
 
 TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_equ)
@@ -113,7 +116,8 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_equ)
     auto instruction = get_instruction_equ();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.get_evaluation(options, symbol_table, current_address), Eq(0x2000));
+    ASSERT_THAT(instruction.get_evaluation(context, options, symbol_table, current_address),
+                Eq(0x2000));
 }
 
 /// TESTS FOR THE FIRST PASS
@@ -123,7 +127,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_empty)
     auto instruction = get_instruction_empty();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address),
+    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
                 Eq(current_address));
 }
 
@@ -132,7 +136,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_end)
     auto instruction = get_instruction_end();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address),
+    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
                 Eq(current_address));
 }
 
@@ -141,7 +145,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_equ)
     auto instruction = get_instruction_equ();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address),
+    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
                 Eq(current_address));
 }
 
@@ -150,7 +154,8 @@ TEST_F(FirstPassFixture, sets_address_for_org)
     auto instruction = get_instruction_org();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address), Eq(0x1000));
+    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
+                Eq(0x1000));
 }
 
 TEST_F(FirstPassFixture, throws_if_wrong_CPU)
@@ -159,7 +164,8 @@ TEST_F(FirstPassFixture, throws_if_wrong_CPU)
 
     const int current_address = 0xff;
     int return_value = 0;
-    ASSERT_THROW(return_value = instruction.first_pass(options, symbol_table, current_address),
+    ASSERT_THROW(return_value =
+                         instruction.first_pass(context, options, symbol_table, current_address),
                  InvalidCPU);
     ASSERT_THAT(return_value, Eq(0));
 }
@@ -169,7 +175,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_correct_cpu)
     auto instruction = get_instruction_cpu_known();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address),
+    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
                 Eq(current_address));
 }
 
@@ -178,7 +184,7 @@ TEST_F(FirstPassFixture, advance_address_with_declared_data)
     auto instruction = get_instruction_data();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address),
+    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
                 Eq(current_address + 3));
 }
 
@@ -188,7 +194,8 @@ TEST_F(FirstPassFixture, throws_if_unknown_opcode)
 
     const int current_address = 0xff;
     int return_value = 0;
-    ASSERT_THROW(return_value = instruction.first_pass(options, symbol_table, current_address),
+    ASSERT_THROW(return_value =
+                         instruction.first_pass(context, options, symbol_table, current_address),
                  UndefinedOpcode);
     ASSERT_THAT(return_value, Eq(0));
 }
@@ -198,7 +205,7 @@ TEST_F(FirstPassFixture, advances_one_byte_if_nop)
     auto instruction = get_instruction_nop();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(options, symbol_table, current_address),
+    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
                 Eq(current_address + 1));
 }
 
@@ -208,8 +215,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_empty)
 {
     auto instruction = get_instruction_empty();
 
-    instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
-                            current_address);
+    instruction.second_pass(context, listing, byte_writer, "", line_number, current_address);
     byte_writer.write_end();
 
     ASSERT_THAT(byte_buffer.str()[0], Eq(0));
@@ -219,8 +225,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_end)
 {
     auto instruction = get_instruction_end();
 
-    instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
-                            current_address);
+    instruction.second_pass(context, listing, byte_writer, "", line_number, current_address);
     byte_writer.write_end();
 
     ASSERT_THAT(byte_buffer.str()[0], Eq(0));
@@ -230,8 +235,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_equ)
 {
     auto instruction = get_instruction_equ();
 
-    instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
-                            current_address);
+    instruction.second_pass(context, listing, byte_writer, "", line_number, current_address);
     byte_writer.write_end();
 
     ASSERT_THAT(byte_buffer.str()[0], Eq(0));
@@ -241,8 +245,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_org)
 {
     auto instruction = get_instruction_org();
 
-    instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
-                            current_address);
+    instruction.second_pass(context, listing, byte_writer, "", line_number, current_address);
     byte_writer.write_end();
 
     ASSERT_THAT(byte_buffer.str()[0], Eq(0));
@@ -252,8 +255,7 @@ TEST_F(SecondPassFixture, outputs_declared_data)
 {
     auto instruction = get_instruction_data();
 
-    instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
-                            current_address);
+    instruction.second_pass(context, listing, byte_writer, "", line_number, current_address);
     byte_writer.write_end();
 
     ASSERT_THAT(byte_buffer.str()[0], Eq(1));
@@ -265,8 +267,7 @@ TEST_F(SecondPassFixture, outputs_opcode_data)
 {
     auto instruction = get_instruction_nop();
 
-    instruction.second_pass(options, symbol_table, listing, byte_writer, "", line_number,
-                            current_address);
+    instruction.second_pass(context, listing, byte_writer, "", line_number, current_address);
     byte_writer.write_end();
 
     ASSERT_THAT(byte_buffer.str()[0], Eq(static_cast<char>(0xC0)));
