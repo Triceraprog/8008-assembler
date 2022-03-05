@@ -37,6 +37,14 @@ if(WITH_TESTS)
     add_subdirectory(extern/googletest)
 endif()
 
+# Prepare for LTO
+include(CheckIPOSupported)
+check_ipo_supported(RESULT LTO_result OUTPUT output)
+
+if(NOT LTO_result)
+    message(WARNING "IPO is not supported: ${output}")
+endif()
+
 # Project
 set(ASSEMBLER_LIB_NAME "assembler-lib")
 
