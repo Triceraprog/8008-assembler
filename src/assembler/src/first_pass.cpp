@@ -15,7 +15,7 @@
 
 namespace
 {
-    void throws_is_already_defined(const SymbolTable& symbol_table, const std::string& label)
+    void throws_if_already_defined(const SymbolTable& symbol_table, const std::string& label)
     {
         if (auto symbol_value = symbol_table.get_symbol_value(label); std::get<0>(symbol_value))
         {
@@ -27,7 +27,7 @@ namespace
                                const std::string& label, const int line_address,
                                const Instruction& instruction)
     {
-        throws_is_already_defined(symbol_table, label);
+        throws_if_already_defined(symbol_table, label);
 
         int val = instruction.get_evaluation(options, symbol_table, line_address);
         symbol_table.define_symbol(label, val);
