@@ -119,15 +119,15 @@ int get_opcode_size(const Opcode& opcode)
     int opcode_byte_size;
     switch (opcode.rule)
     {
-        case 0:
-        case 3:
-        case 4:
+        case NO_ARG:
+        case INP_OUT:
+        case RST:
             opcode_byte_size = 1;
             break;
-        case 1:
+        case ONE_BYTE_ARG:
             opcode_byte_size = 2;
             break;
-        case 2:
+        case ADDRESS_ARG:
             opcode_byte_size = 3;
             break;
     }
