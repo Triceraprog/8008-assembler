@@ -1,4 +1,5 @@
 #include "opcodes.h"
+
 #include "utils.h"
 
 #define NUMOPCODES (sizeof(opcodes) / sizeof(opcodes[0]))

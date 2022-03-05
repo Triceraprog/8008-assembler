@@ -1,6 +1,6 @@
 #include "evaluator.h"
 #include "files.h"
-#include "opcodes.h"
+#include "opcodes/opcodes.h"
 #include "options.h"
 #include "symbol_table.h"
 #include "utils.h"

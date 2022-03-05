@@ -1,15 +1,16 @@
-#include "opcode_action.h"
+#include "opcodes/opcode_action.h"
 
 #include "byte_writer.h"
 #include "options.h"
 #include "symbol_table.h"
 
+#include "opcodes/opcode_action_inpout.h"
+#include "opcodes/opcode_action_noarg.h"
+#include "opcodes/opcode_action_onebyte_arg.h"
+#include "opcodes/opcode_action_rst.h"
+#include "opcodes/opcode_action_twobyte_arg.h"
+
 #include "gmock/gmock.h"
-#include "opcode_action_noarg.h"
-#include "opcode_action_onebyte_arg.h"
-#include "opcode_action_twobyte_arg.h"
-#include "opcode_action_rst.h"
-#include "opcode_action_inpout.h"
 
 using namespace testing;
 

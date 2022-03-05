@@ -2,6 +2,7 @@
 #define INC_8008_ASSEMBLER_OPCODE_ACTION_H
 
 #include "opcodes.h"
+
 #include "options.h"
 #include "symbol_table.h"
 

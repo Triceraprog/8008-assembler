@@ -2,7 +2,7 @@
 #define INC_8008_ASSEMBLER_INSTRUCTION_H
 
 #include "errors.h"
-#include "opcodes.h"
+#include "opcodes/opcodes.h"
 
 #include <string>
 #include <string_view>

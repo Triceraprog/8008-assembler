@@ -1,6 +1,5 @@
-#include "opcodes.h"
+#include "opcodes/opcodes.h"
 
 #include "gmock/gmock.h"
-#include "instruction.h"
 
 using namespace testing;

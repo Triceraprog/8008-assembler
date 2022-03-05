@@ -14,7 +14,6 @@ set(ASSEMBLER_LIB_FILES
         src/symbol_table.cpp src/symbol_table.h
         src/line_tokenizer.cpp src/line_tokenizer.h
         src/utils.cpp src/utils.h
-        src/opcodes.cpp src/opcodes.h
         src/evaluator.cpp src/evaluator.h
         src/byte_writer.cpp src/byte_writer.h
         src/data_extraction.cpp src/data_extraction.h
@@ -25,12 +24,13 @@ set(ASSEMBLER_LIB_FILES
         src/listing_line.cpp src/listing_line.h
         src/parsed_line.cpp src/parsed_line.h
         src/instruction.cpp src/instruction.h
-        src/opcode_action.cpp src/opcode_action.h
-        src/opcode_action_noarg.cpp src/opcode_action_noarg.h
-        src/opcode_action_onebyte_arg.cpp src/opcode_action_onebyte_arg.h
-        src/opcode_action_twobyte_arg.cpp src/opcode_action_twobyte_arg.h
-        src/opcode_action_inpout.cpp src/opcode_action_inpout.h
-        src/opcode_action_rst.cpp src/opcode_action_rst.h)
+        src/opcodes/opcodes.cpp src/opcodes/opcodes.h
+        src/opcodes/opcode_action.cpp src/opcodes/opcode_action.h
+        src/opcodes/opcode_action_noarg.cpp src/opcodes/opcode_action_noarg.h
+        src/opcodes/opcode_action_onebyte_arg.cpp src/opcodes/opcode_action_onebyte_arg.h
+        src/opcodes/opcode_action_twobyte_arg.cpp src/opcodes/opcode_action_twobyte_arg.h
+        src/opcodes/opcode_action_inpout.cpp src/opcodes/opcode_action_inpout.h
+        src/opcodes/opcode_action_rst.cpp src/opcodes/opcode_action_rst.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp
@@ -44,6 +44,7 @@ set(ASSEMBLER_TEST_FILES
         tests/opcode_action_tests.cpp)
 
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})
+target_include_directories(${ASSEMBLER_LIB_NAME} PUBLIC src/)
 
 if(WITH_TESTS)
     add_executable(${ASSEMBLER_TEST_NAME} ${ASSEMBLER_TEST_FILES})

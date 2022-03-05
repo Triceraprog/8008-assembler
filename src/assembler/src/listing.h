@@ -1,7 +1,7 @@
 #ifndef INC_8008_ASSEMBLER_LISTING_H
 #define INC_8008_ASSEMBLER_LISTING_H
 
-#include "opcodes.h"
+#include "opcodes/opcodes.h"
 
 #include <vector>
 
