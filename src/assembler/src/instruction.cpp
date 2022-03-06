@@ -56,21 +56,22 @@ namespace
 
     struct Instruction_ORG : public Instruction::InstructionAction
     {
-        explicit Instruction_ORG(const std::vector<std::string>& arguments)
-            : first_arg{arguments[0]}
-        {}
+        explicit Instruction_ORG(const Context& context, const std::vector<std::string>& arguments)
+        {
+            evaluated_argument = evaluate_argument(context, arguments[0]);
+        }
         [[nodiscard]] int evaluate_fixed_address(const Context& context,
                                                  int current_address) const override
         {
-            return evaluate_argument(context, first_arg);
+            return evaluated_argument;
         }
         [[nodiscard]] int advance_address(const Context& context,
                                           int current_address) const override
         {
-            return evaluate_argument(context, first_arg);
+            return evaluated_argument;
         }
 
-        std::string first_arg;
+        int evaluated_argument;
     };
 
     struct Instruction_DATA : public Instruction::InstructionAction
@@ -219,7 +220,7 @@ InstructionEnum instruction_to_enum(std::string_view opcode)
     return std::get<1>(*found_op_code);
 }
 
-Instruction::Instruction(const std::string& opcode, std::vector<std::string> arguments)
+Instruction::Instruction(const Context& context, const std::string& opcode, std::vector<std::string> arguments)
     : arguments{std::move(arguments)}
 {
     opcode_enum = instruction_to_enum(opcode);
@@ -239,7 +240,7 @@ Instruction::Instruction(const std::string& opcode, std::vector<std::string> arg
             action = std::make_unique<Instruction_END>();
             break;
         case InstructionEnum::ORG:
-            action = std::make_unique<Instruction_ORG>(this->arguments);
+            action = std::make_unique<Instruction_ORG>(context, this->arguments);
             break;
         case InstructionEnum::DATA:
             action = std::make_unique<Instruction_DATA>(this->arguments);

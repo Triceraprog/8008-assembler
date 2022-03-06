@@ -16,17 +16,20 @@ struct InstructionFixture : public Test
     SymbolTable symbol_table;
     Context context{options, symbol_table};
 
-    static Instruction get_instruction_empty() { return Instruction{{}, {}}; }
-    static Instruction get_instruction_end() { return Instruction{"END", {}}; }
-    static Instruction get_instruction_equ() { return Instruction{"EQU", {"0x2000"}}; }
-    static Instruction get_instruction_org() { return Instruction{"ORG", {"0x1000"}}; }
-    static Instruction get_instruction_cpu_known() { return Instruction{"CPU", {"8008"}}; }
-    static Instruction get_instruction_cpu_unknown() { return Instruction{"CPU", {"unknown_cpu"}}; }
-    static Instruction get_instruction_data() { return Instruction{"DATA", {"1", "2", "3"}}; }
-    static Instruction get_instruction_nop() { return Instruction{"LAA", {}}; }
-    static Instruction get_instruction_invalid_opcode()
+    Instruction get_instruction_empty() { return Instruction{context, {}, {}}; }
+    Instruction get_instruction_end() { return Instruction{context, "END", {}}; }
+    Instruction get_instruction_equ() { return Instruction{context, "EQU", {"0x2000"}}; }
+    Instruction get_instruction_org() { return Instruction{context, "ORG", {"0x1000"}}; }
+    Instruction get_instruction_cpu_known() { return Instruction{context, "CPU", {"8008"}}; }
+    Instruction get_instruction_cpu_unknown()
     {
-        return Instruction{"INVALID_OPCODE", {}};
+        return Instruction{context, "CPU", {"unknown_cpu"}};
+    }
+    Instruction get_instruction_data() { return Instruction{context, "DATA", {"1", "2", "3"}}; }
+    Instruction get_instruction_nop() { return Instruction{context, "LAA", {}}; }
+    Instruction get_instruction_invalid_opcode()
+    {
+        return Instruction{context, "INVALID_OPCODE", {}};
     }
 };
 

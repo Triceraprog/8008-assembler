@@ -77,15 +77,15 @@ void first_pass(const Context& context, const Options& old_options, SymbolTable&
 
         LineTokenizer tokens = parse_line(options, input_line, current_line_count);
         {
-            Instruction instruction{tokens.opcode, tokens.arguments};
-            parsed_lines.push_back(
-                    {current_line_count, current_address, tokens, std::move(instruction), input_line});
+            Instruction instruction{context, tokens.opcode, tokens.arguments};
+            parsed_lines.push_back({current_line_count, current_address, tokens,
+                                    std::move(instruction), input_line});
         }
 
         try
         {
             handle_potential_label(context, options, symbol_table, parsed_lines.back());
-            auto & instruction = parsed_lines.back().instruction;
+            auto& instruction = parsed_lines.back().instruction;
             current_address = instruction.first_pass(context, current_address);
         }
         catch (const std::exception& ex)
