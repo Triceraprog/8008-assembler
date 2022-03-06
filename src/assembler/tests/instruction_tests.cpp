@@ -49,7 +49,6 @@ struct SecondPassFixture : public InstructionFixture
     Listing listing{listing_buffer, options};
 
     const int current_address = 0;
-    const int line_number = 1000;
 };
 
 /// TEST FOR PARSING THE INSTRUCTION
@@ -197,7 +196,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_empty)
 {
     auto instruction = get_instruction_empty();
 
-    instruction.second_pass(context, listing, byte_writer, "", line_number, current_address);
+    instruction.second_pass(context, byte_writer, current_address);
     byte_writer.write_end();
 
     ASSERT_THAT(byte_buffer.str()[0], Eq(0));
@@ -207,7 +206,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_end)
 {
     auto instruction = get_instruction_end();
 
-    instruction.second_pass(context, listing, byte_writer, "", line_number, current_address);
+    instruction.second_pass(context, byte_writer, current_address);
     byte_writer.write_end();
 
     ASSERT_THAT(byte_buffer.str()[0], Eq(0));
@@ -217,7 +216,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_equ)
 {
     auto instruction = get_instruction_equ();
 
-    instruction.second_pass(context, listing, byte_writer, "", line_number, current_address);
+    instruction.second_pass(context, byte_writer, current_address);
     byte_writer.write_end();
 
     ASSERT_THAT(byte_buffer.str()[0], Eq(0));
@@ -227,7 +226,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_org)
 {
     auto instruction = get_instruction_org();
 
-    instruction.second_pass(context, listing, byte_writer, "", line_number, current_address);
+    instruction.second_pass(context, byte_writer, current_address);
     byte_writer.write_end();
 
     ASSERT_THAT(byte_buffer.str()[0], Eq(0));
@@ -237,7 +236,7 @@ TEST_F(SecondPassFixture, outputs_declared_data)
 {
     auto instruction = get_instruction_data();
 
-    instruction.second_pass(context, listing, byte_writer, "", line_number, current_address);
+    instruction.second_pass(context, byte_writer, current_address);
     byte_writer.write_end();
 
     ASSERT_THAT(byte_buffer.str()[0], Eq(1));
@@ -249,7 +248,7 @@ TEST_F(SecondPassFixture, outputs_opcode_data)
 {
     auto instruction = get_instruction_nop();
 
-    instruction.second_pass(context, listing, byte_writer, "", line_number, current_address);
+    instruction.second_pass(context, byte_writer, current_address);
     byte_writer.write_end();
 
     ASSERT_THAT(byte_buffer.str()[0], Eq(static_cast<char>(0xC0)));

@@ -39,8 +39,7 @@ public:
 
     [[nodiscard]] int first_pass(const Context& context, int current_address) const;
 
-    void second_pass(const Context& context, Listing& listing, ByteWriter& writer,
-                     const std::string& input_line, int line_number, int address) const;
+    void second_pass(const Context& context, ByteWriter& writer, const int address) const;
 
     void listing_pass(Listing& listing, const std::string& input_line, int line_number, int address,
                       bool single_byte_list) const;

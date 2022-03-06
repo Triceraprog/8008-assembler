@@ -5,12 +5,11 @@
 
 class Context;
 class Files;
-class Listing;
 class Options;
 class ParsedLine;
 class SymbolTable;
 
-void second_pass(const Context& context, const Options& options, const SymbolTable& symbol_table,
-                 Files& files, const std::vector<ParsedLine>& parsed_lines, Listing& listing);
+void second_pass(const Context& context, Files& files, const SymbolTable& symbol_table,
+                 const std::vector<ParsedLine>& parsed_lines);
 
 #endif //INC_8008_ASSEMBLER_SECOND_PASS_H

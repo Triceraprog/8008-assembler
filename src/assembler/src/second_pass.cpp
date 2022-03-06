@@ -4,7 +4,6 @@
 #include "errors.h"
 #include "evaluator.h"
 #include "files.h"
-#include "listing.h"
 #include "options.h"
 #include "parsed_line.h"
 #include "symbol_table.h"
@@ -12,10 +11,11 @@
 #include <cstdio>
 #include <iostream>
 
-void second_pass(const Context& context, const Options& options, const SymbolTable& symbol_table,
-                 Files& files, const std::vector<ParsedLine>& parsed_lines, Listing& listing)
+void second_pass(const Context& context, Files& files, const SymbolTable& symbol_table,
+                 const std::vector<ParsedLine>& parsed_lines)
 {
     /* Symbols are defined. Second pass. */
+    const auto& options = context.options;
     if (options.verbose || options.debug)
     {
         std::cout << "Pass number Two:  Re-read and assemble codes\n";
@@ -38,8 +38,7 @@ void second_pass(const Context& context, const Options& options, const SymbolTab
             }
 
             const auto& instruction = parsed_line.instruction;
-            instruction.second_pass(context, listing, writer, input_line, line_number,
-                                    line_address);
+            instruction.second_pass(context, writer, line_address);
         }
         catch (const CannotFindSymbol& ex)
         {

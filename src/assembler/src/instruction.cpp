@@ -264,9 +264,7 @@ int Instruction::first_pass(const Context& context, int current_address) const
     return action->advance_address(context, current_address);
 }
 
-void Instruction::second_pass(const Context& context, Listing& listing, ByteWriter& writer,
-                              const std::string& input_line, int line_number,
-                              const int address) const
+void Instruction::second_pass(const Context& context, ByteWriter& writer, const int address) const
 {
     action->build(context, address);
     action->write_bytes(context, writer, address);

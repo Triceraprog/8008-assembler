@@ -53,8 +53,8 @@ namespace
     }
 }
 
-void first_pass(const Context& context, const Options& old_options, SymbolTable& symbol_table,
-                Files& files, std::vector<ParsedLine>& parsed_lines, Listing& listing)
+void first_pass(const Context& context, Files& files, SymbolTable& symbol_table,
+                std::vector<ParsedLine>& parsed_lines)
 {
     // In the first pass, we parse through lines to build a symbol table
     // What is parsed is kept into the "parsed_lines" container for the second pass.

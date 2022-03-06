@@ -5,13 +5,13 @@
 #include "listing.h"
 #include "options.h"
 #include "parsed_line.h"
-#include "symbol_table.h"
 
 #include <iostream>
 
-void listing_pass(const Context& context, const Options& options, const SymbolTable& symbol_table,
-                  Files& files, const std::vector<ParsedLine>& parsed_lines, Listing& listing)
+void listing_pass(const Context& context, Files& files, const std::vector<ParsedLine>& parsed_lines,
+                  Listing& listing)
 {
+    const auto& options = context.options;
     if (!options.generate_list_file)
     {
         return;

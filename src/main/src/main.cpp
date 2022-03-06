@@ -33,9 +33,9 @@ int main(int argc, const char** argv)
 
         Context context{global_options, symbol_table};
 
-        first_pass(context, global_options, symbol_table, files, parsed_lines, listing);
-        second_pass(context, global_options, symbol_table, files, parsed_lines, listing);
-        listing_pass(context, global_options, symbol_table, files, parsed_lines, listing);
+        first_pass(context, files, symbol_table, parsed_lines);
+        second_pass(context, files, symbol_table, parsed_lines);
+        listing_pass(context, files, parsed_lines, listing);
 
         /* write symbol table to listfile */
         if (global_options.generate_list_file)

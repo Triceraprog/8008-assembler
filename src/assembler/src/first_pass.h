@@ -5,15 +5,13 @@
 
 #include <vector>
 
-class SymbolTable;
-class Files;
-class Options;
-class Listing;
-class ParsedLine;
 class Context;
+class Files;
+class ParsedLine;
+class SymbolTable;
 
-void first_pass(const Context& context, const Options& options, SymbolTable& symbol_table,
-                Files& files, std::vector<ParsedLine>& parsed_lines, Listing& listing);
+void first_pass(const Context& context, Files& files, SymbolTable& symbol_table,
+                std::vector<ParsedLine>& parsed_lines);
 
 class AlreadyDefinedSymbol : public ExceptionWithReason
 {
