@@ -152,7 +152,6 @@ class TestFunctional(unittest.TestCase):
             self.assertTrue(file_equal(files.output_lst_ref_file, files.output_lst_file),
                             msg=f"File differs {files.output_lst_file}")
 
-    @unittest.skip  # This option makes the assembler crash
     def test_assemble_a_file_with_no_output_listing(self):
         files = DataFiles()
 
