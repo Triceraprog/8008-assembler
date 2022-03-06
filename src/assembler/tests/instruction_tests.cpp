@@ -97,7 +97,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_empty)
     auto instruction = get_instruction_empty();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.get_evaluation(context, options, symbol_table, current_address),
+    ASSERT_THAT(instruction.get_evaluation(context, current_address),
                 Eq(current_address));
 }
 
@@ -106,7 +106,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_end)
     auto instruction = get_instruction_end();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.get_evaluation(context, options, symbol_table, current_address),
+    ASSERT_THAT(instruction.get_evaluation(context, current_address),
                 Eq(current_address));
 }
 
@@ -115,7 +115,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_cpu)
     auto instruction = get_instruction_cpu_known();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.get_evaluation(context, options, symbol_table, current_address),
+    ASSERT_THAT(instruction.get_evaluation(context, current_address),
                 Eq(current_address));
 }
 
@@ -124,7 +124,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_org)
     auto instruction = get_instruction_org();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.get_evaluation(context, options, symbol_table, current_address),
+    ASSERT_THAT(instruction.get_evaluation(context, current_address),
                 Eq(0x1000));
 }
 
@@ -133,7 +133,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_equ)
     auto instruction = get_instruction_equ();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.get_evaluation(context, options, symbol_table, current_address),
+    ASSERT_THAT(instruction.get_evaluation(context, current_address),
                 Eq(0x2000));
 }
 

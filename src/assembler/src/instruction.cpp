@@ -7,7 +7,6 @@
 #include "opcodes/opcode_action.h"
 #include "opcodes/opcodes.h"
 #include "options.h"
-#include "symbol_table.h"
 #include "utils.h"
 
 #include <algorithm>
@@ -181,15 +180,15 @@ namespace
 }
 
 int Instruction::InstructionAction::evaluate_fixed_address(const Context& context,
-                                                           int current_address) const
+                                                           int address) const
 {
-    return current_address;
+    return address;
 }
 
 int Instruction::InstructionAction::advance_address(const Context& context,
-                                                    int current_address) const
+                                                    int address) const
 {
-    return current_address;
+    return address;
 }
 
 void Instruction::InstructionAction::build(const Context& context, int address)
@@ -265,15 +264,14 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
     }
 }
 
-int Instruction::get_evaluation(const Context& context, const Options& options,
-                                const SymbolTable& symbol_table, int current_address) const
+int Instruction::get_evaluation(const Context& context, int address) const
 {
-    return action->evaluate_fixed_address(context, current_address);
+    return action->evaluate_fixed_address(context, address);
 }
 
-int Instruction::first_pass(const Context& context, int current_address) const
+int Instruction::first_pass(const Context& context, int address) const
 {
-    return action->advance_address(context, current_address);
+    return action->advance_address(context, address);
 }
 
 void Instruction::second_pass(const Context& context, ByteWriter& writer, const int address) const

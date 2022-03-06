@@ -30,7 +30,7 @@ namespace
     {
         throws_if_already_defined(symbol_table, label);
 
-        int val = instruction.get_evaluation(context, options, symbol_table, line_address);
+        int val = instruction.get_evaluation(context, line_address);
         symbol_table.define_symbol(label, val);
 
         if (options.debug)
