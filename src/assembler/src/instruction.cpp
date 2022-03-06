@@ -270,11 +270,12 @@ void Instruction::second_pass(const Context& context, Listing& listing, ByteWrit
 {
     action->build(context, address);
     action->write_bytes(context, writer, address);
-    if (context.options.generate_list_file)
-    {
-        action->write_listing(listing, input_line, line_number, address,
-                              context.options.single_byte_list);
-    }
+}
+
+void Instruction::listing_pass(Listing& listing, const std::string& input_line, int line_number,
+                               int address, bool single_byte_list) const
+{
+    action->write_listing(listing, input_line, line_number, address, single_byte_list);
 }
 
 InvalidCPU::InvalidCPU() { reason = R"(cpu only allowed is "8008" or "i8008")"; }

@@ -5,12 +5,12 @@
 
 #include <vector>
 
-class Options;
-class SymbolTable;
+class Context;
 class Files;
 class Listing;
+class Options;
 class ParsedLine;
-class Context;
+class SymbolTable;
 
 void second_pass(const Context& context, const Options& options, const SymbolTable& symbol_table,
                  Files& files, const std::vector<ParsedLine>& parsed_lines, Listing& listing);

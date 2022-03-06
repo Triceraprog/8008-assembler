@@ -1,14 +1,13 @@
 #include "second_pass.h"
 #include "byte_writer.h"
+#include "context.h"
 #include "errors.h"
 #include "evaluator.h"
 #include "files.h"
-#include "instruction.h"
 #include "listing.h"
 #include "options.h"
 #include "parsed_line.h"
 #include "symbol_table.h"
-#include "context.h"
 
 #include <cstdio>
 #include <iostream>
@@ -40,13 +39,27 @@ void second_pass(const Context& context, const Options& options, const SymbolTab
                 printf("     0x%X \"%s\"\n", line_address, input_line.c_str());
             }
 
-            const auto & instruction = parsed_line.instruction;
+            const auto& instruction = parsed_line.instruction;
             instruction.second_pass(context, listing, writer, input_line, line_number,
                                     line_address);
         }
         catch (const CannotFindSymbol& ex)
         {
             throw ParsingException(ex, line_number, input_line);
+        }
+    }
+
+    if (options.generate_list_file)
+    {
+        for (auto& parsed_line : parsed_lines)
+        {
+            const auto& input_line = parsed_line.line;
+            const int line_number = parsed_line.line_number;
+            int line_address = parsed_line.line_address;
+
+            const auto& instruction = parsed_line.instruction;
+            instruction.listing_pass(listing, input_line, line_number, line_address,
+                                     context.options.single_byte_list);
         }
     }
 
