@@ -283,7 +283,7 @@ void Instruction::second_pass(const Context& context, ByteWriter& writer, const 
 }
 
 void Instruction::listing_pass(Listing& listing, const std::string& input_line, int line_number,
-                               int address, bool single_byte_list) const
+                               int address) const
 {
     action->write_listing(listing, input_line, line_number, address);
 }

@@ -31,7 +31,6 @@ void listing_pass(const Context& context, Files& files, const std::vector<Parsed
         int line_address = parsed_line.line_address;
 
         const auto& instruction = parsed_line.instruction;
-        instruction.listing_pass(listing, input_line, line_number, line_address,
-                                 context.options.single_byte_list);
+        instruction.listing_pass(listing, input_line, line_number, line_address);
     }
 }

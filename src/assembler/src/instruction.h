@@ -41,8 +41,8 @@ public:
 
     void second_pass(const Context& context, ByteWriter& writer, const int address) const;
 
-    void listing_pass(Listing& listing, const std::string& input_line, int line_number, int address,
-                      bool single_byte_list) const;
+    void listing_pass(Listing& listing, const std::string& input_line, int line_number,
+                      int address) const;
 
     class InstructionAction
     {
