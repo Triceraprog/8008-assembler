@@ -7,6 +7,7 @@
 #include "assembler/src/parsed_line.h"
 #include "assembler/src/second_pass.h"
 #include "assembler/src/symbol_table.h"
+#include "listing_pass.h"
 
 #include <iostream>
 
@@ -34,6 +35,7 @@ int main(int argc, const char** argv)
 
         first_pass(context, global_options, symbol_table, files, parsed_lines, listing);
         second_pass(context, global_options, symbol_table, files, parsed_lines, listing);
+        listing_pass(context, global_options, symbol_table, files, parsed_lines, listing);
 
         /* write symbol table to listfile */
         if (global_options.generate_list_file)

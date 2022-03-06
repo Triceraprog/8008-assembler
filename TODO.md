@@ -1,5 +1,4 @@
 - Remove the single byte list from most of the listing methods, as it's passed to the object at construction time.
-- What about making the listing a separate pass?
 - What about missing args for EQU/ORG/DATA/CPU/... ?
 - The listing can be reconstructed without keeping the initial line.
 - Option to output an expended, simple assembly code with a syntax for another assembler, especially as8
