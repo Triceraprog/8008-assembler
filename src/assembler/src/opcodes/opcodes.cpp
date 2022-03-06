@@ -134,7 +134,7 @@ int get_opcode_size(const Opcode& opcode)
     return opcode_byte_size;
 }
 
-UndefinedOpcode::UndefinedOpcode(const std::string& opcode)
+UndefinedOpcode::UndefinedOpcode(std::string_view opcode)
 {
-    reason = "undefined opcode " + opcode;
+    reason = "undefined opcode " + std::string{opcode};
 }

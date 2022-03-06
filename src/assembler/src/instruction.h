@@ -65,7 +65,6 @@ public:
     };
 
 private:
-    InstructionEnum opcode_enum;
     const std::vector<std::string> arguments;
     std::unique_ptr<InstructionAction> action;
 };

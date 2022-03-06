@@ -180,12 +180,7 @@ TEST_F(FirstPassFixture, advance_address_with_declared_data)
 
 TEST_F(FirstPassFixture, throws_if_unknown_opcode)
 {
-    auto instruction = get_instruction_invalid_opcode();
-
-    const int current_address = 0xff;
-    int return_value = 0;
-    ASSERT_THROW(return_value = instruction.first_pass(context, current_address), UndefinedOpcode);
-    ASSERT_THAT(return_value, Eq(0));
+    ASSERT_THROW(get_instruction_invalid_opcode(), UndefinedOpcode);
 }
 
 TEST_F(FirstPassFixture, advances_one_byte_if_nop)

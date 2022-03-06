@@ -29,7 +29,7 @@ int get_opcode_size(const Opcode& opcode);
 class UndefinedOpcode : public ExceptionWithReason
 {
 public:
-    explicit UndefinedOpcode(const std::string& opcode);
+    explicit UndefinedOpcode(std::string_view opcode);
 };
 
 #endif //INC_8008_ASSEMBLER_OPCODES_H

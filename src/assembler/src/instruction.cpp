@@ -17,14 +17,6 @@
 
 namespace
 {
-    void verify_cpu(const std::string& cpu_arg)
-    {
-        if ((!ci_equals(cpu_arg, "8008")) && (!ci_equals(cpu_arg, "i8008")))
-        {
-            throw InvalidCPU();
-        }
-    }
-
     struct Instruction_EQU : public Instruction::InstructionAction
     {
         explicit Instruction_EQU(const std::vector<std::string>& arguments)
@@ -51,6 +43,14 @@ namespace
         explicit Instruction_CPU(const std::vector<std::string>& arguments)
         {
             verify_cpu(arguments[0]);
+        }
+
+        static void verify_cpu(const std::string& cpu_arg)
+        {
+            if ((!ci_equals(cpu_arg, "8008")) && (!ci_equals(cpu_arg, "i8008")))
+            {
+                throw InvalidCPU();
+            }
         }
     };
 
@@ -126,30 +126,28 @@ namespace
     struct Instruction_OTHER : public Instruction::InstructionAction
     {
         explicit Instruction_OTHER(std::string_view opcode, std::vector<std::string> arguments)
-            : opcode{opcode}, arguments{std::move(arguments)}
-        {}
+            : arguments{std::move(arguments)}
+        {
+            if (auto [found, found_opcode] = find_opcode(opcode); found)
+            {
+                opcode_info = found_opcode;
+            }
+            else
+            {
+                throw UndefinedOpcode(opcode);
+            }
+        }
 
         [[nodiscard]] int advance_address(const Context& context,
                                           int current_address) const override
         {
-            if (auto [found, found_opcode] = find_opcode(opcode); found)
-            {
-                return current_address + get_opcode_size(found_opcode);
-            }
-            throw UndefinedOpcode(opcode);
+            return current_address + get_opcode_size(opcode_info);
         }
 
         void write_bytes(const Context& context, Listing& listing, ByteWriter& writer,
                          const std::string& input_line, int line_number, int address) const override
         {
-            const auto [found, found_opcode] = find_opcode(opcode);
-            if (!found)
-            {
-                throw UndefinedOpcode(opcode);
-            }
-
-            auto opcode_action = create_opcode_action(context, found_opcode, address, arguments);
-
+            auto opcode_action = create_opcode_action(context, opcode_info, address, arguments);
             opcode_action->emit_byte_stream(writer);
             if (context.options.generate_list_file)
             {
@@ -158,8 +156,8 @@ namespace
             }
         }
 
-        std::string opcode;
         std::vector<std::string> arguments;
+        Opcode opcode_info;
     };
 
     struct Instruction_EMPTY : public Instruction::InstructionAction
@@ -221,7 +219,7 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
                          std::vector<std::string> arguments)
     : arguments{std::move(arguments)}
 {
-    opcode_enum = instruction_to_enum(opcode);
+    auto opcode_enum = instruction_to_enum(opcode);
 
     switch (opcode_enum)
     {
