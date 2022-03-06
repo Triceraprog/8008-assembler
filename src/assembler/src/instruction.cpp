@@ -76,21 +76,19 @@ namespace
 
     struct Instruction_DATA : public Instruction::InstructionAction
     {
-        explicit Instruction_DATA(std::vector<std::string> arguments)
-            : arguments{std::move(arguments)}
-        {}
+        explicit Instruction_DATA(const Context& context, const std::vector<std::string>& arguments)
+        {
+            data_size = decode_data(context, arguments, data_list);
+
+            if (context.options.debug)
+            {
+                std::cout << "got " << std::dec << std::abs(data_size) << " items in data list\n";
+            }
+        }
 
         [[nodiscard]] int advance_address(const Context& context,
                                           int current_address) const override
         {
-            std::vector<int> data_list;
-            int data_size = decode_data(context, arguments, data_list);
-
-            if (context.options.debug)
-            {
-                std::cout << "got " << data_size << " items in data list\n";
-            }
-
             /* a negative number denotes that much space to save, but not specifying data */
             return current_address + std::abs(data_size);
         }
@@ -98,9 +96,7 @@ namespace
         void write_bytes(const Context& context, Listing& listing, ByteWriter& writer,
                          const std::string& input_line, int line_number, int address) const override
         {
-            std::vector<int> data_list;
-            const int data_length = decode_data(context, arguments, data_list);
-            if (data_length < 0)
+            if (data_size < 0)
             {
                 /* if n is negative, that number of bytes are just reserved */
                 if (context.options.generate_list_file)
@@ -123,7 +119,8 @@ namespace
             }
         }
 
-        std::vector<std::string> arguments;
+        std::vector<int> data_list;
+        int data_size; // Can be negative in case of uninitialized data reservation.
     };
 
     struct Instruction_OTHER : public Instruction::InstructionAction
@@ -220,7 +217,8 @@ InstructionEnum instruction_to_enum(std::string_view opcode)
     return std::get<1>(*found_op_code);
 }
 
-Instruction::Instruction(const Context& context, const std::string& opcode, std::vector<std::string> arguments)
+Instruction::Instruction(const Context& context, const std::string& opcode,
+                         std::vector<std::string> arguments)
     : arguments{std::move(arguments)}
 {
     opcode_enum = instruction_to_enum(opcode);
@@ -243,7 +241,7 @@ Instruction::Instruction(const Context& context, const std::string& opcode, std:
             action = std::make_unique<Instruction_ORG>(context, this->arguments);
             break;
         case InstructionEnum::DATA:
-            action = std::make_unique<Instruction_DATA>(this->arguments);
+            action = std::make_unique<Instruction_DATA>(context, this->arguments);
             break;
         case InstructionEnum::OTHER:
             action = std::make_unique<Instruction_OTHER>(opcode, this->arguments);
