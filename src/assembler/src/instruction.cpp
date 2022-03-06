@@ -56,7 +56,7 @@ namespace
 
     struct Instruction_ORG : public Instruction::InstructionAction
     {
-        explicit Instruction_ORG(const Context& context, const std::vector<std::string>& arguments)
+        Instruction_ORG(const Context& context, const std::vector<std::string>& arguments)
         {
             evaluated_argument = evaluate_argument(context, arguments[0]);
         }
@@ -76,7 +76,7 @@ namespace
 
     struct Instruction_DATA : public Instruction::InstructionAction
     {
-        explicit Instruction_DATA(const Context& context, const std::vector<std::string>& arguments)
+        Instruction_DATA(const Context& context, const std::vector<std::string>& arguments)
         {
             data_size = decode_data(context, arguments, data_list);
 
@@ -93,77 +93,83 @@ namespace
             return current_address + std::abs(data_size);
         }
 
+        void build(const Context& context, int address) override { this->address = address; }
+
         void write_bytes(const Context& context, Listing& listing, ByteWriter& writer,
                          const std::string& input_line, int line_number, int address) const override
+        {
+            for (int write_address = address; const auto& data : data_list)
+            {
+                writer.write_byte(data, write_address);
+                write_address += 1;
+            }
+        }
+
+        void write_listing(Listing& listing, int line_number, const std::string& input_line,
+                           bool single_byte_list) const override
         {
             if (data_size < 0)
             {
                 /* if n is negative, that number of bytes are just reserved */
-                if (context.options.generate_list_file)
-                {
-                    listing.reserved_data(line_number, address, input_line,
-                                          context.options.single_byte_list);
-                }
+                listing.reserved_data(line_number, address, input_line, single_byte_list);
             }
             else
             {
-                for (int write_address = address; const auto& data : data_list)
-                {
-                    writer.write_byte(data, write_address);
-                    write_address += 1;
-                }
-                if (context.options.generate_list_file)
-                {
-                    listing.data(line_number, address, input_line, data_list);
-                }
+                listing.data(line_number, address, input_line, data_list);
             }
         }
 
         std::vector<int> data_list;
         int data_size; // Can be negative in case of uninitialized data reservation.
+        int address{};
     };
 
     struct Instruction_OTHER : public Instruction::InstructionAction
     {
-        explicit Instruction_OTHER(std::string_view opcode, std::vector<std::string> arguments)
+        Instruction_OTHER(std::string_view opcode_string, std::vector<std::string> arguments)
             : arguments{std::move(arguments)}
         {
-            if (auto [found, found_opcode] = find_opcode(opcode); found)
+            if (auto [found, found_opcode] = find_opcode(opcode_string); found)
             {
-                opcode_info = found_opcode;
+                opcode = found_opcode;
             }
             else
             {
-                throw UndefinedOpcode(opcode);
+                throw UndefinedOpcode(opcode_string);
             }
         }
 
         [[nodiscard]] int advance_address(const Context& context,
                                           int current_address) const override
         {
-            return current_address + get_opcode_size(opcode_info);
+            return current_address + get_opcode_size(opcode);
+        }
+
+        void build(const Context& context, int address) override
+        {
+            opcode_action = std::move(create_opcode_action(context, opcode, address, arguments));
         }
 
         void write_bytes(const Context& context, Listing& listing, ByteWriter& writer,
                          const std::string& input_line, int line_number, int address) const override
         {
-            auto opcode_action = create_opcode_action(context, opcode_info, address, arguments);
             opcode_action->emit_byte_stream(writer);
-            if (context.options.generate_list_file)
-            {
-                opcode_action->emit_listing(listing, line_number, input_line,
-                                            context.options.single_byte_list);
-            }
+        }
+
+        void write_listing(Listing& listing, int line_number, const std::string& input_line,
+                           bool single_byte_list) const override
+        {
+            opcode_action->emit_listing(listing, line_number, input_line, single_byte_list);
         }
 
         std::vector<std::string> arguments;
-        Opcode opcode_info;
+        std::unique_ptr<OpcodeAction> opcode_action;
+        Opcode opcode;
     };
 
     struct Instruction_EMPTY : public Instruction::InstructionAction
     {
     };
-
 }
 
 int Instruction::InstructionAction::evaluate_fixed_address(const Context& context,
@@ -178,17 +184,23 @@ int Instruction::InstructionAction::advance_address(const Context& context,
     return current_address;
 }
 
+void Instruction::InstructionAction::build(const Context& context, int address)
+{
+    // By default, nothing it built.
+}
+
 void Instruction::InstructionAction::write_bytes(const Context& context, Listing& listing,
                                                  ByteWriter& writer, const std::string& input_line,
                                                  int line_number, const int address) const
 {
     // By default, doesn't write anything.
+}
 
-    // ORG, EMPTY, EQU, CPU, END
-    if (context.options.generate_list_file)
-    {
-        listing.simple_line(line_number, input_line, context.options.single_byte_list);
-    }
+void Instruction::InstructionAction::write_listing(Listing& listing, int line_number,
+                                                   const std::string& input_line,
+                                                   bool single_byte_list) const
+{
+    listing.simple_line(line_number, input_line, single_byte_list);
 }
 
 InstructionEnum instruction_to_enum(std::string_view opcode)
@@ -262,7 +274,12 @@ void Instruction::second_pass(const Context& context, Listing& listing, ByteWrit
                               const std::string& input_line, int line_number,
                               const int address) const
 {
+    action->build(context, address);
     action->write_bytes(context, listing, writer, input_line, line_number, address);
+    if (context.options.generate_list_file)
+    {
+        action->write_listing(listing, line_number, input_line, context.options.single_byte_list);
+    }
 }
 
 InvalidCPU::InvalidCPU() { reason = R"(cpu only allowed is "8008" or "i8008")"; }

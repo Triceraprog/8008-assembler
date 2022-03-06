@@ -58,10 +58,17 @@ public:
         [[nodiscard]] virtual int advance_address(const Context& context,
                                                   int current_address) const;
 
+        // If the construction needs information from the first pass, then it is constructed
+        // at build time.
+        virtual void build(const Context& context, int address);
+
         // Write the bytes for the instruction to the ByteWriter.
         // Currently, also emits the listing, it will have to go
         virtual void write_bytes(const Context& context, Listing& listing, ByteWriter& writer,
                                  const std::string& input_line, int line_number, int address) const;
+
+        virtual void write_listing(Listing& listing, int line_number, const std::string& input_line,
+                                   bool single_byte_list) const;
     };
 
 private:
