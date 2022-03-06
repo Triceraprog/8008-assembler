@@ -1,8 +1,6 @@
 #ifndef INC_8008_ASSEMBLER_SECOND_PASS_H
 #define INC_8008_ASSEMBLER_SECOND_PASS_H
 
-#include "errors.h"
-
 #include <vector>
 
 class Context;
