@@ -127,8 +127,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_empty)
     auto instruction = get_instruction_empty();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
-                Eq(current_address));
+    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address));
 }
 
 TEST_F(FirstPassFixture, does_not_advance_address_for_end)
@@ -136,8 +135,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_end)
     auto instruction = get_instruction_end();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
-                Eq(current_address));
+    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address));
 }
 
 TEST_F(FirstPassFixture, does_not_advance_address_for_equ)
@@ -145,8 +143,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_equ)
     auto instruction = get_instruction_equ();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
-                Eq(current_address));
+    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address));
 }
 
 TEST_F(FirstPassFixture, sets_address_for_org)
@@ -154,20 +151,12 @@ TEST_F(FirstPassFixture, sets_address_for_org)
     auto instruction = get_instruction_org();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
-                Eq(0x1000));
+    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(0x1000));
 }
 
 TEST_F(FirstPassFixture, throws_if_wrong_CPU)
 {
-    auto instruction = get_instruction_cpu_unknown();
-
-    const int current_address = 0xff;
-    int return_value = 0;
-    ASSERT_THROW(return_value =
-                         instruction.first_pass(context, options, symbol_table, current_address),
-                 InvalidCPU);
-    ASSERT_THAT(return_value, Eq(0));
+    ASSERT_THROW(get_instruction_cpu_unknown(), InvalidCPU);
 }
 
 TEST_F(FirstPassFixture, does_not_advance_address_for_correct_cpu)
@@ -175,8 +164,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_correct_cpu)
     auto instruction = get_instruction_cpu_known();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
-                Eq(current_address));
+    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address));
 }
 
 TEST_F(FirstPassFixture, advance_address_with_declared_data)
@@ -184,8 +172,7 @@ TEST_F(FirstPassFixture, advance_address_with_declared_data)
     auto instruction = get_instruction_data();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
-                Eq(current_address + 3));
+    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address + 3));
 }
 
 TEST_F(FirstPassFixture, throws_if_unknown_opcode)
@@ -194,9 +181,7 @@ TEST_F(FirstPassFixture, throws_if_unknown_opcode)
 
     const int current_address = 0xff;
     int return_value = 0;
-    ASSERT_THROW(return_value =
-                         instruction.first_pass(context, options, symbol_table, current_address),
-                 UndefinedOpcode);
+    ASSERT_THROW(return_value = instruction.first_pass(context, current_address), UndefinedOpcode);
     ASSERT_THAT(return_value, Eq(0));
 }
 
@@ -205,8 +190,7 @@ TEST_F(FirstPassFixture, advances_one_byte_if_nop)
     auto instruction = get_instruction_nop();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, options, symbol_table, current_address),
-                Eq(current_address + 1));
+    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address + 1));
 }
 
 /// TESTS FOR THE SECOND PASS

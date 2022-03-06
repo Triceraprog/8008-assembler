@@ -190,8 +190,7 @@ int Instruction::get_evaluation(const Context& context, const Options& options,
     return action->evaluate_fixed_address(context, current_address);
 }
 
-int Instruction::first_pass(const Context& context, const Options& options,
-                            const SymbolTable& symbol_table, int current_address) const
+int Instruction::first_pass(const Context& context, int current_address) const
 {
     return action->advance_address(context, current_address);
 }

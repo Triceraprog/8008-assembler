@@ -86,8 +86,7 @@ void first_pass(const Context& context, const Options& old_options, SymbolTable&
         {
             handle_potential_label(context, options, symbol_table, parsed_lines.back());
             auto & instruction = parsed_lines.back().instruction;
-            current_address =
-                    instruction.first_pass(context, options, symbol_table, current_address);
+            current_address = instruction.first_pass(context, current_address);
         }
         catch (const std::exception& ex)
         {

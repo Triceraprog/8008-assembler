@@ -36,8 +36,7 @@ public:
     [[nodiscard]] int get_evaluation(const Context& context, const Options& options,
                                      const SymbolTable& symbol_table, int current_address) const;
 
-    [[nodiscard]] int first_pass(const Context& context, const Options& options,
-                                 const SymbolTable& symbol_table, int current_address) const;
+    [[nodiscard]] int first_pass(const Context& context, int current_address) const;
 
     void second_pass(const Context& context, Listing& listing, ByteWriter& writer,
                      const std::string& input_line, int line_number, int address) const;
