@@ -56,10 +56,14 @@ public:
         // The default is a need of 0, and so returns the given address.
         [[nodiscard]] virtual int advance_address(const Context& context,
                                                   int current_address) const;
+
+        // Write the bytes for the instruction to the ByteWriter.
+        // Currently, also emits the listing, it will have to go
+        virtual void write_bytes(const Context& context, Listing& listing, ByteWriter& writer,
+                                 const std::string& input_line, int line_number, int address) const;
     };
 
 private:
-    std::string opcode;
     InstructionEnum opcode_enum;
     const std::vector<std::string> arguments;
     std::unique_ptr<InstructionAction> action;
