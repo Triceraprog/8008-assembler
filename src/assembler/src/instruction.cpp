@@ -20,8 +20,13 @@ namespace
     struct Instruction_EQU : public Instruction::InstructionAction
     {
         explicit Instruction_EQU(const std::vector<std::string>& arguments)
-            : first_arg{arguments[0]}
-        {}
+        {
+            if (arguments.empty())
+            {
+                throw MissingArgument("EQU");
+            }
+            first_arg = arguments[0];
+        }
         [[nodiscard]] int evaluate_fixed_address(const Context& context,
                                                  int current_address) const override
         {
@@ -276,3 +281,8 @@ void Instruction::listing_pass(Listing& listing, const std::string& input_line, 
 }
 
 InvalidCPU::InvalidCPU() { reason = R"(cpu only allowed is "8008" or "i8008")"; }
+
+MissingArgument::MissingArgument(std::string_view instruction)
+{
+    reason = "Missing parameter(s) for instruction: " + std::string{instruction};
+}

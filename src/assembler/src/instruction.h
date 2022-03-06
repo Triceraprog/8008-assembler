@@ -85,4 +85,11 @@ public:
     InvalidCPU();
 };
 
+class MissingArgument : public ExceptionWithReason
+{
+public:
+    MissingArgument(std::string_view instruction);
+};
+
+
 #endif //INC_8008_ASSEMBLER_INSTRUCTION_H
