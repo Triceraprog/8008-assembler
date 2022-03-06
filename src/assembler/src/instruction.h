@@ -64,11 +64,10 @@ public:
 
         // Write the bytes for the instruction to the ByteWriter.
         // Currently, also emits the listing, it will have to go
-        virtual void write_bytes(const Context& context, Listing& listing, ByteWriter& writer,
-                                 const std::string& input_line, int line_number, int address) const;
+        virtual void write_bytes(const Context& context, ByteWriter& writer, int address) const;
 
-        virtual void write_listing(Listing& listing, int line_number, const std::string& input_line,
-                                   bool single_byte_list) const;
+        virtual void write_listing(Listing& listing, const std::string& input_line, int line_number,
+                                   int address, bool single_byte_list) const;
     };
 
 private:
