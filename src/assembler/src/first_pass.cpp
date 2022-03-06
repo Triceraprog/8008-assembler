@@ -43,13 +43,12 @@ namespace
     }
 
     void handle_potential_label(const Context& context, const Options& options,
-                                SymbolTable& symbol_table, const ParsedLine& parsed_line,
-                                const Instruction& instruction)
+                                SymbolTable& symbol_table, const ParsedLine& parsed_line)
     {
         if (!parsed_line.tokens.label.empty())
         {
             define_symbol_or_fail(context, options, symbol_table, parsed_line.tokens.label,
-                                  parsed_line.line_address, instruction);
+                                  parsed_line.line_address, parsed_line.instruction);
         }
     }
 }
@@ -77,14 +76,16 @@ void first_pass(const Context& context, const Options& old_options, SymbolTable&
         }
 
         LineTokenizer tokens = parse_line(options, input_line, current_line_count);
-        Instruction instruction{tokens.opcode, tokens.arguments};
-        parsed_lines.push_back(
-                {current_line_count, current_address, tokens, instruction, input_line});
+        {
+            Instruction instruction{tokens.opcode, tokens.arguments};
+            parsed_lines.push_back(
+                    {current_line_count, current_address, tokens, std::move(instruction), input_line});
+        }
 
         try
         {
-            handle_potential_label(context, options, symbol_table, parsed_lines.back(),
-                                   instruction);
+            handle_potential_label(context, options, symbol_table, parsed_lines.back());
+            auto & instruction = parsed_lines.back().instruction;
             current_address =
                     instruction.first_pass(context, options, symbol_table, current_address);
         }
