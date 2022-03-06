@@ -47,6 +47,10 @@ namespace
     {
         explicit Instruction_CPU(const std::vector<std::string>& arguments)
         {
+            if (arguments.empty())
+            {
+                throw MissingArgument("CPU");
+            }
             verify_cpu(arguments[0]);
         }
 
@@ -63,6 +67,10 @@ namespace
     {
         Instruction_ORG(const Context& context, const std::vector<std::string>& arguments)
         {
+            if (arguments.empty())
+            {
+                throw MissingArgument("ORG");
+            }
             evaluated_argument = evaluate_argument(context, arguments[0]);
         }
         [[nodiscard]] int evaluate_fixed_address(const Context& context,

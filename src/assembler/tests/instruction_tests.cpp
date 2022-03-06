@@ -24,10 +24,18 @@ struct InstructionFixture : public Test
         return Instruction{context, "EQU", {}};
     }
     Instruction get_instruction_org() const { return Instruction{context, "ORG", {"0x1000"}}; }
+    Instruction get_instruction_org_without_param() const
+    {
+        return Instruction{context, "ORG", {}};
+    }
     Instruction get_instruction_cpu_known() const { return Instruction{context, "CPU", {"8008"}}; }
     Instruction get_instruction_cpu_unknown() const
     {
         return Instruction{context, "CPU", {"unknown_cpu"}};
+    }
+    Instruction get_instruction_cpu_without_param() const
+    {
+        return Instruction{context, "CPU", {}};
     }
     Instruction get_instruction_data() const
     {
@@ -132,6 +140,16 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_equ)
 TEST_F(InstructionEvaluationFixture, throws_if_equ_as_no_parameter)
 {
     ASSERT_THROW(get_instruction_equ_without_param(), MissingArgument);
+}
+
+TEST_F(InstructionEvaluationFixture, throws_if_org_as_no_parameter)
+{
+    ASSERT_THROW(get_instruction_org_without_param(), MissingArgument);
+}
+
+TEST_F(InstructionEvaluationFixture, throws_if_cpu_as_no_parameter)
+{
+    ASSERT_THROW(get_instruction_cpu_without_param(), MissingArgument);
 }
 
 /// TESTS FOR THE FIRST PASS
