@@ -11,8 +11,8 @@ public:
                            const std::vector<std::string>& arguments);
 
     void emit_byte_stream(ByteWriter& byte_writer) const override;
-    void emit_listing(Listing& listing, int line_number, std::string_view input_line,
-                      bool single_byte) const override;
+    void emit_listing(Listing& listing, int line_number,
+                      std::string_view input_line) const override;
 
 private:
     Opcode::OpcodeByteType opcode;

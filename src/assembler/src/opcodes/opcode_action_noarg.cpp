@@ -12,8 +12,8 @@ void OpcodeActionNoArg::emit_byte_stream(ByteWriter& byte_writer) const
     byte_writer.write_byte(opcode, address);
 }
 
-void OpcodeActionNoArg::emit_listing(Listing& listing, int line_number, std::string_view input_line,
-                                     bool single_byte) const
+void OpcodeActionNoArg::emit_listing(Listing& listing, int line_number,
+                                     std::string_view input_line) const
 {
     listing.opcode_line_with_space(line_number, address, opcode, input_line);
 }

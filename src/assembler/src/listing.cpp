@@ -38,8 +38,9 @@ void Listing::write_listing_header()
     }
 }
 
-void Listing::simple_line(int line_number, const std::string& line_content, const bool short_format)
+void Listing::simple_line(int line_number, const std::string& line_content)
 {
+    const auto& short_format = options.single_byte_list;
     ListingLine line{line_number};
     if (short_format)
     {
@@ -49,9 +50,9 @@ void Listing::simple_line(int line_number, const std::string& line_content, cons
     output << line.str() << "\n";
 }
 
-void Listing::reserved_data(int line_number, int line_address, const std::string& line_content,
-                            const bool short_format)
+void Listing::reserved_data(int line_number, int line_address, const std::string& line_content)
 {
+    const auto& short_format = options.single_byte_list;
     ListingLine line{line_number, line_address};
     if (short_format)
     {
@@ -158,3 +159,5 @@ void Listing::data(int line_number, int line_address, const std::string& line_co
         }
     }
 }
+
+bool Listing::short_format() const { return options.single_byte_list; }

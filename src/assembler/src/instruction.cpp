@@ -103,12 +103,12 @@ namespace
         }
 
         void write_listing(Listing& listing, const std::string& input_line, int line_number,
-                           int address, bool single_byte_list) const override
+                           int address) const override
         {
             if (data_size < 0)
             {
                 /* if n is negative, that number of bytes are just reserved */
-                listing.reserved_data(line_number, address, input_line, single_byte_list);
+                listing.reserved_data(line_number, address, input_line);
             }
             else
             {
@@ -152,9 +152,9 @@ namespace
         }
 
         void write_listing(Listing& listing, const std::string& input_line, int line_number,
-                           int address, bool single_byte_list) const override
+                           int address) const override
         {
-            opcode_action->emit_listing(listing, line_number, input_line, single_byte_list);
+            opcode_action->emit_listing(listing, line_number, input_line);
         }
 
         std::vector<std::string> arguments;
@@ -191,10 +191,9 @@ void Instruction::InstructionAction::write_bytes(const Context& context, ByteWri
 }
 
 void Instruction::InstructionAction::write_listing(Listing& listing, const std::string& input_line,
-                                                   int line_number, int address,
-                                                   bool single_byte_list) const
+                                                   int line_number, int address) const
 {
-    listing.simple_line(line_number, input_line, single_byte_list);
+    listing.simple_line(line_number, input_line);
 }
 
 InstructionEnum instruction_to_enum(std::string_view opcode)
@@ -273,7 +272,7 @@ void Instruction::second_pass(const Context& context, ByteWriter& writer, const 
 void Instruction::listing_pass(Listing& listing, const std::string& input_line, int line_number,
                                int address, bool single_byte_list) const
 {
-    action->write_listing(listing, input_line, line_number, address, single_byte_list);
+    action->write_listing(listing, input_line, line_number, address);
 }
 
 InvalidCPU::InvalidCPU() { reason = R"(cpu only allowed is "8008" or "i8008")"; }

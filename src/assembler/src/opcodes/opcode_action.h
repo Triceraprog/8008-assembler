@@ -3,9 +3,9 @@
 
 #include "opcodes.h"
 
+#include "context.h"
 #include "options.h"
 #include "symbol_table.h"
-#include "context.h"
 
 #include <memory>
 #include <string>
@@ -18,8 +18,8 @@ class OpcodeAction
 {
 public:
     virtual void emit_byte_stream(ByteWriter& byte_writer) const = 0;
-    virtual void emit_listing(Listing& listing, int line_number, std::string_view input_line,
-                              bool single_byte) const = 0;
+    virtual void emit_listing(Listing& listing, int line_number,
+                              std::string_view input_line) const = 0;
 
     virtual ~OpcodeAction() = default;
 };

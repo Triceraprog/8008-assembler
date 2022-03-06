@@ -23,9 +23,9 @@ void OpcodeActionOneByteArg::emit_byte_stream(ByteWriter& byte_writer) const
 }
 
 void OpcodeActionOneByteArg::emit_listing(Listing& listing, int line_number,
-                                          std::string_view input_line, bool single_byte) const
+                                          std::string_view input_line) const
 {
-    if (single_byte)
+    if (listing.short_format())
     {
         auto line_address = address;
         listing.one_byte_of_data_with_address(line_number, line_address, opcode, input_line);

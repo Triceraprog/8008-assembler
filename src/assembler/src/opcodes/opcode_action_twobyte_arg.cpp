@@ -28,11 +28,11 @@ void OpcodeActionTwoByteArg::emit_byte_stream(ByteWriter& byte_writer) const
 }
 
 void OpcodeActionTwoByteArg::emit_listing(Listing& listing, int line_number,
-                                          std::string_view input_line, bool single_byte) const
+                                          std::string_view input_line) const
 {
     const int low_byte = (0xFF & evaluated_argument);
     const int high_byte = (0xFF & (evaluated_argument >> 8));
-    if (single_byte)
+    if (listing.short_format())
     {
         auto line_address = address;
 

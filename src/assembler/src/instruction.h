@@ -69,7 +69,7 @@ public:
         virtual void write_bytes(const Context& context, ByteWriter& writer, int address) const;
 
         virtual void write_listing(Listing& listing, const std::string& input_line, int line_number,
-                                   int address, bool single_byte_list) const;
+                                   int address) const;
     };
 
 private:
