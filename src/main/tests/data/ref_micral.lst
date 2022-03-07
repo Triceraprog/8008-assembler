@@ -1,0 +1,15 @@
+AS8 assembler for intel 8008, t.e.jones Version 1.0
+Options: listfile=1 debug=0 binaryout=0 singlelist=0
+octalnums=0 markascii=0
+Infile=data/micral.asm
+Assembly Performed: Mon Mar  7 21:35:26 2022
+
+
+Line Addr.  CodeBytes   Source Line
+---- ------ ----------- ----------------------------------
+   1 00-000 322             MAS ; Is coded as LAA
+   2 00-001 366             DMS ; Is coded as LLL
+   3 00-002 037             REI ; Is coded as RET with 011 on the xxx part
+Symbol Count: 0
+    Symbol  Oct Val  DecVal
+    ------  -------  ------

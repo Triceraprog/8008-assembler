@@ -1,5 +1,5 @@
-- Micral N specific instructions
 - New syntax support alongside old syntax
+- Support multiple files on command line and .include
 - Macro system
 - Pseudo instructions
 - The responsibility of the short format should probably be in Listing
@@ -8,4 +8,3 @@
 - Check name of executable and if as8, enters a compatible mode if needed
 - If the accumulator results in a negative number, various weird things happen, because it's passed as int (wrong hex, wrong lst)
 - Support for priorities in expressions
-- 

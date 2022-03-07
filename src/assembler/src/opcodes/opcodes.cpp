@@ -81,7 +81,9 @@ Opcode opcodes[] = {
         "rfp", 0033, NO_ARG, "rtc", 0043, NO_ARG, "rtz", 0053, NO_ARG, "rts", 0063, NO_ARG, //
         "rtp", 0073, NO_ARG,
         /* input and output */
-        "inp", 0101, INP_OUT, "out", 0121, INP_OUT};
+        "inp", 0101, INP_OUT, "out", 0121, INP_OUT,
+        /* micral specific aliases to instructions */
+        "mas", 0322, NO_ARG, "dms", 0366, NO_ARG, "rei", 0037, NO_ARG};
 
 namespace
 {
