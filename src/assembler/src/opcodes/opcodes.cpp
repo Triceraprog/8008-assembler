@@ -71,17 +71,25 @@ Opcode opcodes[] = {
         "jmp", 0104, ADDRESS_ARG, "jfc", 0100, ADDRESS_ARG, "jfz", 0110, ADDRESS_ARG, //
         "jfs", 0120, ADDRESS_ARG, "jfp", 0130, ADDRESS_ARG, "jtc", 0140, ADDRESS_ARG, //
         "jtz", 0150, ADDRESS_ARG, "jts", 0160, ADDRESS_ARG, "jtp", 0170, ADDRESS_ARG,
+        // new syntax
+        "jnc", 0100, ADDRESS_ARG, "jnz", 0110, ADDRESS_ARG,                         //
+        "jp", 0120, ADDRESS_ARG, "jpo", 0130, ADDRESS_ARG, "jc", 0140, ADDRESS_ARG, //
+        "jz", 0150, ADDRESS_ARG, "jm", 0160, ADDRESS_ARG, "jpe", 0170, ADDRESS_ARG,
         /* call instructions */
         "cal", 0106, ADDRESS_ARG, "cfc", 0102, ADDRESS_ARG, "cfz", 0112, ADDRESS_ARG, //
         "cfs", 0122, ADDRESS_ARG, "cfp", 0132, ADDRESS_ARG, "ctc", 0142, ADDRESS_ARG, //
         "ctz", 0152, ADDRESS_ARG, "cts", 0162, ADDRESS_ARG, "ctp", 0172, ADDRESS_ARG, //
         "rst", 0005, RST,
+        // new syntax
+        "call", 0106, ADDRESS_ARG, "cnc", 0102, ADDRESS_ARG, "cnz", 0112, ADDRESS_ARG, //
+        "cp", 0122, ADDRESS_ARG, "cpo", 0132, ADDRESS_ARG, "cc", 0142, ADDRESS_ARG,    //
+        "cz", 0152, ADDRESS_ARG, "cm", 0162, ADDRESS_ARG, "cpe", 0172, ADDRESS_ARG,    //
         /* return instructions */
         "ret", 0007, NO_ARG, "rfc", 0003, NO_ARG, "rfz", 0013, NO_ARG, "rfs", 0023, NO_ARG, //
         "rfp", 0033, NO_ARG, "rtc", 0043, NO_ARG, "rtz", 0053, NO_ARG, "rts", 0063, NO_ARG, //
         "rtp", 0073, NO_ARG,
         /* input and output */
-        "inp", 0101, INP_OUT, "out", 0121, INP_OUT,
+        "inp", 0101, INP_OUT, "out", 0121, INP_OUT, "in", 0101, INP_OUT, // new syntax
         /* micral specific aliases to instructions */
         "mas", 0322, NO_ARG, "dms", 0366, NO_ARG, "rei", 0037, NO_ARG};
 
