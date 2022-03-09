@@ -124,6 +124,45 @@ std::tuple<bool, Opcode&> find_opcode(std::string_view opcode_name)
     return {true, get_opcode(index)};
 }
 
+std::tuple<bool, Opcode&, std::size_t> find_opcode(std::string_view opcode_name,
+                                                   std::span<std::string> arguments)
+{
+    const auto& [found, opcode] = find_opcode(opcode_name);
+
+    if (!found)
+    {
+        if (ci_equals(opcode_name, "mov"))
+        {
+            const auto argument_needed = 2;
+
+            if (arguments.size() < argument_needed)
+            {
+                // Should emit a syntax error
+                return {false, opcode, argument_needed};
+            }
+
+            const auto& first_argument = arguments[0];
+            if (first_argument.size() != 1)
+            {
+                // Should emit a syntax error
+                return {false, opcode, argument_needed};
+            }
+
+            const auto& second_argument = arguments[1];
+            if (second_argument.size() != 1)
+            {
+                // Should emit a syntax error
+                return {false, opcode, argument_needed};
+            }
+
+            const auto new_opcode = std::string{"L"} + first_argument + second_argument;
+            const auto& [new_found, new_found_opcode] = find_opcode(new_opcode);
+            return {new_found, new_found_opcode, argument_needed};
+        }
+    }
+    return {found, opcode, 0};
+}
+
 int get_opcode_size(const Opcode& opcode)
 {
     int opcode_byte_size;

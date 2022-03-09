@@ -3,6 +3,8 @@
 
 #include "errors.h"
 
+#include <span>
+#include <string>
 #include <string_view>
 #include <tuple>
 
@@ -24,6 +26,8 @@ struct Opcode
 };
 
 std::tuple<bool, Opcode&> find_opcode(std::string_view opcode_name);
+std::tuple<bool, Opcode&, std::size_t> find_opcode(std::string_view opcode_name,
+                                                   std::span<std::string> arguments);
 int get_opcode_size(const Opcode& opcode);
 
 class UndefinedOpcode : public ExceptionWithReason

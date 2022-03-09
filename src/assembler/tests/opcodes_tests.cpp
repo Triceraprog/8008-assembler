@@ -48,3 +48,14 @@ TEST(Opcode, understands_rst_opcode)
     ASSERT_THAT(found_opcode.rule, Eq(RST));
     ASSERT_THAT(found_opcode.code, Eq(0005));
 }
+
+TEST(Opcode, understands_mov_opcode)
+{
+    std::vector<std::string> arguments{"A", "B"};
+    auto [found, found_opcode, consumed] = find_opcode("MOV", arguments);
+
+    ASSERT_THAT(found, IsTrue());
+    ASSERT_THAT(found_opcode.rule, Eq(NO_ARG));
+    ASSERT_THAT(found_opcode.code, Eq(0301));
+    ASSERT_THAT(consumed, Eq(2));
+}
