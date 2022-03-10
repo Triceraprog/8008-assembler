@@ -125,8 +125,8 @@ std::tuple<bool, Opcode> find_opcode(std::string_view opcode_name)
     return {true, get_opcode(index)};
 }
 
-void verify_arguments(const std::string_view instruction_name,
-                      const std::span<std::string>& arguments, const int argument_needed)
+void verify_arguments_count(const std::string_view instruction_name,
+                            const std::span<std::string>& arguments, const int argument_needed)
 {
     if (arguments.size() < argument_needed)
     {
@@ -134,13 +134,13 @@ void verify_arguments(const std::string_view instruction_name,
     }
 
     const auto& first_argument = arguments[0];
-    if (first_argument.size() != 1)
+    if (argument_needed >= 1 && first_argument.size() != 1)
     {
         throw SyntaxError("Wrong first argument for " + std::string{instruction_name});
     }
 
     const auto& second_argument = arguments[1];
-    if (second_argument.size() != 1)
+    if (argument_needed >= 2 && second_argument.size() != 1)
     {
         throw SyntaxError("Wrong second argument for " + std::string{instruction_name});
     }
@@ -158,7 +158,7 @@ int reg_name_to_code(std::string_view register_name)
     {
         return reg_char - 'A';
     }
-    return 0;
+    throw SyntaxError("Register expected.");
 }
 
 std::tuple<bool, Opcode, std::size_t> find_opcode(std::string_view opcode_name,
@@ -172,14 +172,28 @@ std::tuple<bool, Opcode, std::size_t> find_opcode(std::string_view opcode_name,
         {
             const auto argument_needed = 2;
 
-            verify_arguments("MOV", arguments, argument_needed);
+            verify_arguments_count("MOV", arguments, argument_needed);
 
             const int destination_reg = reg_name_to_code(arguments[0]);
             const int source_reg = reg_name_to_code(arguments[1]);
 
-            static const char* mov_opcode_name = "MOV";
+            static const char* mov_opcode_name = "mov";
             Opcode::OpcodeByteType code = 0b11000000 | (destination_reg) << 3 | source_reg;
             Opcode new_syntax_opcode{mov_opcode_name, code, NO_ARG};
+
+            return {true, new_syntax_opcode, argument_needed};
+        }
+        if (ci_equals(opcode_name, "mvi"))
+        {
+            const auto argument_needed = 1;
+
+            verify_arguments_count("MVI", arguments, argument_needed);
+
+            const int destination_reg = reg_name_to_code(arguments[0]);
+
+            static const char* mov_opcode_name = "mvi";
+            Opcode::OpcodeByteType code = 0b00000110 | (destination_reg) << 3;
+            Opcode new_syntax_opcode{mov_opcode_name, code, ONE_BYTE_ARG};
 
             return {true, new_syntax_opcode, argument_needed};
         }

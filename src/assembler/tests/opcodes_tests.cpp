@@ -82,3 +82,20 @@ TEST(Opcode, understands_mov_opcode_with_different_registers)
     ASSERT_THAT(found_opcode.code, Eq(0374));
     ASSERT_THAT(consumed, Eq(2));
 }
+
+TEST(Opcode, understands_mvi_opcode)
+{
+    std::vector<std::string> arguments{"C"};
+    auto [found, found_opcode, consumed] = find_opcode("MVI", arguments);
+
+    ASSERT_THAT(found, IsTrue());
+    ASSERT_THAT(found_opcode.rule, Eq(ONE_BYTE_ARG));
+    ASSERT_THAT(found_opcode.code, Eq(0026));
+    ASSERT_THAT(consumed, Eq(1));
+}
+
+TEST(Opcode, mov_with_a_number_as_first_argument_is_a_syntax_error)
+{
+    std::vector<std::string> arguments{"1", "B"};
+    ASSERT_THROW(find_opcode("MVI", arguments), SyntaxError);
+}
