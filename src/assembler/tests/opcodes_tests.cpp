@@ -59,3 +59,26 @@ TEST(Opcode, understands_mov_opcode)
     ASSERT_THAT(found_opcode.code, Eq(0301));
     ASSERT_THAT(consumed, Eq(2));
 }
+
+TEST(Opcode, mov_missing_one_argument_is_a_syntax_error)
+{
+    std::vector<std::string> arguments{"A"};
+    ASSERT_THROW(find_opcode("MOV", arguments), SyntaxError);
+}
+
+TEST(Opcode, mov_missing_first_argument_is_a_syntax_error)
+{
+    std::vector<std::string> arguments{"", "B"};
+    ASSERT_THROW(find_opcode("MOV", arguments), SyntaxError);
+}
+
+TEST(Opcode, understands_mov_opcode_with_different_registers)
+{
+    std::vector<std::string> arguments{"M", "E"};
+    auto [found, found_opcode, consumed] = find_opcode("MOV", arguments);
+
+    ASSERT_THAT(found, IsTrue());
+    ASSERT_THAT(found_opcode.rule, Eq(NO_ARG));
+    ASSERT_THAT(found_opcode.code, Eq(0374));
+    ASSERT_THAT(consumed, Eq(2));
+}

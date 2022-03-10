@@ -36,4 +36,10 @@ public:
     explicit UndefinedOpcode(std::string_view opcode);
 };
 
+class SyntaxError : public ExceptionWithReason
+{
+public:
+    explicit SyntaxError(std::string_view reason);
+};
+
 #endif //INC_8008_ASSEMBLER_OPCODES_H

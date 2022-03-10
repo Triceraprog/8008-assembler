@@ -137,22 +137,19 @@ std::tuple<bool, Opcode&, std::size_t> find_opcode(std::string_view opcode_name,
 
             if (arguments.size() < argument_needed)
             {
-                // Should emit a syntax error
-                return {false, opcode, argument_needed};
+                throw SyntaxError("missing argument(s) for MOV");
             }
 
             const auto& first_argument = arguments[0];
             if (first_argument.size() != 1)
             {
-                // Should emit a syntax error
-                return {false, opcode, argument_needed};
+                throw SyntaxError("Wrong first argument for MOV");
             }
 
             const auto& second_argument = arguments[1];
             if (second_argument.size() != 1)
             {
-                // Should emit a syntax error
-                return {false, opcode, argument_needed};
+                throw SyntaxError("Wrong second argument for MOV");
             }
 
             const auto new_opcode = std::string{"L"} + first_argument + second_argument;
@@ -187,3 +184,5 @@ UndefinedOpcode::UndefinedOpcode(std::string_view opcode)
 {
     reason = "undefined opcode " + std::string{opcode};
 }
+
+SyntaxError::SyntaxError(std::string_view reason) { this->reason = reason; }
