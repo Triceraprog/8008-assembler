@@ -137,7 +137,7 @@ namespace
         Instruction_OTHER(std::string_view opcode_string, std::vector<std::string> arguments)
             : arguments{std::move(arguments)}
         {
-            if (auto [found, found_opcode] = find_opcode(opcode_string); found)
+            if (auto [found, found_opcode, consumed] = find_opcode(opcode_string, arguments); found)
             {
                 opcode = found_opcode;
             }
@@ -185,8 +185,7 @@ int Instruction::InstructionAction::evaluate_fixed_address(const Context& contex
     return address;
 }
 
-int Instruction::InstructionAction::advance_address(const Context& context,
-                                                    int address) const
+int Instruction::InstructionAction::advance_address(const Context& context, int address) const
 {
     return address;
 }
