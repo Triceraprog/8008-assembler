@@ -1,10 +1,9 @@
 #include "opcodes.h"
-#include <cassert>
 
 #include "utils.h"
 
-#define NUM_OPCODES (sizeof(opcodes) / sizeof(opcodes[0]))
-#define NUM_NEW_OPCODES (sizeof(new_opcodes) / sizeof(new_opcodes[0]))
+#include <algorithm>
+#include <cassert>
 
 Opcode opcodes[] = {
         /* first the basic load immediate */
@@ -98,8 +97,8 @@ Opcode opcodes[] = {
 enum NewSyntaxSourceDest
 {
     SOURCE,
-    DEST,
-    SOURCE_AND_DEST,
+    DESTINATION,
+    SOURCE_AND_DESTINATION,
 };
 
 struct NewSyntaxOpcode
@@ -112,66 +111,38 @@ struct NewSyntaxOpcode
 };
 
 NewSyntaxOpcode new_opcodes[] = {
-        "mov", 0b11000000, NO_ARG,       SOURCE_AND_DEST, //
-        "mvi", 0b00000110, ONE_BYTE_ARG, DEST             //
+        "mov", 0b11000000, NO_ARG,       SOURCE_AND_DESTINATION, //
+        "mvi", 0b00000110, ONE_BYTE_ARG, DESTINATION             //
 };
-
-namespace
-{
-    int find_opcode_in_table(std::string_view str)
-    {
-        for (int i = 0; i < NUM_OPCODES; i++)
-        {
-            if (ci_equals(str, opcodes[i].mnemonic))
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    Opcode& get_opcode(int i) { return opcodes[i]; }
-
-    int find_new_opcode_in_table(std::string_view str)
-    {
-        for (int i = 0; i < NUM_NEW_OPCODES; i++)
-        {
-            if (ci_equals(str, new_opcodes[i].mnemonic))
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    NewSyntaxOpcode& get_new_opcode(int i) { return new_opcodes[i]; }
-
-}
 
 std::tuple<bool, Opcode> find_opcode(std::string_view opcode_name)
 {
     static Opcode null_opcode;
 
-    int index = find_opcode_in_table(opcode_name);
-    if (index == -1)
+    auto it = std::ranges::find_if(opcodes, [&opcode_name](const auto& opcode) {
+        return ci_equals(opcode_name, opcode.mnemonic);
+    });
+
+    if (it == std::end(opcodes))
     {
         return {false, null_opcode};
     }
-
-    return {true, get_opcode(index)};
+    return {true, *it};
 }
 
 std::tuple<bool, NewSyntaxOpcode> find_new_opcode(std::string_view opcode_name)
 {
     static NewSyntaxOpcode null_opcode;
 
-    int index = find_new_opcode_in_table(opcode_name);
-    if (index == -1)
+    auto it = std::ranges::find_if(new_opcodes, [&opcode_name](const auto& opcode) {
+        return ci_equals(opcode_name, opcode.mnemonic);
+    });
+    if (it == std::end(new_opcodes))
     {
         return {false, null_opcode};
     }
 
-    return {true, get_new_opcode(index)};
+    return {true, *it};
 }
 
 void verify_arguments_count(const std::string_view instruction_name,
@@ -220,11 +191,12 @@ std::tuple<bool, Opcode, std::size_t> find_opcode(std::string_view opcode_name,
         const auto& [new_found, new_opcode] = find_new_opcode(opcode_name);
         if (new_found)
         {
-            const int argument_needed = (new_opcode.source_and_dest == SOURCE_AND_DEST) ? 2 : 1;
+            const int argument_needed =
+                    (new_opcode.source_and_dest == SOURCE_AND_DESTINATION) ? 2 : 1;
             verify_arguments_count(opcode_name, arguments, argument_needed);
 
             Opcode::OpcodeByteType code = new_opcode.code;
-            if (new_opcode.source_and_dest == SOURCE_AND_DEST)
+            if (new_opcode.source_and_dest == SOURCE_AND_DESTINATION)
             {
                 const int destination_reg = reg_name_to_code(arguments[0]);
                 const int source_reg = reg_name_to_code(arguments[1]);
