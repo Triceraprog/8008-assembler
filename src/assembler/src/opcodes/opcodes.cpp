@@ -124,6 +124,27 @@ std::tuple<bool, Opcode&> find_opcode(std::string_view opcode_name)
     return {true, get_opcode(index)};
 }
 
+void verify_arguments(const std::string_view instruction_name,
+                      const std::span<std::string>& arguments, const int argument_needed)
+{
+    if (arguments.size() < argument_needed)
+    {
+        throw SyntaxError("missing argument(s) for " + std::string{instruction_name});
+    }
+
+    const auto& first_argument = arguments[0];
+    if (first_argument.size() != 1)
+    {
+        throw SyntaxError("Wrong first argument for " + std::string{instruction_name});
+    }
+
+    const auto& second_argument = arguments[1];
+    if (second_argument.size() != 1)
+    {
+        throw SyntaxError("Wrong second argument for " + std::string{instruction_name});
+    }
+}
+
 std::tuple<bool, Opcode&, std::size_t> find_opcode(std::string_view opcode_name,
                                                    std::span<std::string> arguments)
 {
@@ -135,24 +156,9 @@ std::tuple<bool, Opcode&, std::size_t> find_opcode(std::string_view opcode_name,
         {
             const auto argument_needed = 2;
 
-            if (arguments.size() < argument_needed)
-            {
-                throw SyntaxError("missing argument(s) for MOV");
-            }
+            verify_arguments("MOV", arguments, argument_needed);
 
-            const auto& first_argument = arguments[0];
-            if (first_argument.size() != 1)
-            {
-                throw SyntaxError("Wrong first argument for MOV");
-            }
-
-            const auto& second_argument = arguments[1];
-            if (second_argument.size() != 1)
-            {
-                throw SyntaxError("Wrong second argument for MOV");
-            }
-
-            const auto new_opcode = std::string{"L"} + first_argument + second_argument;
+            const auto new_opcode = std::string{"L"} + arguments[0] + arguments[1];
             const auto& [new_found, new_found_opcode] = find_opcode(new_opcode);
             return {new_found, new_found_opcode, argument_needed};
         }
