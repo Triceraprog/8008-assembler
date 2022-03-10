@@ -25,9 +25,9 @@ struct Opcode
     OpcodeType rule{};
 };
 
-std::tuple<bool, Opcode&> find_opcode(std::string_view opcode_name);
-std::tuple<bool, Opcode&, std::size_t> find_opcode(std::string_view opcode_name,
-                                                   std::span<std::string> arguments);
+std::tuple<bool, Opcode> find_opcode(std::string_view opcode_name);
+std::tuple<bool, Opcode, std::size_t> find_opcode(std::string_view opcode_name,
+                                                  std::span<std::string> arguments);
 int get_opcode_size(const Opcode& opcode);
 
 class UndefinedOpcode : public ExceptionWithReason

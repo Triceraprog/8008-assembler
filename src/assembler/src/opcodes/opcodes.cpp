@@ -1,4 +1,5 @@
 #include "opcodes.h"
+#include <cassert>
 
 #include "utils.h"
 
@@ -111,7 +112,7 @@ namespace
 
 }
 
-std::tuple<bool, Opcode&> find_opcode(std::string_view opcode_name)
+std::tuple<bool, Opcode> find_opcode(std::string_view opcode_name)
 {
     static Opcode null_opcode;
 
@@ -145,8 +146,23 @@ void verify_arguments(const std::string_view instruction_name,
     }
 }
 
-std::tuple<bool, Opcode&, std::size_t> find_opcode(std::string_view opcode_name,
-                                                   std::span<std::string> arguments)
+int reg_name_to_code(std::string_view register_name)
+{
+    assert(register_name.size() == 1);
+    const auto& reg_char = register_name[0];
+    if (reg_char == 'M')
+    {
+        return 7;
+    }
+    if (reg_char >= 'A' && reg_char <= 'E')
+    {
+        return reg_char - 'A';
+    }
+    return 0;
+}
+
+std::tuple<bool, Opcode, std::size_t> find_opcode(std::string_view opcode_name,
+                                                  std::span<std::string> arguments)
 {
     const auto& [found, opcode] = find_opcode(opcode_name);
 
@@ -158,9 +174,14 @@ std::tuple<bool, Opcode&, std::size_t> find_opcode(std::string_view opcode_name,
 
             verify_arguments("MOV", arguments, argument_needed);
 
-            const auto new_opcode = std::string{"L"} + arguments[0] + arguments[1];
-            const auto& [new_found, new_found_opcode] = find_opcode(new_opcode);
-            return {new_found, new_found_opcode, argument_needed};
+            const int destination_reg = reg_name_to_code(arguments[0]);
+            const int source_reg = reg_name_to_code(arguments[1]);
+
+            static const char* mov_opcode_name = "MOV";
+            Opcode::OpcodeByteType code = 0b11000000 | (destination_reg) << 3 | source_reg;
+            Opcode new_syntax_opcode{mov_opcode_name, code, NO_ARG};
+
+            return {true, new_syntax_opcode, argument_needed};
         }
     }
     return {found, opcode, 0};
