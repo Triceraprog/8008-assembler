@@ -3,7 +3,8 @@
 
 #include "utils.h"
 
-#define NUMOPCODES (sizeof(opcodes) / sizeof(opcodes[0]))
+#define NUM_OPCODES (sizeof(opcodes) / sizeof(opcodes[0]))
+#define NUM_NEW_OPCODES (sizeof(new_opcodes) / sizeof(new_opcodes[0]))
 
 Opcode opcodes[] = {
         /* first the basic load immediate */
@@ -94,11 +95,32 @@ Opcode opcodes[] = {
         /* micral specific aliases to instructions */
         "mas", 0322, NO_ARG, "dms", 0366, NO_ARG, "rei", 0037, NO_ARG};
 
+enum NewSyntaxSourceDest
+{
+    SOURCE,
+    DEST,
+    SOURCE_AND_DEST,
+};
+
+struct NewSyntaxOpcode
+{
+    using OpcodeByteType = unsigned char;
+    const char* mnemonic{};
+    OpcodeByteType code{};
+    OpcodeType rule{};
+    NewSyntaxSourceDest source_and_dest{};
+};
+
+NewSyntaxOpcode new_opcodes[] = {
+        "mov", 0b11000000, NO_ARG,       SOURCE_AND_DEST, //
+        "mvi", 0b00000110, ONE_BYTE_ARG, DEST             //
+};
+
 namespace
 {
     int find_opcode_in_table(std::string_view str)
     {
-        for (int i = 0; i < NUMOPCODES; i++)
+        for (int i = 0; i < NUM_OPCODES; i++)
         {
             if (ci_equals(str, opcodes[i].mnemonic))
             {
@@ -109,6 +131,20 @@ namespace
     }
 
     Opcode& get_opcode(int i) { return opcodes[i]; }
+
+    int find_new_opcode_in_table(std::string_view str)
+    {
+        for (int i = 0; i < NUM_NEW_OPCODES; i++)
+        {
+            if (ci_equals(str, new_opcodes[i].mnemonic))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    NewSyntaxOpcode& get_new_opcode(int i) { return new_opcodes[i]; }
 
 }
 
@@ -123,6 +159,19 @@ std::tuple<bool, Opcode> find_opcode(std::string_view opcode_name)
     }
 
     return {true, get_opcode(index)};
+}
+
+std::tuple<bool, NewSyntaxOpcode> find_new_opcode(std::string_view opcode_name)
+{
+    static NewSyntaxOpcode null_opcode;
+
+    int index = find_new_opcode_in_table(opcode_name);
+    if (index == -1)
+    {
+        return {false, null_opcode};
+    }
+
+    return {true, get_new_opcode(index)};
 }
 
 void verify_arguments_count(const std::string_view instruction_name,
@@ -168,32 +217,31 @@ std::tuple<bool, Opcode, std::size_t> find_opcode(std::string_view opcode_name,
 
     if (!found)
     {
-        if (ci_equals(opcode_name, "mov"))
+        const auto& [new_found, new_opcode] = find_new_opcode(opcode_name);
+        if (new_found)
         {
-            const auto argument_needed = 2;
+            const int argument_needed = (new_opcode.source_and_dest == SOURCE_AND_DEST) ? 2 : 1;
+            verify_arguments_count(opcode_name, arguments, argument_needed);
 
-            verify_arguments_count("MOV", arguments, argument_needed);
+            Opcode::OpcodeByteType code = new_opcode.code;
+            if (new_opcode.source_and_dest == SOURCE_AND_DEST)
+            {
+                const int destination_reg = reg_name_to_code(arguments[0]);
+                const int source_reg = reg_name_to_code(arguments[1]);
+                code |= (destination_reg) << 3 | source_reg;
+            }
+            else if (new_opcode.source_and_dest == SOURCE)
+            {
+                const int source_reg = reg_name_to_code(arguments[0]);
+                code |= source_reg;
+            }
+            else
+            {
+                const int destination_reg = reg_name_to_code(arguments[0]);
+                code |= (destination_reg) << 3;
+            }
 
-            const int destination_reg = reg_name_to_code(arguments[0]);
-            const int source_reg = reg_name_to_code(arguments[1]);
-
-            static const char* mov_opcode_name = "mov";
-            Opcode::OpcodeByteType code = 0b11000000 | (destination_reg) << 3 | source_reg;
-            Opcode new_syntax_opcode{mov_opcode_name, code, NO_ARG};
-
-            return {true, new_syntax_opcode, argument_needed};
-        }
-        if (ci_equals(opcode_name, "mvi"))
-        {
-            const auto argument_needed = 1;
-
-            verify_arguments_count("MVI", arguments, argument_needed);
-
-            const int destination_reg = reg_name_to_code(arguments[0]);
-
-            static const char* mov_opcode_name = "mvi";
-            Opcode::OpcodeByteType code = 0b00000110 | (destination_reg) << 3;
-            Opcode new_syntax_opcode{mov_opcode_name, code, ONE_BYTE_ARG};
+            Opcode new_syntax_opcode{new_opcode.mnemonic, code, new_opcode.rule};
 
             return {true, new_syntax_opcode, argument_needed};
         }
