@@ -6,7 +6,8 @@ using namespace testing;
 
 TEST(Opcode, understands_no_arg_opcode)
 {
-    auto [found, found_opcode] = find_opcode("LAA");
+    std::vector<std::string> arguments{};
+    auto [found, found_opcode, consume] = find_opcode("LAA", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(NO_ARG));
@@ -15,7 +16,8 @@ TEST(Opcode, understands_no_arg_opcode)
 
 TEST(Opcode, understands_one_byte_arg_opcode)
 {
-    auto [found, found_opcode] = find_opcode("LAI");
+    std::vector<std::string> arguments{};
+    auto [found, found_opcode, consume] = find_opcode("LAI", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(ONE_BYTE_ARG));
@@ -24,7 +26,8 @@ TEST(Opcode, understands_one_byte_arg_opcode)
 
 TEST(Opcode, understands_address_arg_opcode)
 {
-    auto [found, found_opcode] = find_opcode("JMP");
+    std::vector<std::string> arguments{};
+    auto [found, found_opcode, consume] = find_opcode("JMP", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(ADDRESS_ARG));
@@ -33,7 +36,8 @@ TEST(Opcode, understands_address_arg_opcode)
 
 TEST(Opcode, understands_inpout_opcode)
 {
-    auto [found, found_opcode] = find_opcode("INP");
+    std::vector<std::string> arguments{};
+    auto [found, found_opcode, consume] = find_opcode("INP", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(INP_OUT));
@@ -42,7 +46,8 @@ TEST(Opcode, understands_inpout_opcode)
 
 TEST(Opcode, understands_rst_opcode)
 {
-    auto [found, found_opcode] = find_opcode("RST");
+    std::vector<std::string> arguments{};
+    auto [found, found_opcode, consume] = find_opcode("RST", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(RST));
