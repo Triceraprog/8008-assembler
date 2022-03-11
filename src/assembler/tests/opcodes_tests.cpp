@@ -18,12 +18,14 @@ TEST(Opcode, can_select_the_opcode_matcher)
 
 struct OldOpcodeSyntaxFixture : public Test
 {
+    OldOpcodeSyntaxFixture() : matcher{get_opcode_matcher(OLD)} {}
     std::vector<std::string> arguments{};
+    matcher_signature* matcher;
 };
 
 TEST_F(OldOpcodeSyntaxFixture, understands_no_arg_opcode)
 {
-    auto [found, found_opcode, consume] = find_opcode("LAA", arguments);
+    auto [found, found_opcode, consume] = matcher("LAA", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(NO_ARG));
@@ -33,7 +35,7 @@ TEST_F(OldOpcodeSyntaxFixture, understands_no_arg_opcode)
 TEST_F(OldOpcodeSyntaxFixture, understands_one_byte_arg_opcode)
 {
     std::vector<std::string> arguments{};
-    auto [found, found_opcode, consume] = find_opcode("LAI", arguments);
+    auto [found, found_opcode, consume] = matcher("LAI", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(ONE_BYTE_ARG));
@@ -43,7 +45,7 @@ TEST_F(OldOpcodeSyntaxFixture, understands_one_byte_arg_opcode)
 TEST_F(OldOpcodeSyntaxFixture, understands_address_arg_opcode)
 {
     std::vector<std::string> arguments{};
-    auto [found, found_opcode, consume] = find_opcode("JMP", arguments);
+    auto [found, found_opcode, consume] = matcher("JMP", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(ADDRESS_ARG));
@@ -53,7 +55,7 @@ TEST_F(OldOpcodeSyntaxFixture, understands_address_arg_opcode)
 TEST_F(OldOpcodeSyntaxFixture, understands_inpout_opcode)
 {
     std::vector<std::string> arguments{};
-    auto [found, found_opcode, consume] = find_opcode("INP", arguments);
+    auto [found, found_opcode, consume] = matcher("INP", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(INP_OUT));
@@ -63,7 +65,7 @@ TEST_F(OldOpcodeSyntaxFixture, understands_inpout_opcode)
 TEST_F(OldOpcodeSyntaxFixture, understands_rst_opcode)
 {
     std::vector<std::string> arguments{};
-    auto [found, found_opcode, consume] = find_opcode("RST", arguments);
+    auto [found, found_opcode, consume] = matcher("RST", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(RST));
