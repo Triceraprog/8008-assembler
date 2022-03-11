@@ -74,27 +74,20 @@ namespace
             "jmp", 0104, ADDRESS_ARG, "jfc", 0100, ADDRESS_ARG, "jfz", 0110, ADDRESS_ARG, //
             "jfs", 0120, ADDRESS_ARG, "jfp", 0130, ADDRESS_ARG, "jtc", 0140, ADDRESS_ARG, //
             "jtz", 0150, ADDRESS_ARG, "jts", 0160, ADDRESS_ARG, "jtp", 0170, ADDRESS_ARG,
-            // new syntax
-            "jnc", 0100, ADDRESS_ARG, "jnz", 0110, ADDRESS_ARG,                         //
-            "jp", 0120, ADDRESS_ARG, "jpo", 0130, ADDRESS_ARG, "jc", 0140, ADDRESS_ARG, //
-            "jz", 0150, ADDRESS_ARG, "jm", 0160, ADDRESS_ARG, "jpe", 0170, ADDRESS_ARG,
             /* call instructions */
             "cal", 0106, ADDRESS_ARG, "cfc", 0102, ADDRESS_ARG, "cfz", 0112, ADDRESS_ARG, //
             "cfs", 0122, ADDRESS_ARG, "cfp", 0132, ADDRESS_ARG, "ctc", 0142, ADDRESS_ARG, //
             "ctz", 0152, ADDRESS_ARG, "cts", 0162, ADDRESS_ARG, "ctp", 0172, ADDRESS_ARG, //
             "rst", 0005, RST,
-            // new syntax
-            "call", 0106, ADDRESS_ARG, "cnc", 0102, ADDRESS_ARG, "cnz", 0112, ADDRESS_ARG, //
-            "cp", 0122, ADDRESS_ARG, "cpo", 0132, ADDRESS_ARG, "cc", 0142, ADDRESS_ARG,    //
-            "cz", 0152, ADDRESS_ARG, "cm", 0162, ADDRESS_ARG, "cpe", 0172, ADDRESS_ARG,    //
             /* return instructions */
             "ret", 0007, NO_ARG, "rfc", 0003, NO_ARG, "rfz", 0013, NO_ARG, "rfs", 0023, NO_ARG, //
             "rfp", 0033, NO_ARG, "rtc", 0043, NO_ARG, "rtz", 0053, NO_ARG, "rts", 0063, NO_ARG, //
             "rtp", 0073, NO_ARG,
             /* input and output */
-            "inp", 0101, INP_OUT, "out", 0121, INP_OUT, "in", 0101, INP_OUT, // new syntax
+            "inp", 0101, INP_OUT, "out", 0121, INP_OUT,
             /* micral specific aliases to instructions */
-            "mas", 0322, NO_ARG, "dms", 0366, NO_ARG, "rei", 0037, NO_ARG};
+            "mas", 0322, NO_ARG, "dms", 0366, NO_ARG, "rei", 0037, NO_ARG //
+    };
 
     enum NewSyntaxSourceDest
     {
@@ -114,78 +107,99 @@ namespace
     };
 
     NewSyntaxOpcode new_opcodes[] = {
-            "mov", 0b11000000, NO_ARG,       SOURCE_AND_DESTINATION, //
-            "mvi", 0b00000110, ONE_BYTE_ARG, DESTINATION,            //
-            "add", 0b10000000, ONE_BYTE_ARG, SOURCE,                 //
-            "adi", 0b00000100, ONE_BYTE_ARG, NO_REGISTER,            //
+            "mov", 0b11000000, NO_ARG, SOURCE_AND_DESTINATION, //
+            "mvi", 0b00000110, ONE_BYTE_ARG, DESTINATION,      //
+            "add", 0b10000000, ONE_BYTE_ARG, SOURCE,           //
+            "adi", 0b00000100, ONE_BYTE_ARG, NO_REGISTER,      //
+            "adc", 0b10001000, ONE_BYTE_ARG, SOURCE,           //
+            "aci", 0b00001100, ONE_BYTE_ARG, NO_REGISTER,      //
+            "sub", 0b10010000, ONE_BYTE_ARG, SOURCE,           //
+            "sui", 0b00010100, ONE_BYTE_ARG, NO_REGISTER,      //
+            "sbb", 0b10011000, ONE_BYTE_ARG, SOURCE,           //
+            "sbi", 0b00011100, ONE_BYTE_ARG, NO_REGISTER,      //
+            "ana", 0b10100000, ONE_BYTE_ARG, SOURCE,           //
+            "ani", 0b00100100, ONE_BYTE_ARG, NO_REGISTER,      //
+            "xra", 0b10101000, ONE_BYTE_ARG, SOURCE,           //
+            "xri", 0b00101100, ONE_BYTE_ARG, NO_REGISTER,      //
+            "ora", 0b10100000, ONE_BYTE_ARG, SOURCE,           //
+            "ori", 0b00110100, ONE_BYTE_ARG, NO_REGISTER,      //
+            "cmp", 0b10111000, ONE_BYTE_ARG, SOURCE,           //
+            "cpi", 0b00111100, ONE_BYTE_ARG, NO_REGISTER,      //
+            "inr", 0b00000000, NO_ARG, DESTINATION,            //
+            "dcr", 0b00000001, NO_ARG, DESTINATION,            //
+            /* micral specific aliases to instructions */
+            "mas", 0322, NO_ARG, NO_REGISTER, //
+            "dms", 0366, NO_ARG, NO_REGISTER, //
+            "rei", 0037, NO_ARG, NO_REGISTER, //
     };
 
-    std::tuple<bool, Opcode> find_old_opcode(std::string_view opcode_name)
+};
+
+std::tuple<bool, Opcode> find_old_opcode(std::string_view opcode_name)
+{
+    static Opcode null_opcode;
+
+    auto it = std::ranges::find_if(opcodes, [&opcode_name](const auto& opcode) {
+        return ci_equals(opcode_name, opcode.mnemonic);
+    });
+
+    if (it == std::end(opcodes))
     {
-        static Opcode null_opcode;
+        return {false, null_opcode};
+    }
+    return {true, *it};
+}
 
-        auto it = std::ranges::find_if(opcodes, [&opcode_name](const auto& opcode) {
-            return ci_equals(opcode_name, opcode.mnemonic);
-        });
+std::tuple<bool, NewSyntaxOpcode> find_new_opcode(std::string_view opcode_name)
+{
+    static NewSyntaxOpcode null_opcode;
 
-        if (it == std::end(opcodes))
-        {
-            return {false, null_opcode};
-        }
-        return {true, *it};
+    auto it = std::ranges::find_if(new_opcodes, [&opcode_name](const auto& opcode) {
+        return ci_equals(opcode_name, opcode.mnemonic);
+    });
+    if (it == std::end(new_opcodes))
+    {
+        return {false, null_opcode};
     }
 
-    std::tuple<bool, NewSyntaxOpcode> find_new_opcode(std::string_view opcode_name)
+    return {true, *it};
+}
+
+void verify_arguments_count(const std::string_view instruction_name,
+                            const std::span<std::string>& arguments,
+                            const std::size_t argument_needed)
+{
+    if (arguments.size() < argument_needed)
     {
-        static NewSyntaxOpcode null_opcode;
-
-        auto it = std::ranges::find_if(new_opcodes, [&opcode_name](const auto& opcode) {
-            return ci_equals(opcode_name, opcode.mnemonic);
-        });
-        if (it == std::end(new_opcodes))
-        {
-            return {false, null_opcode};
-        }
-
-        return {true, *it};
+        throw SyntaxError("missing argument(s) for " + std::string{instruction_name});
     }
 
-    void verify_arguments_count(const std::string_view instruction_name,
-                                const std::span<std::string>& arguments,
-                                const std::size_t argument_needed)
+    const auto& first_argument = arguments[0];
+    if (argument_needed >= 1 && first_argument.size() != 1)
     {
-        if (arguments.size() < argument_needed)
-        {
-            throw SyntaxError("missing argument(s) for " + std::string{instruction_name});
-        }
-
-        const auto& first_argument = arguments[0];
-        if (argument_needed >= 1 && first_argument.size() != 1)
-        {
-            throw SyntaxError("Wrong first argument for " + std::string{instruction_name});
-        }
-
-        const auto& second_argument = arguments[1];
-        if (argument_needed >= 2 && second_argument.size() != 1)
-        {
-            throw SyntaxError("Wrong second argument for " + std::string{instruction_name});
-        }
+        throw SyntaxError("Wrong first argument for " + std::string{instruction_name});
     }
 
-    int reg_name_to_code(std::string_view register_name)
+    const auto& second_argument = arguments[1];
+    if (argument_needed >= 2 && second_argument.size() != 1)
     {
-        assert(register_name.size() == 1);
-        const auto& reg_char = register_name[0];
-        if (reg_char == 'M')
-        {
-            return 7;
-        }
-        if (reg_char >= 'A' && reg_char <= 'E')
-        {
-            return reg_char - 'A';
-        }
-        throw SyntaxError("Register expected.");
+        throw SyntaxError("Wrong second argument for " + std::string{instruction_name});
     }
+}
+
+int reg_name_to_code(std::string_view register_name)
+{
+    assert(register_name.size() == 1);
+    const auto& reg_char = register_name[0];
+    if (reg_char == 'M')
+    {
+        return 7;
+    }
+    if (reg_char >= 'A' && reg_char <= 'E')
+    {
+        return reg_char - 'A';
+    }
+    throw SyntaxError("Register expected.");
 }
 
 std::tuple<bool, Opcode, std::size_t> find_opcode_old(std::string_view opcode_name,
