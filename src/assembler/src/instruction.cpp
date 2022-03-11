@@ -137,6 +137,7 @@ namespace
         Instruction_OTHER(std::string_view opcode_string, std::vector<std::string> arguments)
             : arguments{std::move(arguments)}
         {
+            auto find_opcode = get_opcode_matcher(NEW);
             if (auto [found, found_opcode, consumed] = find_opcode(opcode_string, arguments); found)
             {
                 opcode = found_opcode;
