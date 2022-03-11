@@ -244,6 +244,8 @@ int get_opcode_size(const Opcode& opcode)
     return opcode_byte_size;
 }
 
+matcher_signature* get_opcode_matcher(SyntaxType syntax_type) { return find_opcode; }
+
 UndefinedOpcode::UndefinedOpcode(std::string_view opcode)
 {
     reason = "undefined opcode " + std::string{opcode};

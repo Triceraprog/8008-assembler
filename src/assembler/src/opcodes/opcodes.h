@@ -17,6 +17,12 @@ enum OpcodeType
     RST,
 };
 
+enum SyntaxType
+{
+    OLD,
+    NEW
+};
+
 struct Opcode
 {
     using OpcodeByteType = unsigned char;
@@ -28,6 +34,11 @@ struct Opcode
 std::tuple<bool, Opcode, std::size_t> find_opcode(std::string_view opcode_name,
                                                   std::span<std::string> arguments);
 int get_opcode_size(const Opcode& opcode);
+
+using matcher_signature = std::tuple<bool, Opcode, std::size_t>(std::string_view opcode_name,
+                                                                std::span<std::string> arguments);
+
+matcher_signature* get_opcode_matcher(SyntaxType syntax_type);
 
 class UndefinedOpcode : public ExceptionWithReason
 {
