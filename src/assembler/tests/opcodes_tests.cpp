@@ -140,3 +140,14 @@ TEST_F(NewOpcodeSyntaxFixture, understands_add_opcode)
     ASSERT_THAT(found_opcode.code, Eq(0203));
     ASSERT_THAT(consumed, Eq(1));
 }
+
+TEST_F(NewOpcodeSyntaxFixture, understands_adi_opcode)
+{
+    std::vector<std::string> arguments{"10"};
+    auto [found, found_opcode, consumed] = matcher("ADI", arguments);
+
+    ASSERT_THAT(found, IsTrue());
+    ASSERT_THAT(found_opcode.rule, Eq(ONE_BYTE_ARG));
+    ASSERT_THAT(found_opcode.code, Eq(0004));
+    ASSERT_THAT(consumed, Eq(0));
+}

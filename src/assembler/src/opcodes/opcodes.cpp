@@ -101,6 +101,7 @@ namespace
         SOURCE,
         DESTINATION,
         SOURCE_AND_DESTINATION,
+        NO_REGISTER,
     };
 
     struct NewSyntaxOpcode
@@ -115,7 +116,8 @@ namespace
     NewSyntaxOpcode new_opcodes[] = {
             "mov", 0b11000000, NO_ARG,       SOURCE_AND_DESTINATION, //
             "mvi", 0b00000110, ONE_BYTE_ARG, DESTINATION,            //
-            "add", 0b10000000, ONE_BYTE_ARG, SOURCE                  //
+            "add", 0b10000000, ONE_BYTE_ARG, SOURCE,                 //
+            "adi", 0b00000100, ONE_BYTE_ARG, NO_REGISTER,            //
     };
 
     std::tuple<bool, Opcode> find_old_opcode(std::string_view opcode_name)
@@ -149,7 +151,8 @@ namespace
     }
 
     void verify_arguments_count(const std::string_view instruction_name,
-                                const std::span<std::string>& arguments, const int argument_needed)
+                                const std::span<std::string>& arguments,
+                                const std::size_t argument_needed)
     {
         if (arguments.size() < argument_needed)
         {
@@ -192,13 +195,28 @@ std::tuple<bool, Opcode, std::size_t> find_opcode_old(std::string_view opcode_na
     return {found, opcode, 0};
 }
 
+std::size_t register_type_to_count(NewSyntaxSourceDest source_dest_type)
+{
+    switch (source_dest_type)
+    {
+        case SOURCE:
+        case DESTINATION:
+            return 1;
+        case SOURCE_AND_DESTINATION:
+            return 2;
+        case NO_REGISTER:
+            return 0;
+    }
+    return 0;
+}
+
 std::tuple<bool, Opcode, std::size_t> find_opcode_new(std::string_view opcode_name,
                                                       std::span<std::string> arguments)
 {
     const auto& [found, new_opcode] = find_new_opcode(opcode_name);
     if (found)
     {
-        const int argument_needed = (new_opcode.source_and_dest == SOURCE_AND_DESTINATION) ? 2 : 1;
+        const auto argument_needed = register_type_to_count(new_opcode.source_and_dest);
         verify_arguments_count(opcode_name, arguments, argument_needed);
 
         Opcode::OpcodeByteType code = new_opcode.code;
@@ -213,10 +231,14 @@ std::tuple<bool, Opcode, std::size_t> find_opcode_new(std::string_view opcode_na
             const int source_reg = reg_name_to_code(arguments[0]);
             code |= source_reg;
         }
-        else
+        else if (new_opcode.source_and_dest == DESTINATION)
         {
             const int destination_reg = reg_name_to_code(arguments[0]);
             code |= (destination_reg) << 3;
+        }
+        else
+        {
+            assert(new_opcode.source_and_dest == NO_REGISTER);
         }
 
         Opcode new_syntax_opcode{new_opcode.mnemonic, code, new_opcode.rule};
