@@ -129,8 +129,8 @@ TEST_F(NewOpcodeSyntaxFixture, mov_with_a_number_as_first_argument_is_a_syntax_e
     ASSERT_THROW(matcher("MVI", arguments), SyntaxError);
 }
 
-/*
-TEST_F(OldOpcodeSyntaxFixture, understands_add_opcode)
+
+TEST_F(NewOpcodeSyntaxFixture, understands_add_opcode)
 {
     std::vector<std::string> arguments{"D"};
     auto [found, found_opcode, consumed] = matcher("ADD", arguments);
@@ -140,4 +140,3 @@ TEST_F(OldOpcodeSyntaxFixture, understands_add_opcode)
     ASSERT_THAT(found_opcode.code, Eq(0203));
     ASSERT_THAT(consumed, Eq(1));
 }
-*/

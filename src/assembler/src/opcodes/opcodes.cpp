@@ -114,7 +114,8 @@ namespace
 
     NewSyntaxOpcode new_opcodes[] = {
             "mov", 0b11000000, NO_ARG,       SOURCE_AND_DESTINATION, //
-            "mvi", 0b00000110, ONE_BYTE_ARG, DESTINATION             //
+            "mvi", 0b00000110, ONE_BYTE_ARG, DESTINATION,            //
+            "add", 0b10000000, ONE_BYTE_ARG, SOURCE                  //
     };
 
     std::tuple<bool, Opcode> find_old_opcode(std::string_view opcode_name)
@@ -194,8 +195,8 @@ std::tuple<bool, Opcode, std::size_t> find_opcode_old(std::string_view opcode_na
 std::tuple<bool, Opcode, std::size_t> find_opcode_new(std::string_view opcode_name,
                                                       std::span<std::string> arguments)
 {
-    const auto& [new_found, new_opcode] = find_new_opcode(opcode_name);
-    if (new_found)
+    const auto& [found, new_opcode] = find_new_opcode(opcode_name);
+    if (found)
     {
         const int argument_needed = (new_opcode.source_and_dest == SOURCE_AND_DESTINATION) ? 2 : 1;
         verify_arguments_count(opcode_name, arguments, argument_needed);
