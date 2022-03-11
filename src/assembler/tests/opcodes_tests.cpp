@@ -74,12 +74,14 @@ TEST_F(OldOpcodeSyntaxFixture, understands_rst_opcode)
 
 struct NewOpcodeSyntaxFixture : public Test
 {
+    NewOpcodeSyntaxFixture() : matcher{get_opcode_matcher(NEW)} {}
+    matcher_signature* matcher;
 };
 
 TEST_F(NewOpcodeSyntaxFixture, understands_mov_opcode)
 {
     std::vector<std::string> arguments{"A", "B"};
-    auto [found, found_opcode, consumed] = find_opcode("MOV", arguments);
+    auto [found, found_opcode, consumed] = matcher("MOV", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(NO_ARG));
@@ -90,19 +92,19 @@ TEST_F(NewOpcodeSyntaxFixture, understands_mov_opcode)
 TEST_F(NewOpcodeSyntaxFixture, mov_missing_one_argument_is_a_syntax_error)
 {
     std::vector<std::string> arguments{"A"};
-    ASSERT_THROW(find_opcode("MOV", arguments), SyntaxError);
+    ASSERT_THROW(matcher("MOV", arguments), SyntaxError);
 }
 
 TEST_F(NewOpcodeSyntaxFixture, mov_missing_first_argument_is_a_syntax_error)
 {
     std::vector<std::string> arguments{"", "B"};
-    ASSERT_THROW(find_opcode("MOV", arguments), SyntaxError);
+    ASSERT_THROW(matcher("MOV", arguments), SyntaxError);
 }
 
 TEST_F(NewOpcodeSyntaxFixture, understands_mov_opcode_with_different_registers)
 {
     std::vector<std::string> arguments{"M", "E"};
-    auto [found, found_opcode, consumed] = find_opcode("MOV", arguments);
+    auto [found, found_opcode, consumed] = matcher("MOV", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(NO_ARG));
@@ -113,7 +115,7 @@ TEST_F(NewOpcodeSyntaxFixture, understands_mov_opcode_with_different_registers)
 TEST_F(NewOpcodeSyntaxFixture, understands_mvi_opcode)
 {
     std::vector<std::string> arguments{"C"};
-    auto [found, found_opcode, consumed] = find_opcode("MVI", arguments);
+    auto [found, found_opcode, consumed] = matcher("MVI", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(ONE_BYTE_ARG));
@@ -124,14 +126,14 @@ TEST_F(NewOpcodeSyntaxFixture, understands_mvi_opcode)
 TEST_F(NewOpcodeSyntaxFixture, mov_with_a_number_as_first_argument_is_a_syntax_error)
 {
     std::vector<std::string> arguments{"1", "B"};
-    ASSERT_THROW(find_opcode("MVI", arguments), SyntaxError);
+    ASSERT_THROW(matcher("MVI", arguments), SyntaxError);
 }
 
 /*
 TEST_F(OldOpcodeSyntaxFixture, understands_add_opcode)
 {
     std::vector<std::string> arguments{"D"};
-    auto [found, found_opcode, consumed] = find_opcode("ADD", arguments);
+    auto [found, found_opcode, consumed] = matcher("ADD", arguments);
 
     ASSERT_THAT(found, IsTrue());
     ASSERT_THAT(found_opcode.rule, Eq(ONE_BYTE_ARG));
