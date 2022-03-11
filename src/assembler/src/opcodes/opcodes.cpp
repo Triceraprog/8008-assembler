@@ -184,8 +184,15 @@ namespace
     }
 }
 
-std::tuple<bool, Opcode, std::size_t> find_opcode(std::string_view opcode_name,
-                                                  std::span<std::string> arguments)
+std::tuple<bool, Opcode, std::size_t> find_opcode_old(std::string_view opcode_name,
+                                                      std::span<std::string> arguments)
+{
+    const auto& [found, opcode] = find_old_opcode(opcode_name);
+    return {found, opcode, 0};
+}
+
+std::tuple<bool, Opcode, std::size_t> find_opcode_new(std::string_view opcode_name,
+                                                      std::span<std::string> arguments)
 {
     const auto& [found, opcode] = find_old_opcode(opcode_name);
 
@@ -244,7 +251,10 @@ int get_opcode_size(const Opcode& opcode)
     return opcode_byte_size;
 }
 
-matcher_signature* get_opcode_matcher(SyntaxType syntax_type) { return find_opcode; }
+matcher_signature* get_opcode_matcher(SyntaxType syntax_type)
+{
+    return syntax_type == OLD ? find_opcode_old : find_opcode_new;
+}
 
 UndefinedOpcode::UndefinedOpcode(std::string_view opcode)
 {
