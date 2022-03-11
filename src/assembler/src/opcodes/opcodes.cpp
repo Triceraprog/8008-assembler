@@ -194,41 +194,37 @@ std::tuple<bool, Opcode, std::size_t> find_opcode_old(std::string_view opcode_na
 std::tuple<bool, Opcode, std::size_t> find_opcode_new(std::string_view opcode_name,
                                                       std::span<std::string> arguments)
 {
-    const auto& [found, opcode] = find_old_opcode(opcode_name);
-
-    if (!found)
+    const auto& [new_found, new_opcode] = find_new_opcode(opcode_name);
+    if (new_found)
     {
-        const auto& [new_found, new_opcode] = find_new_opcode(opcode_name);
-        if (new_found)
+        const int argument_needed = (new_opcode.source_and_dest == SOURCE_AND_DESTINATION) ? 2 : 1;
+        verify_arguments_count(opcode_name, arguments, argument_needed);
+
+        Opcode::OpcodeByteType code = new_opcode.code;
+        if (new_opcode.source_and_dest == SOURCE_AND_DESTINATION)
         {
-            const int argument_needed =
-                    (new_opcode.source_and_dest == SOURCE_AND_DESTINATION) ? 2 : 1;
-            verify_arguments_count(opcode_name, arguments, argument_needed);
-
-            Opcode::OpcodeByteType code = new_opcode.code;
-            if (new_opcode.source_and_dest == SOURCE_AND_DESTINATION)
-            {
-                const int destination_reg = reg_name_to_code(arguments[0]);
-                const int source_reg = reg_name_to_code(arguments[1]);
-                code |= (destination_reg) << 3 | source_reg;
-            }
-            else if (new_opcode.source_and_dest == SOURCE)
-            {
-                const int source_reg = reg_name_to_code(arguments[0]);
-                code |= source_reg;
-            }
-            else
-            {
-                const int destination_reg = reg_name_to_code(arguments[0]);
-                code |= (destination_reg) << 3;
-            }
-
-            Opcode new_syntax_opcode{new_opcode.mnemonic, code, new_opcode.rule};
-
-            return {true, new_syntax_opcode, argument_needed};
+            const int destination_reg = reg_name_to_code(arguments[0]);
+            const int source_reg = reg_name_to_code(arguments[1]);
+            code |= (destination_reg) << 3 | source_reg;
         }
+        else if (new_opcode.source_and_dest == SOURCE)
+        {
+            const int source_reg = reg_name_to_code(arguments[0]);
+            code |= source_reg;
+        }
+        else
+        {
+            const int destination_reg = reg_name_to_code(arguments[0]);
+            code |= (destination_reg) << 3;
+        }
+
+        Opcode new_syntax_opcode{new_opcode.mnemonic, code, new_opcode.rule};
+
+        return {true, new_syntax_opcode, argument_needed};
     }
-    return {found, opcode, 0};
+
+    static Opcode null_opcode;
+    return {false, null_opcode, 0};
 }
 
 int get_opcode_size(const Opcode& opcode)

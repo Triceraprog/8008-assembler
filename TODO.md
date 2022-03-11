@@ -1,7 +1,8 @@
 - New syntax support alongside old syntax
 - Support multiple files on command line and .include
 - Macro system
-- Pseudo instructions
+- Pseudo instructions (specify syntax mode)
+- Add a CL switch for new syntax
 - The responsibility of the short format should probably be in Listing
 - The listing can be reconstructed without keeping the initial line.
 - Option to output an expended, simple assembly code with a syntax for another assembler, especially as8
