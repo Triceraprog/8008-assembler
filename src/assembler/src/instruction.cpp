@@ -10,6 +10,7 @@
 #include "utils.h"
 
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <utility>
 #include <vector>
@@ -136,12 +137,21 @@ namespace
     {
         Instruction_OTHER(std::string_view opcode_string, std::vector<std::string> arguments,
                           SyntaxType syntax_type)
-            : arguments{std::move(arguments)}
         {
             auto find_opcode = get_opcode_matcher(syntax_type);
             if (auto [found, found_opcode, consumed] = find_opcode(opcode_string, arguments); found)
             {
                 opcode = found_opcode;
+                if (consumed == 0)
+                {
+                    this->arguments = std::move(arguments);
+                }
+                else
+                {
+                    assert(consumed <= arguments.size());
+                    std::ranges::copy(arguments | std::ranges::views::drop(consumed),
+                                      std::back_inserter(arguments));
+                }
             }
             else
             {
