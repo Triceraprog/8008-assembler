@@ -40,7 +40,7 @@ void second_pass(const Context& context, Files& files, const SymbolTable& symbol
             const auto& instruction = parsed_line.instruction;
             instruction.second_pass(context, writer, line_address);
         }
-        catch (const CannotFindSymbol& ex)
+        catch (const std::exception& ex)
         {
             throw ParsingException(ex, line_number, input_line);
         }
