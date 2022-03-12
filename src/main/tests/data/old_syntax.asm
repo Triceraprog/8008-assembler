@@ -1,0 +1,227 @@
+	HLT
+	INP		0x00
+	INP		0x01
+	INP		0x02
+	INP		0x03
+	INP		0x04
+	INP		0x05
+	INP		0x06
+	INP		0x07
+	OUT		0x00
+	OUT		0x01
+	OUT		0x02
+	OUT		0x03
+	OUT		0x04
+	OUT		0x05
+	OUT		0x06
+	OUT		0x07
+	OUT		0x08
+	OUT		0x09
+	OUT		0x0a
+	OUT		0x0b
+	OUT		0x0c
+	OUT		0x0d
+	OUT		0x0e
+	OUT		0x0f
+	OUT		0x10
+	OUT		0x11
+	OUT		0x12
+	OUT		0x13
+	OUT		0x14
+	OUT		0x15
+	OUT		0x16
+	OUT		0x17
+	JMP		0x1234
+	JFC		0x1234
+	JFZ		0x1234
+	JFS		0x1234
+	JFP		0x1234
+	JTC		0x1234
+	JTZ		0x1234
+	JTS		0x1234
+	JTP		0x1234
+	CAL		0x3cde
+	CFC		0x3cde
+	CFZ		0x3cde
+	CFS		0x3cde
+	CFP		0x3cde
+	CTC		0x3cde
+	CTZ		0x3cde
+	CTS		0x3cde
+	CTP		0x3cde
+	RST		0x00
+	RST		0x01
+	RST		0x02
+	RST		0x03
+	RST		0x04
+	RST		0x05
+	RST		0x06
+	RST		0x07
+	RET		
+	RFC		
+	RFZ		
+	RFS		
+	RFP		
+	RTC		
+	RTZ		
+	RTS		
+	RTP		
+	LAA
+	LAB
+	LAC
+	LAD
+	LAE
+	LAH
+	LAL
+	LAM
+	LBA
+	LBB
+	LBC
+	LBD
+	LBE
+	LBH
+	LBL
+	LBM
+	LCA
+	LCB
+	LCC
+	LCD
+	LCE
+	LCH
+	LCL
+	LCM
+	LDA
+	LDB
+	LDC
+	LDD
+	LDE
+	LDH
+	LDL
+	LDM
+	LEA
+	LEB
+	LEC
+	LED
+	LEE
+	LEH
+	LEL
+	LEM
+	LHA
+	LHB
+	LHC
+	LHD
+	LHE
+	LHH
+	LHL
+	LHM
+	LLA
+	LLB
+	LLC
+	LLD
+	LLE
+	LLH
+	LLL
+	LLM
+	LMA
+	LMB
+	LMC
+	LMD
+	LME
+	LMH
+	LML
+	LAI		0x42
+	LBI		0x42
+	LCI		0x42
+	LDI		0x42
+	LEI		0x42
+	LHI		0x42
+	LLI		0x42
+	LMI		0x42
+	ADA		
+	ADB		
+	ADC		
+	ADD		
+	ADE		
+	ADH		
+	ADL		
+	ADM		
+	ADI		0x34
+	ACA		
+	ACB		
+	ACC		
+	ACD		
+	ACE		
+	ACH		
+	ACL		
+	ACM		
+	ACI		0x34
+	SUA		
+	SUB		
+	SUC		
+	SUD		
+	SUE		
+	SUH		
+	SUL		
+	SUM		
+	SUI		0x34
+	SBA		
+	SBB		
+	SBC		
+	SBD		
+	SBE		
+	SBH		
+	SBL		
+	SBM		
+	SBI		0x34
+	NDA		
+	NDB		
+	NDC		
+	NDD		
+	NDE		
+	NDH		
+	NDL		
+	NDM		
+	NDI		0x34
+	XRA		
+	XRB		
+	XRC		
+	XRD		
+	XRE		
+	XRH		
+	XRL		
+	XRM		
+	XRI		0x34
+	ORA		
+	ORB		
+	ORC		
+	ORD		
+	ORE		
+	ORH		
+	ORL		
+	ORM		
+	ORI		0x34
+	CPA		
+	CPB		
+	CPC		
+	CPD		
+	CPE		
+	CPH		
+	CPL		
+	CPM		
+	CPI		0x34
+	INB		
+	DCB		
+	INC		
+	DCC		
+	IND		
+	DCD		
+	INE		
+	DCE		
+	INH		
+	DCH		
+	INL		
+	DCL		
+	RLC
+	RRC
+	RAL
+	RAR

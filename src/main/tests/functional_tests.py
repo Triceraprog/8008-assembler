@@ -86,6 +86,8 @@ class DataFiles:
         self.input_file = data_path.joinpath("basics.asm")
         self.scelbal_input_file = data_path.joinpath("sc-micral-n.asm")
         self.micral_input_file = data_path.joinpath("micral.asm")
+        self.old_syntax_input_file = data_path.joinpath("old_syntax.asm")
+        self.new_syntax_input_file = data_path.joinpath("new_syntax.asm")
 
         self.output_hex_file = data_path.joinpath("basics.hex")
         self.output_lst_file = data_path.joinpath("basics.lst")
@@ -108,6 +110,12 @@ class DataFiles:
         self.output_lst_octal_ref_file = data_path.joinpath("ref_basics_octal.lst")
         self.output_lst_single_ref_file = data_path.joinpath("ref_basics_single.lst")
         self.output_lst_markascii_ref_file = data_path.joinpath("ref_basics_markascii.lst")
+        self.output_hex_all_syntax_ref_file = data_path.joinpath("ref_all_syntax.hex")
+        self.output_bin_all_syntax_ref_file = data_path.joinpath("ref_all_syntax.bin")
+        self.output_hex_old_syntax_file = data_path.joinpath("old_syntax.hex")
+        self.output_bin_all_syntax_file = data_path.joinpath("old_syntax.bin")
+        self.output_hex_new_syntax_file = data_path.joinpath("new_syntax.hex")
+        self.output_bin_new_syntax_file = data_path.joinpath("new_syntax.bin")
 
         self.temp_files = [self.output_lst_file, self.output_hex_file, self.output_bin_file,
                            self.output_scelbal_lst_file, self.output_scelbal_hex_file, self.output_micral_hex_file,
@@ -286,4 +294,54 @@ class TestFunctional(unittest.TestCase):
             self.assertTrue(file_equal(files.output_micral_lst_ref_file, files.output_micral_lst_file),
                             msg=f"File differs {files.output_micral_lst_file}")
 
-# When the assembler will be done and ROM rewritten, then make the test on them too
+    def test_assemble_old_syntax_hex(self):
+        files = DataFiles()
+
+        with temp_files(files.temp_files):
+            result = run_assembler([files.old_syntax_input_file])
+
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, '')
+            self.assertEqual(result.stderr, '')
+
+            self.assertTrue(file_equal(files.output_hex_all_syntax_ref_file, files.output_hex_old_syntax_file),
+                            msg=f"File differs {files.output_hex_old_syntax_file}")
+
+    def test_assemble_old_syntax_bin(self):
+        files = DataFiles()
+
+        with temp_files(files.temp_files):
+            result = run_assembler(["-bin", files.old_syntax_input_file])
+
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, '')
+            self.assertEqual(result.stderr, '')
+
+            self.assertTrue(file_equal_binary(files.output_bin_all_syntax_ref_file, files.output_bin_all_syntax_file),
+                            msg=f"File differs {files.output_bin_all_syntax_file}")
+
+    def test_assemble_new_syntax_hex(self):
+        files = DataFiles()
+
+        with temp_files(files.temp_files):
+            result = run_assembler(["-syntax=new", files.new_syntax_input_file])
+
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, '')
+            self.assertEqual(result.stderr, '')
+
+            self.assertTrue(file_equal(files.output_hex_all_syntax_ref_file, files.output_hex_new_syntax_file),
+                            msg=f"File differs {files.output_hex_new_syntax_file}")
+
+    def test_assemble_new_syntax_bin(self):
+        files = DataFiles()
+
+        with temp_files(files.temp_files):
+            result = run_assembler(["-syntax=new", "-bin", files.new_syntax_input_file])
+
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, '')
+            self.assertEqual(result.stderr, '')
+
+            self.assertTrue(file_equal_binary(files.output_bin_all_syntax_ref_file, files.output_bin_all_syntax_file),
+                            msg=f"File differs {files.output_bin_all_syntax_file}")
