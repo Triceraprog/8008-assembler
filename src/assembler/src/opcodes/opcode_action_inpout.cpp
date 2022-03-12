@@ -10,14 +10,15 @@ OpcodeActionInpOut::OpcodeActionInpOut(const Context& context, Opcode::OpcodeByt
     : address{address}
 {
     int argument = evaluate_argument(context, arguments[0]);
-    const int max_port = (mnemonic[0] == 'i') ? 7 : 23;
+    const bool is_input = mnemonic[0] == 'i';
+    const int max_port = is_input ? 7 : 23;
 
     if ((argument > max_port) || (argument < 0))
     {
         throw ExpectedArgumentWithinLimits(max_port, arguments[0], argument);
     }
 
-    opcode = opcode_byte + (argument << 1);
+    opcode = opcode_byte + (argument << 1) + (is_input ? 0 : 16);
 }
 
 void OpcodeActionInpOut::emit_byte_stream(ByteWriter& byte_writer) const

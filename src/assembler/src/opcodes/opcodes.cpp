@@ -84,7 +84,7 @@ namespace
             "rfp", 0033, NO_ARG, "rtc", 0043, NO_ARG, "rtz", 0053, NO_ARG, "rts", 0063, NO_ARG, //
             "rtp", 0073, NO_ARG,
             /* input and output */
-            "inp", 0101, INP_OUT, "out", 0121, INP_OUT,
+            "inp", 0101, INP_OUT, "out", 0101, INP_OUT,
             /* micral specific aliases to instructions */
             "mas", 0322, NO_ARG, "dms", 0366, NO_ARG, "rei", 0037, NO_ARG //
     };
@@ -156,7 +156,7 @@ namespace
             "ani", 0b00100100, ONE_BYTE_ARG, NO_REGISTER, //
             "xra", 0b10101000, NO_ARG, SOURCE,            //
             "xri", 0b00101100, ONE_BYTE_ARG, NO_REGISTER, //
-            "ora", 0b10100000, NO_ARG, SOURCE,            //
+            "ora", 0b10110000, NO_ARG, SOURCE,            //
             "ori", 0b00110100, ONE_BYTE_ARG, NO_REGISTER, //
             "cmp", 0b10111000, NO_ARG, SOURCE,            //
             "cpi", 0b00111100, ONE_BYTE_ARG, NO_REGISTER, //
