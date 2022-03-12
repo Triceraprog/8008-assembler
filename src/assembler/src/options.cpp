@@ -32,7 +32,9 @@ std::size_t Options::parse_command_line(int argc, const char** argv)
                                             {"-bin", &generate_binary_file, true},
                                             {"-octal", &input_num_as_octal, true},
                                             {"-single", &single_byte_list, true},
-                                            {"-markascii", &mark_8_ascii, true}};
+                                            {"-markascii", &mark_8_ascii, true},
+                                            {"-syntax=new", &new_syntax, true},
+                                            {"-syntax=old", &new_syntax, false}};
 
     for (auto& arg : argv_vector | std::ranges::views::drop(1))
     {
@@ -70,13 +72,14 @@ void Options::display_help(const char** argv)
     fprintf(stderr, "Usage: %s [options] infile\n", argv[0]);
     fprintf(stderr, "    where <infile> is assembly code file, extension defaults to .asm\n");
     fprintf(stderr, "    and options include...\n");
-    fprintf(stderr, "    -v        verbose output\n");
-    fprintf(stderr, "    -nl       no list (default is to make .lst file.)\n");
-    fprintf(stderr, "    -d        debug assembler (extra output)\n");
-    fprintf(stderr, "    -bin      makes output binary ROM file, otherwise intel hex\n");
-    fprintf(stderr, "    -octal    makes unidentified 3-digit numbers octal (default decimal)\n");
-    fprintf(stderr, "    -single   makes .lst file single byte per line, otherwise 3/line.\n");
-    fprintf(stderr, "    -markascii makes highest bit in ascii bytes a one (mark).\n");
+    fprintf(stderr, "    -v          verbose output\n");
+    fprintf(stderr, "    -nl         no list (default is to make .lst file.)\n");
+    fprintf(stderr, "    -d          debug assembler (extra output)\n");
+    fprintf(stderr, "    -bin        makes output binary ROM file, otherwise intel hex\n");
+    fprintf(stderr, "    -octal      makes unidentified 3-digit numbers octal (default decimal)\n");
+    fprintf(stderr, "    -single     makes .lst file single byte per line, otherwise 3/line.\n");
+    fprintf(stderr, "    -markascii  makes highest bit in ascii bytes a one (mark).\n");
+    fprintf(stderr, "    -syntax=new default parsing is with new syntax mnemonics.\n");
 }
 
 void Options::adjust_filenames()

@@ -23,6 +23,7 @@ public:
     bool generate_binary_file = false;
     bool input_num_as_octal = false;
     bool mark_8_ascii = false;
+    bool new_syntax = false;
 
     std::string input_filename;
     std::string input_filename_base;

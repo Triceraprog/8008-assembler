@@ -67,13 +67,14 @@ def temp_files(list_of_paths):
 help_output_first_line_words = ["Usage: ", "[options] infile"]
 help_output = """    where <infile> is assembly code file, extension defaults to .asm
     and options include...
-    -v        verbose output
-    -nl       no list (default is to make .lst file.)
-    -d        debug assembler (extra output)
-    -bin      makes output binary ROM file, otherwise intel hex
-    -octal    makes unidentified 3-digit numbers octal (default decimal)
-    -single   makes .lst file single byte per line, otherwise 3/line.
-    -markascii makes highest bit in ascii bytes a one (mark).
+    -v          verbose output
+    -nl         no list (default is to make .lst file.)
+    -d          debug assembler (extra output)
+    -bin        makes output binary ROM file, otherwise intel hex
+    -octal      makes unidentified 3-digit numbers octal (default decimal)
+    -single     makes .lst file single byte per line, otherwise 3/line.
+    -markascii  makes highest bit in ascii bytes a one (mark).
+    -syntax=new default parsing is with new syntax mnemonics.
 """
 
 ASSEMBLY_TEXT = "Assembly Performed"

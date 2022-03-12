@@ -134,10 +134,11 @@ namespace
 
     struct Instruction_OTHER : public Instruction::InstructionAction
     {
-        Instruction_OTHER(std::string_view opcode_string, std::vector<std::string> arguments)
+        Instruction_OTHER(std::string_view opcode_string, std::vector<std::string> arguments,
+                          SyntaxType syntax_type)
             : arguments{std::move(arguments)}
         {
-            auto find_opcode = get_opcode_matcher(OLD);
+            auto find_opcode = get_opcode_matcher(syntax_type);
             if (auto [found, found_opcode, consumed] = find_opcode(opcode_string, arguments); found)
             {
                 opcode = found_opcode;
@@ -259,7 +260,8 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
             action = std::make_unique<Instruction_DATA>(context, this->arguments);
             break;
         case InstructionEnum::OTHER:
-            action = std::make_unique<Instruction_OTHER>(opcode, this->arguments);
+            action = std::make_unique<Instruction_OTHER>(opcode, this->arguments,
+                                                         context.options.new_syntax ? NEW : OLD);
             break;
     }
 }

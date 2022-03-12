@@ -1,3 +1,4 @@
+- Add functional test with all opcodes
 - Support multiple files on command line and .include
 - Macro system
 - Pseudo instructions (specify syntax mode)
