@@ -1,4 +1,3 @@
-- New syntax support alongside old syntax
 - Support multiple files on command line and .include
 - Macro system
 - Pseudo instructions (specify syntax mode)

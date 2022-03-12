@@ -107,32 +107,82 @@ namespace
     };
 
     NewSyntaxOpcode new_opcodes[] = {
+            // Jump
+            "jmp", 0b01000100, ADDRESS_ARG, NO_REGISTER, //
+            "jnc", 0b01000000, ADDRESS_ARG, NO_REGISTER, //
+            "jnz", 0b01001000, ADDRESS_ARG, NO_REGISTER, //
+            "jp", 0b01010000, ADDRESS_ARG, NO_REGISTER,  //
+            "jpo", 0b01011000, ADDRESS_ARG, NO_REGISTER, //
+            "jc", 0b01100000, ADDRESS_ARG, NO_REGISTER,  //
+            "jz", 0b01101000, ADDRESS_ARG, NO_REGISTER,  //
+            "jm", 0b01110000, ADDRESS_ARG, NO_REGISTER,  //
+            "jpe", 0b01111000, ADDRESS_ARG, NO_REGISTER, //
+
+            // Call and Return
+            "call", 0b01000110, ADDRESS_ARG, NO_REGISTER, //
+            "cnc", 0b01000010, ADDRESS_ARG, NO_REGISTER,  //
+            "cnz", 0b01001010, ADDRESS_ARG, NO_REGISTER,  //
+            "cp", 0b01010010, ADDRESS_ARG, NO_REGISTER,   //
+            "cpo", 0b01011010, ADDRESS_ARG, NO_REGISTER,  //
+            "cc", 0b01100010, ADDRESS_ARG, NO_REGISTER,   //
+            "cz", 0b01101010, ADDRESS_ARG, NO_REGISTER,   //
+            "cm", 0b01110010, ADDRESS_ARG, NO_REGISTER,   //
+            "cpe", 0b01111010, ADDRESS_ARG, NO_REGISTER,  //
+            "ret", 0b00000111, NO_ARG, NO_REGISTER,       //
+            "rnc", 0b00000011, NO_ARG, NO_REGISTER,       //
+            "rnz", 0b00001011, NO_ARG, NO_REGISTER,       //
+            "rp", 0b00010011, NO_ARG, NO_REGISTER,        //
+            "rpo", 0b00011011, NO_ARG, NO_REGISTER,       //
+            "rc", 0b00100011, NO_ARG, NO_REGISTER,        //
+            "rz", 0b00101011, NO_ARG, NO_REGISTER,        //
+            "rm", 0b00110011, NO_ARG, NO_REGISTER,        //
+            "rpe", 0b00111011, NO_ARG, NO_REGISTER,       //
+            "rst", 0b00000101, RST, NO_REGISTER,          //
+
+            // Load
             "mov", 0b11000000, NO_ARG, SOURCE_AND_DESTINATION, //
             "mvi", 0b00000110, ONE_BYTE_ARG, DESTINATION,      //
-            "add", 0b10000000, ONE_BYTE_ARG, SOURCE,           //
-            "adi", 0b00000100, ONE_BYTE_ARG, NO_REGISTER,      //
-            "adc", 0b10001000, ONE_BYTE_ARG, SOURCE,           //
-            "aci", 0b00001100, ONE_BYTE_ARG, NO_REGISTER,      //
-            "sub", 0b10010000, ONE_BYTE_ARG, SOURCE,           //
-            "sui", 0b00010100, ONE_BYTE_ARG, NO_REGISTER,      //
-            "sbb", 0b10011000, ONE_BYTE_ARG, SOURCE,           //
-            "sbi", 0b00011100, ONE_BYTE_ARG, NO_REGISTER,      //
-            "ana", 0b10100000, ONE_BYTE_ARG, SOURCE,           //
-            "ani", 0b00100100, ONE_BYTE_ARG, NO_REGISTER,      //
-            "xra", 0b10101000, ONE_BYTE_ARG, SOURCE,           //
-            "xri", 0b00101100, ONE_BYTE_ARG, NO_REGISTER,      //
-            "ora", 0b10100000, ONE_BYTE_ARG, SOURCE,           //
-            "ori", 0b00110100, ONE_BYTE_ARG, NO_REGISTER,      //
-            "cmp", 0b10111000, ONE_BYTE_ARG, SOURCE,           //
-            "cpi", 0b00111100, ONE_BYTE_ARG, NO_REGISTER,      //
-            "inr", 0b00000000, NO_ARG, DESTINATION,            //
-            "dcr", 0b00000001, NO_ARG, DESTINATION,            //
-            /* micral specific aliases to instructions */
+
+            // Arithmetic
+            "add", 0b10000000, ONE_BYTE_ARG, SOURCE,      //
+            "adi", 0b00000100, ONE_BYTE_ARG, NO_REGISTER, //
+            "adc", 0b10001000, ONE_BYTE_ARG, SOURCE,      //
+            "aci", 0b00001100, ONE_BYTE_ARG, NO_REGISTER, //
+            "sub", 0b10010000, ONE_BYTE_ARG, SOURCE,      //
+            "sui", 0b00010100, ONE_BYTE_ARG, NO_REGISTER, //
+            "sbb", 0b10011000, ONE_BYTE_ARG, SOURCE,      //
+            "sbi", 0b00011100, ONE_BYTE_ARG, NO_REGISTER, //
+            "ana", 0b10100000, ONE_BYTE_ARG, SOURCE,      //
+            "ani", 0b00100100, ONE_BYTE_ARG, NO_REGISTER, //
+            "xra", 0b10101000, ONE_BYTE_ARG, SOURCE,      //
+            "xri", 0b00101100, ONE_BYTE_ARG, NO_REGISTER, //
+            "ora", 0b10100000, ONE_BYTE_ARG, SOURCE,      //
+            "ori", 0b00110100, ONE_BYTE_ARG, NO_REGISTER, //
+            "cmp", 0b10111000, ONE_BYTE_ARG, SOURCE,      //
+            "cpi", 0b00111100, ONE_BYTE_ARG, NO_REGISTER, //
+            "inr", 0b00000000, NO_ARG, DESTINATION,       //
+            "dcr", 0b00000001, NO_ARG, DESTINATION,       //
+
+            // Rotate
+            "rlc", 0b00000010, NO_ARG, NO_REGISTER, //
+            "rrc", 0b00001010, NO_ARG, NO_REGISTER, //
+            "ral", 0b00010010, NO_ARG, NO_REGISTER, //
+            "rar", 0b00011010, NO_ARG, NO_REGISTER, //
+
+            // Input/Output
+            "in", 0b01000001, INP_OUT, NO_REGISTER,  //
+            "out", 0b01000001, INP_OUT, NO_REGISTER, //
+
+            // Halt
+            // Halt can be anything on bit 0
+            // It can also be 0xff
+            "hlt", 0b00000001, NO_ARG, NO_REGISTER,  //
+
+            // Micral N specific aliases to instructions
             "mas", 0322, NO_ARG, NO_REGISTER, //
             "dms", 0366, NO_ARG, NO_REGISTER, //
             "rei", 0037, NO_ARG, NO_REGISTER, //
     };
-
 };
 
 std::tuple<bool, Opcode> find_old_opcode(std::string_view opcode_name)
