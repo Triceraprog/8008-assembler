@@ -113,13 +113,18 @@ class DataFiles:
         self.output_hex_all_syntax_ref_file = data_path.joinpath("ref_all_syntax.hex")
         self.output_bin_all_syntax_ref_file = data_path.joinpath("ref_all_syntax.bin")
         self.output_hex_old_syntax_file = data_path.joinpath("old_syntax.hex")
-        self.output_bin_all_syntax_file = data_path.joinpath("old_syntax.bin")
+        self.output_bin_old_syntax_file = data_path.joinpath("old_syntax.bin")
+        self.output_lst_old_syntax_file = data_path.joinpath("old_syntax.lst")
         self.output_hex_new_syntax_file = data_path.joinpath("new_syntax.hex")
         self.output_bin_new_syntax_file = data_path.joinpath("new_syntax.bin")
+        self.output_lst_new_syntax_file = data_path.joinpath("new_syntax.lst")
 
         self.temp_files = [self.output_lst_file, self.output_hex_file, self.output_bin_file,
                            self.output_scelbal_lst_file, self.output_scelbal_hex_file, self.output_micral_hex_file,
-                           self.output_micral_lst_file]
+                           self.output_micral_lst_file, self.output_hex_old_syntax_file,
+                           self.output_bin_old_syntax_file,
+                           self.output_hex_new_syntax_file, self.output_bin_new_syntax_file,
+                           self.output_lst_old_syntax_file, self.output_lst_new_syntax_file]
 
 
 class TestFunctional(unittest.TestCase):
@@ -317,8 +322,8 @@ class TestFunctional(unittest.TestCase):
             self.assertEqual(result.stdout, '')
             self.assertEqual(result.stderr, '')
 
-            self.assertTrue(file_equal_binary(files.output_bin_all_syntax_ref_file, files.output_bin_all_syntax_file),
-                            msg=f"File differs {files.output_bin_all_syntax_file}")
+            self.assertTrue(file_equal_binary(files.output_bin_all_syntax_ref_file, files.output_bin_old_syntax_file),
+                            msg=f"File differs {files.output_bin_old_syntax_file}")
 
     def test_assemble_new_syntax_hex(self):
         files = DataFiles()
@@ -343,5 +348,5 @@ class TestFunctional(unittest.TestCase):
             self.assertEqual(result.stdout, '')
             self.assertEqual(result.stderr, '')
 
-            self.assertTrue(file_equal_binary(files.output_bin_all_syntax_ref_file, files.output_bin_all_syntax_file),
-                            msg=f"File differs {files.output_bin_all_syntax_file}")
+            self.assertTrue(file_equal_binary(files.output_bin_all_syntax_ref_file, files.output_bin_new_syntax_file),
+                            msg=f"File differs {files.output_bin_new_syntax_file}")
