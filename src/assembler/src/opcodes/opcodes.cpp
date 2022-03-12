@@ -144,21 +144,21 @@ namespace
             "mvi", 0b00000110, ONE_BYTE_ARG, DESTINATION,      //
 
             // Arithmetic
-            "add", 0b10000000, ONE_BYTE_ARG, SOURCE,      //
+            "add", 0b10000000, NO_ARG, SOURCE,            //
             "adi", 0b00000100, ONE_BYTE_ARG, NO_REGISTER, //
-            "adc", 0b10001000, ONE_BYTE_ARG, SOURCE,      //
+            "adc", 0b10001000, NO_ARG, SOURCE,            //
             "aci", 0b00001100, ONE_BYTE_ARG, NO_REGISTER, //
-            "sub", 0b10010000, ONE_BYTE_ARG, SOURCE,      //
+            "sub", 0b10010000, NO_ARG, SOURCE,            //
             "sui", 0b00010100, ONE_BYTE_ARG, NO_REGISTER, //
-            "sbb", 0b10011000, ONE_BYTE_ARG, SOURCE,      //
+            "sbb", 0b10011000, NO_ARG, SOURCE,            //
             "sbi", 0b00011100, ONE_BYTE_ARG, NO_REGISTER, //
-            "ana", 0b10100000, ONE_BYTE_ARG, SOURCE,      //
+            "ana", 0b10100000, NO_ARG, SOURCE,            //
             "ani", 0b00100100, ONE_BYTE_ARG, NO_REGISTER, //
-            "xra", 0b10101000, ONE_BYTE_ARG, SOURCE,      //
+            "xra", 0b10101000, NO_ARG, SOURCE,            //
             "xri", 0b00101100, ONE_BYTE_ARG, NO_REGISTER, //
-            "ora", 0b10100000, ONE_BYTE_ARG, SOURCE,      //
+            "ora", 0b10100000, NO_ARG, SOURCE,            //
             "ori", 0b00110100, ONE_BYTE_ARG, NO_REGISTER, //
-            "cmp", 0b10111000, ONE_BYTE_ARG, SOURCE,      //
+            "cmp", 0b10111000, NO_ARG, SOURCE,            //
             "cpi", 0b00111100, ONE_BYTE_ARG, NO_REGISTER, //
             "inr", 0b00000000, NO_ARG, DESTINATION,       //
             "dcr", 0b00000001, NO_ARG, DESTINATION,       //
@@ -176,7 +176,7 @@ namespace
             // Halt
             // Halt can be anything on bit 0
             // It can also be 0xff
-            "hlt", 0b00000001, NO_ARG, NO_REGISTER,  //
+            "hlt", 0b00000001, NO_ARG, NO_REGISTER, //
 
             // Micral N specific aliases to instructions
             "mas", 0322, NO_ARG, NO_REGISTER, //

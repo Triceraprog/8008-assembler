@@ -136,7 +136,7 @@ TEST_F(NewOpcodeSyntaxFixture, understands_add_opcode)
     auto [found, found_opcode, consumed] = matcher("ADD", arguments);
 
     ASSERT_THAT(found, IsTrue());
-    ASSERT_THAT(found_opcode.rule, Eq(ONE_BYTE_ARG));
+    ASSERT_THAT(found_opcode.rule, Eq(NO_ARG));
     ASSERT_THAT(found_opcode.code, Eq(0203));
     ASSERT_THAT(consumed, Eq(1));
 }

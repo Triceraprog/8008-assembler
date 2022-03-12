@@ -29,7 +29,7 @@ class Instruction
 {
 public:
     Instruction(const Context& context, const std::string& opcode,
-                std::vector<std::string> arguments);
+                const std::vector<std::string>& arguments);
 
     [[nodiscard]] int get_evaluation(const Context& context, int address) const;
 
@@ -67,7 +67,6 @@ public:
     };
 
 private:
-    const std::vector<std::string> arguments;
     std::unique_ptr<InstructionAction> action;
 };
 

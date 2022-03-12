@@ -149,8 +149,8 @@ namespace
                 else
                 {
                     assert(consumed <= arguments.size());
-                    std::ranges::copy(arguments | std::ranges::views::drop(consumed),
-                                      std::back_inserter(arguments));
+                    std::ranges::copy(arguments | std::views::drop(consumed),
+                                      std::back_inserter(this->arguments));
                 }
             }
             else
@@ -244,33 +244,32 @@ InstructionEnum instruction_to_enum(std::string_view opcode)
 }
 
 Instruction::Instruction(const Context& context, const std::string& opcode,
-                         std::vector<std::string> arguments)
-    : arguments{std::move(arguments)}
+                         const std::vector<std::string>& arguments)
 {
     auto opcode_enum = instruction_to_enum(opcode);
 
     switch (opcode_enum)
     {
         case InstructionEnum::CPU:
-            action = std::make_unique<Instruction_CPU>(this->arguments);
+            action = std::make_unique<Instruction_CPU>(arguments);
             break;
         case InstructionEnum::EMPTY:
             action = std::make_unique<Instruction_EMPTY>();
             break;
         case InstructionEnum::EQU:
-            action = std::make_unique<Instruction_EQU>(this->arguments);
+            action = std::make_unique<Instruction_EQU>(arguments);
             break;
         case InstructionEnum::END:
             action = std::make_unique<Instruction_END>();
             break;
         case InstructionEnum::ORG:
-            action = std::make_unique<Instruction_ORG>(context, this->arguments);
+            action = std::make_unique<Instruction_ORG>(context, arguments);
             break;
         case InstructionEnum::DATA:
-            action = std::make_unique<Instruction_DATA>(context, this->arguments);
+            action = std::make_unique<Instruction_DATA>(context, arguments);
             break;
         case InstructionEnum::OTHER:
-            action = std::make_unique<Instruction_OTHER>(opcode, this->arguments,
+            action = std::make_unique<Instruction_OTHER>(opcode, arguments,
                                                          context.options.new_syntax ? NEW : OLD);
             break;
     }
