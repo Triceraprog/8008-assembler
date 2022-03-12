@@ -241,13 +241,13 @@ int reg_name_to_code(std::string_view register_name)
 {
     assert(register_name.size() == 1);
     const auto& reg_char = register_name[0];
-    if (reg_char == 'M')
+    static const std::string registers{"ABCDEHLM"};
+
+    auto reg_index = registers.find(reg_char);
+
+    if (reg_index != std::string::npos)
     {
-        return 7;
-    }
-    if (reg_char >= 'A' && reg_char <= 'E')
-    {
-        return reg_char - 'A';
+        return static_cast<int>(reg_index);
     }
     throw SyntaxError("Register expected.");
 }
