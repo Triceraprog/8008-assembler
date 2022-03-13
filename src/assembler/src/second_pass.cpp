@@ -2,8 +2,6 @@
 #include "byte_writer.h"
 #include "context.h"
 #include "errors.h"
-#include "evaluator.h"
-#include "files.h"
 #include "options.h"
 #include "parsed_line.h"
 #include "symbol_table.h"
@@ -11,8 +9,8 @@
 #include <cstdio>
 #include <iostream>
 
-void second_pass(const Context& context, Files& files, const SymbolTable& symbol_table,
-                 const std::vector<ParsedLine>& parsed_lines)
+void second_pass(const Context& context, std::ostream& output_stream,
+                 const SymbolTable& symbol_table, const std::vector<ParsedLine>& parsed_lines)
 {
     /* Symbols are defined. Second pass. */
     const auto& options = context.options;
@@ -21,7 +19,7 @@ void second_pass(const Context& context, Files& files, const SymbolTable& symbol
         std::cout << "Pass number Two:  Re-read and assemble codes\n";
     }
 
-    ByteWriter writer(files.output_stream,
+    ByteWriter writer(output_stream,
                       options.generate_binary_file ? ByteWriter::BINARY : ByteWriter::HEX);
 
     for (auto& parsed_line : parsed_lines)

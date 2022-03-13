@@ -6,11 +6,10 @@
 #include <vector>
 
 class Context;
-class Files;
 class ParsedLine;
 class SymbolTable;
 
-void first_pass(const Context& context, Files& files, SymbolTable& symbol_table,
+void first_pass(const Context& context, std::istream& input_stream, SymbolTable& symbol_table,
                 std::vector<ParsedLine>& parsed_lines);
 
 class AlreadyDefinedSymbol : public ExceptionWithReason
