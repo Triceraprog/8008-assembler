@@ -32,7 +32,8 @@ set(ASSEMBLER_LIB_FILES
         src/opcodes/opcode_action_inpout.cpp src/opcodes/opcode_action_inpout.h
         src/opcodes/opcode_action_rst.cpp src/opcodes/opcode_action_rst.h
         src/context.h
-        src/listing_pass.cpp src/listing_pass.h)
+        src/listing_pass.cpp src/listing_pass.h
+        src/file_reader.cpp src/file_reader.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp
@@ -43,7 +44,8 @@ set(ASSEMBLER_TEST_FILES
         tests/listing_line_tests.cpp
         tests/line_tokenizer_tests.cpp
         tests/instruction_tests.cpp
-        tests/opcode_action_tests.cpp)
+        tests/opcode_action_tests.cpp
+        tests/file_reader_tests.cpp)
 
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})
 target_include_directories(${ASSEMBLER_LIB_NAME} PUBLIC src/)
