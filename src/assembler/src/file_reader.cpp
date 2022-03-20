@@ -36,19 +36,21 @@ void FileReader::advance()
 }
 
 FileReader::Iterator FileReader::begin() { return Iterator{this}; }
-FileReader::Iterator FileReader::end() { return Iterator{this, -1}; }
+FileReader::Iterator FileReader::end() { return Iterator{this, true}; }
 
-FileReader::Iterator::Iterator(FileReader* file_reader, FileReader::line_type line)
-        : file_reader{file_reader}, marker{line}
+FileReader::Iterator::Iterator(FileReader* file_reader, bool end)
+    : file_reader{file_reader}, marker{end}
 {
-    if (line != -1)
+    if (!marker)
     {
         marker = this->file_reader->current_line_count();
     }
 }
 
 FileReader::Iterator::value_type FileReader::Iterator::operator*() const
-{ return file_reader->current_line(); }
+{
+    return file_reader->current_line();
+}
 
 FileReader::Iterator& FileReader::Iterator::operator++()
 {

@@ -35,9 +35,9 @@ public:
         friend bool operator!=(const Iterator& a, const Iterator& b);
 
     private:
-        explicit Iterator(FileReader* file_reader, line_type line = 0);
+        explicit Iterator(FileReader* file_reader, bool end = false);
 
-        line_type marker;
+        bool marker;
         FileReader* file_reader;
 
         friend FileReader;
