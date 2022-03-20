@@ -24,9 +24,10 @@ public:
     bool input_num_as_octal = false;
     bool mark_8_ascii = false;
     bool new_syntax = false;
+    bool output_name = false;
 
     std::string input_filename;
-    std::string input_filename_base;
+    std::string output_filename_base;
 
 private:
     std::size_t parse_command_line(int argc, const char** argv);

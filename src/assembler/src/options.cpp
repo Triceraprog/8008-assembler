@@ -10,8 +10,8 @@ const char* InvalidCommandLine::what() const noexcept { return "Invalid Command 
 
 void Options::parse(int argc, const char** argv)
 {
-    argc = parse_command_line(argc, argv);
-    if (argc != 1)
+    auto file_count = parse_command_line(argc, argv);
+    if (file_count == 0)
     {
         display_help(argv);
         throw InvalidCommandLine();
@@ -34,7 +34,8 @@ std::size_t Options::parse_command_line(int argc, const char** argv)
                                             {"-single", &single_byte_list, true},
                                             {"-markascii", &mark_8_ascii, true},
                                             {"-syntax=new", &new_syntax, true},
-                                            {"-syntax=old", &new_syntax, false}};
+                                            {"-syntax=old", &new_syntax, false},
+                                            {"-o", &output_name, true}};
 
     for (auto& arg : argv_vector | std::ranges::views::drop(1))
     {
@@ -55,7 +56,15 @@ std::size_t Options::parse_command_line(int argc, const char** argv)
         }
         else
         {
-            left_arguments.push_back(arg);
+            if (output_name)
+            {
+                output_filename_base = arg;
+                output_name = false;
+            }
+            else
+            {
+                left_arguments.push_back(arg);
+            }
         }
     }
 
@@ -80,17 +89,23 @@ void Options::display_help(const char** argv)
     fprintf(stderr, "    -single     makes .lst file single byte per line, otherwise 3/line.\n");
     fprintf(stderr, "    -markascii  makes highest bit in ascii bytes a one (mark).\n");
     fprintf(stderr, "    -syntax=new default parsing is with new syntax mnemonics.\n");
+    fprintf(stderr, "    -o          the next argument is the output filename base.\n");
 }
 
 void Options::adjust_filenames()
 {
+    if (!output_filename_base.empty())
+    {
+        return;
+    }
+
     if (auto dot_index = input_filename.find('.'); dot_index != std::string::npos)
     {
-        input_filename_base = input_filename.substr(0, dot_index);
+        output_filename_base = input_filename.substr(0, dot_index);
     }
     else
     {
-        input_filename_base = input_filename;
+        output_filename_base = input_filename;
         input_filename += ".asm";
     }
 }

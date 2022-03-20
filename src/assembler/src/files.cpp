@@ -15,13 +15,13 @@ Files::~Files() = default;
 void Files::set_output_filenames(const Options& options)
 {
     const auto* output_filename_extension = options.generate_binary_file ? ".bin" : ".hex";
-    output_filename = options.input_filename_base + output_filename_extension;
-    list_filename = options.input_filename_base + ".lst";
+    output_filename = options.output_filename_base + output_filename_extension;
+    list_filename = options.output_filename_base + ".lst";
     input_filename = options.input_filename;
 
     if (options.debug)
     {
-        std::cout << "filebase=" << options.input_filename_base << " ";
+        std::cout << "filebase=" << options.output_filename_base << " ";
         std::cout << "infile=" << input_filename << " ";
         std::cout << "outfile=" << output_filename << " ";
         std::cout << "listfile=" << list_filename << "\n";
