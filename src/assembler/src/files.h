@@ -6,6 +6,7 @@
 #include <exception>
 #include <fstream>
 #include <string>
+#include <vector>
 
 class Options;
 
@@ -25,7 +26,7 @@ private:
 
     std::string output_filename;
     std::string list_filename;
-    std::string input_filename;
+    std::vector<std::string> input_filenames;
 };
 
 class CannotOpenFile : std::exception

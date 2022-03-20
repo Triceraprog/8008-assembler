@@ -75,6 +75,7 @@ help_output = """    where <infile> is assembly code file, extension defaults to
     -single     makes .lst file single byte per line, otherwise 3/line.
     -markascii  makes highest bit in ascii bytes a one (mark).
     -syntax=new default parsing is with new syntax mnemonics.
+    -o          the next argument is the output filename base.
 """
 
 ASSEMBLY_TEXT = "Assembly Performed"
@@ -92,6 +93,9 @@ class DataFiles:
         self.output_hex_file = data_path.joinpath("basics.hex")
         self.output_lst_file = data_path.joinpath("basics.lst")
         self.output_bin_file = data_path.joinpath("basics.bin")
+        self.output_double_base_file = data_path.joinpath("double")
+        self.output_double_bin_file = data_path.joinpath("double.bin")
+        self.output_double_lst_file = data_path.joinpath("double.lst")
         self.output_micral_hex_file = data_path.joinpath("micral.hex")
         self.output_micral_lst_file = data_path.joinpath("micral.lst")
         self.output_scelbal_hex_file = data_path.joinpath("sc-micral-n.hex")
@@ -112,6 +116,7 @@ class DataFiles:
         self.output_lst_markascii_ref_file = data_path.joinpath("ref_basics_markascii.lst")
         self.output_hex_all_syntax_ref_file = data_path.joinpath("ref_all_syntax.hex")
         self.output_bin_all_syntax_ref_file = data_path.joinpath("ref_all_syntax.bin")
+        self.output_bin_double_ref_file = data_path.joinpath("ref_double.bin")
         self.output_hex_old_syntax_file = data_path.joinpath("old_syntax.hex")
         self.output_bin_old_syntax_file = data_path.joinpath("old_syntax.bin")
         self.output_lst_old_syntax_file = data_path.joinpath("old_syntax.lst")
@@ -124,7 +129,8 @@ class DataFiles:
                            self.output_micral_lst_file, self.output_hex_old_syntax_file,
                            self.output_bin_old_syntax_file,
                            self.output_hex_new_syntax_file, self.output_bin_new_syntax_file,
-                           self.output_lst_old_syntax_file, self.output_lst_new_syntax_file]
+                           self.output_lst_old_syntax_file, self.output_lst_new_syntax_file,
+                           self.output_double_lst_file, self.output_double_bin_file]
 
 
 class TestFunctional(unittest.TestCase):
@@ -350,3 +356,17 @@ class TestFunctional(unittest.TestCase):
 
             self.assertTrue(file_equal_binary(files.output_bin_all_syntax_ref_file, files.output_bin_new_syntax_file),
                             msg=f"File differs {files.output_bin_new_syntax_file}")
+
+    def test_assemble_two_files(self):
+        files = DataFiles()
+
+        with temp_files(files.temp_files):
+            result = run_assembler(
+                ["-bin", "-o", files.output_double_base_file, files.input_file, files.micral_input_file])
+
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, '')
+            self.assertEqual(result.stderr, '')
+
+            self.assertTrue(file_equal_binary(files.output_bin_double_ref_file, files.output_double_bin_file),
+                            msg=f"File differs {files.output_double_bin_file}")

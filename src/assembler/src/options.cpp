@@ -70,7 +70,9 @@ std::size_t Options::parse_command_line(int argc, const char** argv)
 
     if (!left_arguments.empty())
     {
-        input_filenames.push_back(std::string{left_arguments.front()});
+        std::transform(std::begin(left_arguments), std::end(left_arguments),
+                       std::back_inserter(input_filenames),
+                       [](const auto& str_view) { return std::string{str_view}; });
     }
 
     return left_arguments.size();
@@ -94,18 +96,26 @@ void Options::display_help(const char** argv)
 
 void Options::adjust_filenames()
 {
-    if (!output_filename_base.empty())
+    if (output_filename_base.empty())
     {
-        return;
-    }
-
-    if (auto dot_index = input_filenames.front().find('.'); dot_index != std::string::npos)
-    {
-        output_filename_base = input_filenames.front().substr(0, dot_index);
+        if (auto dot_index = input_filenames.front().find('.'); dot_index != std::string::npos)
+        {
+            output_filename_base = input_filenames.front().substr(0, dot_index);
+        }
+        else
+        {
+            output_filename_base = input_filenames.front();
+            input_filenames.front() += ".asm";
+        }
     }
     else
     {
-        output_filename_base = input_filenames.front();
-        input_filenames.front() += ".asm";
+        for (auto& input_filename : input_filenames)
+        {
+            if (auto dot_index = input_filename.find('.'); dot_index == std::string::npos)
+            {
+                input_filename += ".asm";
+            }
+        }
     }
 }

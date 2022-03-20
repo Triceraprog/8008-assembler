@@ -17,12 +17,12 @@ void Files::set_filenames(const Options& options)
     const auto* output_filename_extension = options.generate_binary_file ? ".bin" : ".hex";
     output_filename = options.output_filename_base + output_filename_extension;
     list_filename = options.output_filename_base + ".lst";
-    input_filename = options.input_filenames.front();
+    std::ranges::copy(options.input_filenames, std::back_inserter(input_filenames));
 
     if (options.debug)
     {
         std::cout << "filebase=" << options.output_filename_base << " ";
-        std::cout << "infile=" << input_filename << " ";
+        std::cout << "infile=" << input_filenames.front() << " ";
         std::cout << "outfile=" << output_filename << " ";
         std::cout << "listfile=" << list_filename << "\n";
     }
@@ -30,14 +30,17 @@ void Files::set_filenames(const Options& options)
 
 void Files::open_files(const Options& options)
 {
-    auto stream = std::make_unique<std::ifstream>(input_filename.c_str());
-
-    if (stream->fail())
+    for (const auto& input_filename : input_filenames)
     {
-        throw CannotOpenFile(input_filename, "input file");
-    }
+        auto stream = std::make_unique<std::ifstream>(input_filename.c_str());
 
-    file_reader.append(std::move(stream));
+        if (stream->fail())
+        {
+            throw CannotOpenFile(input_filename, "input file");
+        }
+
+        file_reader.append(std::move(stream));
+    }
 
     if (options.generate_binary_file)
     {
