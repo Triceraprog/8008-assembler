@@ -1,6 +1,8 @@
 #ifndef INC_8008_ASSEMBLER_FILES_H
 #define INC_8008_ASSEMBLER_FILES_H
 
+#include "file_reader.h"
+
 #include <exception>
 #include <fstream>
 #include <string>
@@ -13,7 +15,7 @@ public:
     explicit Files(const Options& options);
     ~Files();
 
-    std::fstream input_stream;
+    FileReader file_reader;
     std::fstream output_stream;
     std::fstream listing_stream;
 

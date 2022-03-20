@@ -33,7 +33,7 @@ int main(int argc, const char** argv)
 
         Context context{global_options, symbol_table};
 
-        first_pass(context, files.input_stream, symbol_table, parsed_lines);
+        first_pass(context, files.file_reader, symbol_table, parsed_lines);
         second_pass(context, files.output_stream, symbol_table, parsed_lines);
         listing_pass(context, parsed_lines, listing);
 

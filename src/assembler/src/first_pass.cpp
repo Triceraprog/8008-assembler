@@ -2,6 +2,7 @@
 
 #include "context.h"
 #include "errors.h"
+#include "file_reader.h"
 #include "instruction.h"
 #include "line_tokenizer.h"
 #include "options.h"
@@ -52,7 +53,7 @@ namespace
     }
 }
 
-void first_pass(const Context& context, std::istream& input_stream, SymbolTable& symbol_table,
+void first_pass(const Context& context, FileReader& file_reader, SymbolTable& symbol_table,
                 std::vector<ParsedLine>& parsed_lines)
 {
     // In the first pass, we parse through lines to build a symbol table
@@ -65,7 +66,7 @@ void first_pass(const Context& context, std::istream& input_stream, SymbolTable&
 
     int current_line_count = 0;
     int current_address = 0;
-    for (std::string input_line; std::getline(input_stream, input_line);)
+    for (const std::string & input_line : file_reader)
     {
         current_line_count++;
         if (options.verbose || options.debug)

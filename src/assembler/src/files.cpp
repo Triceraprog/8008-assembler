@@ -10,13 +10,7 @@ Files::Files(const Options& options)
     open_files(options);
 }
 
-Files::~Files()
-{
-    if (input_stream.is_open())
-    {
-        input_stream.close();
-    }
-}
+Files::~Files() = default;
 
 void Files::set_output_filenames(const Options& options)
 {
@@ -36,12 +30,14 @@ void Files::set_output_filenames(const Options& options)
 
 void Files::open_files(const Options& options)
 {
-    input_stream.open(input_filename.c_str());
+    auto stream = std::make_unique<std::ifstream>(input_filename.c_str());
 
-    if (input_stream.fail())
+    if (stream->fail())
     {
         throw CannotOpenFile(options.input_filename, "input file");
     }
+
+    file_reader.append(std::move(stream));
 
     if (options.generate_binary_file)
     {
