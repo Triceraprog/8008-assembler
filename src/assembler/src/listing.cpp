@@ -17,7 +17,8 @@ void Listing::write_listing_header()
     time_t result = time(nullptr);
     std::string compile_time{asctime(localtime(&result))};
 
-    output << "AS8 assembler for intel 8008, t.e.jones Version 1.0\n";
+    output << "8008 Assembler, s.glaize Version 1.0\n";
+    output << "Originally based on AS8 assembler by t.e.jones Version 1.0\n";
     output << "Options: listfile=" << options.generate_list_file << " debug=" << options.debug
            << " binaryout=" << options.generate_binary_file
            << " singlelist=" << options.single_byte_list << "\n";
