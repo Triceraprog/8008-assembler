@@ -6,18 +6,18 @@
 
 Files::Files(const Options& options)
 {
-    set_output_filenames(options);
+    set_filenames(options);
     open_files(options);
 }
 
 Files::~Files() = default;
 
-void Files::set_output_filenames(const Options& options)
+void Files::set_filenames(const Options& options)
 {
     const auto* output_filename_extension = options.generate_binary_file ? ".bin" : ".hex";
     output_filename = options.output_filename_base + output_filename_extension;
     list_filename = options.output_filename_base + ".lst";
-    input_filename = options.input_filename;
+    input_filename = options.input_filenames.front();
 
     if (options.debug)
     {
@@ -34,7 +34,7 @@ void Files::open_files(const Options& options)
 
     if (stream->fail())
     {
-        throw CannotOpenFile(options.input_filename, "input file");
+        throw CannotOpenFile(input_filename, "input file");
     }
 
     file_reader.append(std::move(stream));
@@ -44,7 +44,7 @@ void Files::open_files(const Options& options)
         output_stream.open(output_filename.c_str(), std::ios::binary | std::ios::out);
         if (output_stream.fail())
         {
-            throw CannotOpenFile(options.input_filename, "binary output file");
+            throw CannotOpenFile(output_filename, "binary output file");
         }
     }
     else
@@ -52,7 +52,7 @@ void Files::open_files(const Options& options)
         output_stream.open(output_filename.c_str(), std::ios::out);
         if (output_stream.fail())
         {
-            throw CannotOpenFile(options.input_filename, "hex output file");
+            throw CannotOpenFile(output_filename, "hex output file");
         }
     }
 
@@ -61,7 +61,7 @@ void Files::open_files(const Options& options)
         listing_stream.open(list_filename.c_str(), std::ios::out);
         if (listing_stream.fail())
         {
-            throw CannotOpenFile(options.input_filename, "output list file");
+            throw CannotOpenFile(list_filename, "output list file");
         }
     }
     if (options.debug)

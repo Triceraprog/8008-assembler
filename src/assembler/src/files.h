@@ -20,7 +20,7 @@ public:
     std::fstream listing_stream;
 
 private:
-    void set_output_filenames(const Options& options);
+    void set_filenames(const Options& options);
     void open_files(const Options& options);
 
     std::string output_filename;

@@ -25,7 +25,7 @@ void Listing::write_listing_header()
 
     output << "octalnums=" << options.input_num_as_octal << " markascii=" << options.mark_8_ascii
            << "\n";
-    output << "Infile=" << options.input_filename << "\n";
+    output << "Infile=" << options.input_filenames.front() << "\n";
     output << "Assembly Performed: " << compile_time << "\n\n";
     if (options.single_byte_list)
     {

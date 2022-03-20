@@ -3,6 +3,7 @@
 
 #include <exception>
 #include <string>
+#include <vector>
 
 class InvalidCommandLine : std::exception
 {
@@ -26,7 +27,7 @@ public:
     bool new_syntax = false;
     bool output_name = false;
 
-    std::string input_filename;
+    std::vector<std::string> input_filenames;
     std::string output_filename_base;
 
 private:
