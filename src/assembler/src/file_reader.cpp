@@ -10,19 +10,19 @@ void FileReader::append(std::unique_ptr<std::istream> stream)
     auto line_iterator = std::istream_iterator<line>(*input_streams.back());
     line_iterators.push_back(line_iterator);
 
-    if (line_count == -1)
+    if (exhausted)
     {
-        line_count = 0;
+        exhausted = false;
         drop_front_empty_providers();
         extract_line_or_stop();
     }
 }
 
-FileReader::line_type FileReader::current_line_count() const { return line_count; }
+bool FileReader::content_exhausted() const { return exhausted; }
 
 void FileReader::advance()
 {
-    if (line_count == -1)
+    if (exhausted)
     {
         // The reader had previously consumed everything.
         return;
@@ -43,7 +43,7 @@ FileReader::Iterator::Iterator(FileReader* file_reader, bool end)
 {
     if (!marker)
     {
-        marker = this->file_reader->current_line_count();
+        marker = this->file_reader->content_exhausted();
     }
 }
 
@@ -55,7 +55,7 @@ FileReader::Iterator::value_type FileReader::Iterator::operator*() const
 FileReader::Iterator& FileReader::Iterator::operator++()
 {
     file_reader->advance();
-    marker = file_reader->current_line_count();
+    marker = file_reader->content_exhausted();
     return *this;
 }
 
@@ -100,6 +100,6 @@ void FileReader::extract_line_or_stop()
     }
     else
     {
-        line_count = -1;
+        exhausted = true;
     }
 }

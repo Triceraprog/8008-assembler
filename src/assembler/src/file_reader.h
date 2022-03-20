@@ -51,10 +51,10 @@ public:
 private:
     std::deque<std::unique_ptr<std::istream>> input_streams;
     std::deque<std::istream_iterator<line>> line_iterators;
-    line_type line_count{-1};
+    bool exhausted{true};
     line latest_read_line;
 
-    [[nodiscard]] line_type current_line_count() const;
+    [[nodiscard]] bool content_exhausted() const;
 
     void advance();
     void drop_front_empty_providers();
