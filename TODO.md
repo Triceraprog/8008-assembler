@@ -1,6 +1,4 @@
-- Support multiple files on command line and .include
-  - Define an input stream that can read over several files and inject included files
-  - The stream should also give information on the current line of the current file
+- Create a class around file_reader that handles the filenames to avoid duplication
 - Macro system
 - Pseudo instructions (specify syntax mode)
 - The responsibility of the short format should probably be in Listing

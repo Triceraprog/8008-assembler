@@ -79,7 +79,7 @@ void first_pass(const Context& context, FileReader& file_reader, SymbolTable& sy
         {
             LineTokenizer tokens = parse_line(options, input_line, current_line_count);
             {
-                Instruction instruction{context, tokens.opcode, tokens.arguments};
+                Instruction instruction{context, tokens.opcode, tokens.arguments, file_reader};
                 parsed_lines.push_back({current_line_count, current_address, tokens,
                                         std::move(instruction), input_line});
             }

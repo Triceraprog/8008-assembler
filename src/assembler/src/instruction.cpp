@@ -3,14 +3,17 @@
 #include "context.h"
 #include "data_extraction.h"
 #include "evaluator.h"
+#include "file_reader.h"
 #include "listing.h"
 #include "opcodes/opcode_action.h"
 #include "opcodes/opcodes.h"
 #include "options.h"
 #include "utils.h"
+#include "files.h"
 
 #include <algorithm>
 #include <cassert>
+#include <fstream>
 #include <iostream>
 #include <utility>
 #include <vector>
@@ -186,6 +189,34 @@ namespace
         Opcode opcode;
     };
 
+    struct Instruction_INCLUDE : public Instruction::InstructionAction
+    {
+        Instruction_INCLUDE(const Context& context, const std::vector<std::string>& arguments,
+                            FileReader& file_reader)
+        {
+            if (arguments.empty())
+            {
+                throw MissingArgument(".include");
+            }
+
+            auto include_filename = arguments[0];
+
+            if (context.options.debug)
+            {
+                std::cout << "got '" << include_filename << "' as a filename to include.\n";
+            }
+
+            auto stream = std::make_unique<std::ifstream>(include_filename.c_str());
+
+            if (stream->fail())
+            {
+                throw CannotOpenFile(include_filename, "include file");
+            }
+
+            file_reader.insert_now(std::move(stream));
+        }
+    };
+
     struct Instruction_EMPTY : public Instruction::InstructionAction
     {
     };
@@ -224,7 +255,7 @@ InstructionEnum instruction_to_enum(std::string_view opcode)
     static std::vector<std::tuple<const char*, InstructionEnum>> association = {
             {"equ", InstructionEnum::EQU},   {"end", InstructionEnum::END},
             {"cpu", InstructionEnum::CPU},   {"org", InstructionEnum::ORG},
-            {"data", InstructionEnum::DATA},
+            {"data", InstructionEnum::DATA}, {".include", InstructionEnum::INCLUDE},
     };
     if (opcode.empty())
     {
@@ -244,7 +275,7 @@ InstructionEnum instruction_to_enum(std::string_view opcode)
 }
 
 Instruction::Instruction(const Context& context, const std::string& opcode,
-                         const std::vector<std::string>& arguments)
+                         const std::vector<std::string>& arguments, FileReader& file_reader)
 {
     auto opcode_enum = instruction_to_enum(opcode);
 
@@ -267,6 +298,9 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
             break;
         case InstructionEnum::DATA:
             action = std::make_unique<Instruction_DATA>(context, arguments);
+            break;
+        case InstructionEnum::INCLUDE:
+            action = std::make_unique<Instruction_INCLUDE>(context, arguments, file_reader);
             break;
         case InstructionEnum::OTHER:
             action = std::make_unique<Instruction_OTHER>(opcode, arguments,

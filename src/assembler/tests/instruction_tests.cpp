@@ -2,6 +2,7 @@
 
 #include "byte_writer.h"
 #include "context.h"
+#include "file_reader.h"
 #include "listing.h"
 #include "options.h"
 #include "symbol_table.h"
@@ -15,36 +16,46 @@ struct InstructionFixture : public Test
     Options options;
     SymbolTable symbol_table;
     Context context{options, symbol_table};
+    FileReader file_reader;
 
-    Instruction get_instruction_empty() const { return Instruction{context, {}, {}}; }
-    Instruction get_instruction_end() const { return Instruction{context, "END", {}}; }
-    Instruction get_instruction_equ() const { return Instruction{context, "EQU", {"0x2000"}}; }
-    Instruction get_instruction_equ_without_param() const
+    Instruction get_instruction_empty() { return Instruction{context, {}, {}, file_reader}; }
+    Instruction get_instruction_end() { return Instruction{context, "END", {}, file_reader}; }
+    Instruction get_instruction_equ()
     {
-        return Instruction{context, "EQU", {}};
+        return Instruction{context, "EQU", {"0x2000"}, file_reader};
     }
-    Instruction get_instruction_org() const { return Instruction{context, "ORG", {"0x1000"}}; }
-    Instruction get_instruction_org_without_param() const
+    Instruction get_instruction_equ_without_param()
     {
-        return Instruction{context, "ORG", {}};
+        return Instruction{context, "EQU", {}, file_reader};
     }
-    Instruction get_instruction_cpu_known() const { return Instruction{context, "CPU", {"8008"}}; }
-    Instruction get_instruction_cpu_unknown() const
+    Instruction get_instruction_org()
     {
-        return Instruction{context, "CPU", {"unknown_cpu"}};
+        return Instruction{context, "ORG", {"0x1000"}, file_reader};
     }
-    Instruction get_instruction_cpu_without_param() const
+    Instruction get_instruction_org_without_param()
     {
-        return Instruction{context, "CPU", {}};
+        return Instruction{context, "ORG", {}, file_reader};
     }
-    Instruction get_instruction_data() const
+    Instruction get_instruction_cpu_known()
     {
-        return Instruction{context, "DATA", {"1", "2", "3"}};
+        return Instruction{context, "CPU", {"8008"}, file_reader};
     }
-    Instruction get_instruction_nop() const { return Instruction{context, "LAA", {}}; }
-    Instruction get_instruction_invalid_opcode() const
+    Instruction get_instruction_cpu_unknown()
     {
-        return Instruction{context, "INVALID_OPCODE", {}};
+        return Instruction{context, "CPU", {"unknown_cpu"}, file_reader};
+    }
+    Instruction get_instruction_cpu_without_param()
+    {
+        return Instruction{context, "CPU", {}, file_reader};
+    }
+    Instruction get_instruction_data()
+    {
+        return Instruction{context, "DATA", {"1", "2", "3"}, file_reader};
+    }
+    Instruction get_instruction_nop() { return Instruction{context, "LAA", {}, file_reader}; }
+    Instruction get_instruction_invalid_opcode()
+    {
+        return Instruction{context, "INVALID_OPCODE", {}, file_reader};
     }
 };
 
@@ -56,8 +67,11 @@ struct InstructionEvaluationFixtureNewSyntax : public InstructionFixture
 {
     InstructionEvaluationFixtureNewSyntax() { options.new_syntax = true; }
 
-    Instruction get_instruction_mvi() const { return Instruction{context, "MVI", {"A", "0x42"}}; }
-    Instruction get_instruction_add() const { return Instruction{context, "ADD", {"A"}}; }
+    Instruction get_instruction_mvi()
+    {
+        return Instruction{context, "MVI", {"A", "0x42"}, file_reader};
+    }
+    Instruction get_instruction_add() { return Instruction{context, "ADD", {"A"}, file_reader}; }
 };
 
 struct FirstPassFixture : public InstructionFixture

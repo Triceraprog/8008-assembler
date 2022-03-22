@@ -8,11 +8,12 @@
 #include <string_view>
 #include <vector>
 
+class ByteWriter;
 class Context;
+class FileReader;
+class Listing;
 class Options;
 class SymbolTable;
-class ByteWriter;
-class Listing;
 
 enum class InstructionEnum
 {
@@ -22,6 +23,7 @@ enum class InstructionEnum
     CPU,
     ORG,
     DATA,
+    INCLUDE,
     OTHER,
 };
 
@@ -29,7 +31,7 @@ class Instruction
 {
 public:
     Instruction(const Context& context, const std::string& opcode,
-                const std::vector<std::string>& arguments);
+                const std::vector<std::string>& arguments, FileReader& file_reader);
 
     [[nodiscard]] int get_evaluation(const Context& context, int address) const;
 
