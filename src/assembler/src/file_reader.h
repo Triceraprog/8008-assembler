@@ -57,6 +57,7 @@ private:
     std::deque<std::unique_ptr<std::istream>> input_streams;
     std::deque<std::istream_iterator<line>> line_iterators;
     bool exhausted{true};
+    bool interrupted{false};
     line latest_read_line;
 
     [[nodiscard]] bool content_exhausted() const;

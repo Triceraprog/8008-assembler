@@ -104,10 +104,11 @@ TEST(FileReader, input_stream_interrupted_by_another)
     auto it = std::begin(file_reader);
 
     ASSERT_THAT(*it, Eq("first line"));
-    ++it;
 
     file_reader.insert_now(std::move(content_2));
 
+    ASSERT_THAT(*it, Eq("first line"));
+    ++it;
     ASSERT_THAT(*it, Eq("interruption"));
     ++it;
     ASSERT_THAT(*it, Eq("second interruption"));

@@ -28,12 +28,10 @@ void FileReader::insert_now(std::unique_ptr<std::istream> stream)
     auto line_iterator = std::istream_iterator<line>(*input_streams.front());
     line_iterators.push_front(line_iterator);
 
-    if (exhausted)
-    {
-        exhausted = false;
-    }
+    interrupted = true; // Will not work if interrupted by an empty stream
+    exhausted = false;
+
     drop_front_empty_providers();
-    extract_line_or_stop();
 }
 
 bool FileReader::content_exhausted() const { return exhausted; }
@@ -48,7 +46,19 @@ void FileReader::advance()
 
     auto& current_line_it = line_iterators.front();
     assert(current_line_it != std::istream_iterator<line>());
-    ++current_line_it;
+    if (interrupted)
+    {
+        // A new stream was added in front.
+        // In that case, advancing means advancing the interrupted stream and reading
+        // the first line of the new stream.
+        assert(line_iterators.size() > 1);
+        ++line_iterators[1];
+        interrupted = false;
+    }
+    else
+    {
+        ++current_line_it;
+    }
     drop_front_empty_providers();
     extract_line_or_stop();
 }
