@@ -46,7 +46,12 @@ public:
     Iterator begin();;
     Iterator end();;
 
+    // Appends a new stream for queueing. It will be read after the already present streams.
     void append(std::unique_ptr<std::istream> stream);
+
+    // Inserts a new stream to be read just now. It interrupts the current stream and will
+    // return to it after, as in a stack.
+    void insert_now(std::unique_ptr<std::istream> stream);
 
 private:
     std::deque<std::unique_ptr<std::istream>> input_streams;

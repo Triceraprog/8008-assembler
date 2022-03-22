@@ -18,6 +18,24 @@ void FileReader::append(std::unique_ptr<std::istream> stream)
     }
 }
 
+void FileReader::insert_now(std::unique_ptr<std::istream> stream)
+{
+    // As insert interrupts the current stream, the new stream is placed
+    // in front of the streams. After it is consumed, it will naturally
+    // go back to the previous streams, like in a stack.
+    input_streams.emplace_front(std::move(stream));
+
+    auto line_iterator = std::istream_iterator<line>(*input_streams.front());
+    line_iterators.push_front(line_iterator);
+
+    if (exhausted)
+    {
+        exhausted = false;
+    }
+    drop_front_empty_providers();
+    extract_line_or_stop();
+}
+
 bool FileReader::content_exhausted() const { return exhausted; }
 
 void FileReader::advance()

@@ -89,3 +89,30 @@ TEST(FileReader, chains_three_input_streams_and_ignores_empty_one)
 
     ASSERT_THAT(all_lines.size(), Eq(4));
 }
+
+TEST(FileReader, input_stream_interrupted_by_another)
+{
+    const std::string input_value_1{"first line\nsecond line"};
+    const std::string input_value_2{"interruption\nsecond interruption"};
+
+    auto content_1 = std::make_unique<std::istringstream>(input_value_1);
+    auto content_2 = std::make_unique<std::istringstream>(input_value_2);
+
+    FileReader file_reader;
+    file_reader.append(std::move(content_1));
+
+    auto it = std::begin(file_reader);
+
+    ASSERT_THAT(*it, Eq("first line"));
+    ++it;
+
+    file_reader.insert_now(std::move(content_2));
+
+    ASSERT_THAT(*it, Eq("interruption"));
+    ++it;
+    ASSERT_THAT(*it, Eq("second interruption"));
+    ++it;
+    ASSERT_THAT(*it, Eq("second line"));
+    ++it;
+    ASSERT_THAT(it, Eq(std::end(file_reader)));
+}
