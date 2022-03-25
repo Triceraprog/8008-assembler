@@ -3,13 +3,13 @@
 #include "context.h"
 #include "data_extraction.h"
 #include "evaluator.h"
-#include "file_reader.h"
+#include "files/file_reader.h"
+#include "files/files.h"
 #include "listing.h"
 #include "opcodes/opcode_action.h"
 #include "opcodes/opcodes.h"
 #include "options.h"
 #include "utils.h"
-#include "files.h"
 
 #include <algorithm>
 #include <cassert>

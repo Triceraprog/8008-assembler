@@ -2,7 +2,7 @@
 
 #include "byte_writer.h"
 #include "context.h"
-#include "file_reader.h"
+#include "files/file_reader.h"
 #include "listing.h"
 #include "options.h"
 #include "symbol_table.h"

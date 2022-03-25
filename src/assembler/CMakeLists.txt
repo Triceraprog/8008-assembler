@@ -10,7 +10,6 @@ set(ASSEMBLER_TEST_NAME ${ASSEMBLER_LIB_NAME}_tests)
 
 set(ASSEMBLER_LIB_FILES
         src/options.cpp src/options.h
-        src/files.cpp src/files.h
         src/symbol_table.cpp src/symbol_table.h
         src/line_tokenizer.cpp src/line_tokenizer.h
         src/utils.cpp src/utils.h
@@ -33,7 +32,8 @@ set(ASSEMBLER_LIB_FILES
         src/opcodes/opcode_action_rst.cpp src/opcodes/opcode_action_rst.h
         src/context.h
         src/listing_pass.cpp src/listing_pass.h
-        src/file_reader.cpp src/file_reader.h)
+        src/files/files.cpp src/files/files.h
+        src/files/file_reader.cpp src/files/file_reader.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp

@@ -1,5 +1,7 @@
-#include "file_reader.h"
 #include "gmock/gmock.h"
+
+#include "files/file_reader.h"
+
 #include <deque>
 
 using namespace testing;

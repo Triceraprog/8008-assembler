@@ -1,13 +1,13 @@
 #include "assembler/src/context.h"
 #include "assembler/src/errors.h"
-#include "assembler/src/files.h"
+#include "assembler/src/files/files.h"
 #include "assembler/src/first_pass.h"
 #include "assembler/src/listing.h"
+#include "assembler/src/listing_pass.h"
 #include "assembler/src/options.h"
 #include "assembler/src/parsed_line.h"
 #include "assembler/src/second_pass.h"
 #include "assembler/src/symbol_table.h"
-#include "assembler/src/listing_pass.h"
 
 #include <iostream>
 

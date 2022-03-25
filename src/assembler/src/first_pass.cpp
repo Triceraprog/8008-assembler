@@ -2,7 +2,7 @@
 
 #include "context.h"
 #include "errors.h"
-#include "file_reader.h"
+#include "files/file_reader.h"
 #include "instruction.h"
 #include "line_tokenizer.h"
 #include "options.h"
