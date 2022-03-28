@@ -6,4 +6,5 @@
 - Option to output an expended, simple assembly code with a syntax for another assembler, especially as8
 - Check name of executable and if as8, enters a compatible mode if needed
 - If the accumulator results in a negative number, various weird things happen, because it's passed as int (wrong hex, wrong lst)
-- Support for priorities in expressions
+- Support for priorities in expressions (with optional compatibilities with as8)
+- Change the hardcoded path in functional tests to a parameter and generate the call to tests from CMake

@@ -1,2 +1,3 @@
+- Needs a C++20 compiler.
+- Build is using CMake
 - Use -DWITH_TESTS with CMake to build tests.
-- 
