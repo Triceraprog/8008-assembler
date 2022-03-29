@@ -16,8 +16,6 @@ std::istream& operator>>(std::istream& stream, line& line);
 class FileReader
 {
 public:
-    using line_type = std::int_least32_t;
-
     class Iterator
     {
     public:
@@ -43,8 +41,8 @@ public:
         friend FileReader;
     };
 
-    Iterator begin();;
-    Iterator end();;
+    Iterator begin();
+    Iterator end();
 
     // Appends a new stream for queueing. It will be read after the already present streams.
     void append(std::unique_ptr<std::istream> stream);
