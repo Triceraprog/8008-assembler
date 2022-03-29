@@ -1,4 +1,3 @@
-- Create a class around file_reader that handles the filenames to avoid duplication
 - Errors should tell the current file in addition to the current line.
 - Macro system
   - Needs a way to record the macro

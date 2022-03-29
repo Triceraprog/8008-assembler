@@ -33,7 +33,8 @@ set(ASSEMBLER_LIB_FILES
         src/context.h
         src/listing_pass.cpp src/listing_pass.h
         src/files/files.cpp src/files/files.h
-        src/files/file_reader.cpp src/files/file_reader.h)
+        src/files/file_reader.cpp src/files/file_reader.h
+        src/files/file_utility.cpp src/files/file_utility.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp

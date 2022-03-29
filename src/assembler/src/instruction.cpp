@@ -3,7 +3,7 @@
 #include "context.h"
 #include "data_extraction.h"
 #include "evaluator.h"
-#include "files/file_reader.h"
+#include "files/file_utility.h"
 #include "files/files.h"
 #include "listing.h"
 #include "opcodes/opcode_action.h"
@@ -206,14 +206,7 @@ namespace
                 std::cout << "got '" << include_filename << "' as a filename to include.\n";
             }
 
-            auto stream = std::make_unique<std::ifstream>(include_filename.c_str());
-
-            if (stream->fail())
-            {
-                throw CannotOpenFile(include_filename, "include file");
-            }
-
-            file_reader.insert_now(std::move(stream));
+            Utility::insert_file_by_name(file_reader, include_filename);
         }
     };
 

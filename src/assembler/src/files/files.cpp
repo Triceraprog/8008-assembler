@@ -1,6 +1,7 @@
 #include "files.h"
 
 #include "options.h"
+#include "file_utility.h"
 
 #include <iostream>
 
@@ -32,14 +33,7 @@ void Files::open_files(const Options& options)
 {
     for (const auto& input_filename : input_filenames)
     {
-        auto stream = std::make_unique<std::ifstream>(input_filename.c_str());
-
-        if (stream->fail())
-        {
-            throw CannotOpenFile(input_filename, "input file");
-        }
-
-        file_reader.append(std::move(stream));
+        Utility::append_file_by_name(file_reader, input_filename);
     }
 
     if (options.generate_binary_file)
