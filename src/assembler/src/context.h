@@ -7,7 +7,7 @@ class SymbolTable;
 struct Context
 {
     const Options& options;
-    SymbolTable& symbolTable;
+    SymbolTable& symbol_table;
 };
 
 #endif //INC_8008_ASSEMBLER_CONTEXT_H

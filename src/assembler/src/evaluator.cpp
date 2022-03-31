@@ -94,7 +94,7 @@ namespace
         auto front = operand.front();
         if (isalpha(front) && front != '\'')
         {
-            return symbol_to_int(context.symbolTable, operand);
+            return symbol_to_int(context.symbol_table, operand);
         }
         else
         {

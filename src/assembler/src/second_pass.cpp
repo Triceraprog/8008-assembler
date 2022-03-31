@@ -10,7 +10,7 @@
 #include <iostream>
 
 void second_pass(const Context& context, std::ostream& output_stream,
-                 const SymbolTable& symbol_table, const std::vector<ParsedLine>& parsed_lines)
+                 const std::vector<ParsedLine>& parsed_lines)
 {
     /* Symbols are defined. Second pass. */
     const auto& options = context.options;
@@ -25,7 +25,7 @@ void second_pass(const Context& context, std::ostream& output_stream,
     for (auto& parsed_line : parsed_lines)
     {
         const auto& input_line = parsed_line.line;
-        const int line_number = parsed_line.line_number;
+        const auto line_number = parsed_line.line_number;
         int line_address = parsed_line.line_address;
 
         try

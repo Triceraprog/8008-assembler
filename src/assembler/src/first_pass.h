@@ -10,8 +10,7 @@ class FileReader;
 class ParsedLine;
 class SymbolTable;
 
-void first_pass(const Context& context, FileReader& file_reader, SymbolTable& symbol_table,
-                std::vector<ParsedLine>& parsed_lines);
+void first_pass(Context& context, FileReader& file_reader, std::vector<ParsedLine>& parsed_lines);
 
 class AlreadyDefinedSymbol : public ExceptionWithReason
 {

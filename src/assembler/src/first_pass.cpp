@@ -24,10 +24,12 @@ namespace
         }
     }
 
-    void define_symbol_or_fail(const Context& context, const Options& options,
-                               SymbolTable& symbol_table, const std::string& label,
-                               const int line_address, const Instruction& instruction)
+    void define_symbol_or_fail(Context& context, const std::string& label, const int line_address,
+                               const Instruction& instruction)
     {
+        const auto& options = context.options;
+        auto& symbol_table = context.symbol_table;
+
         throws_if_already_defined(symbol_table, label);
 
         int val = instruction.get_evaluation(context, line_address);
@@ -42,23 +44,23 @@ namespace
         }
     }
 
-    void handle_potential_label(const Context& context, const Options& options,
-                                SymbolTable& symbol_table, const ParsedLine& parsed_line)
+    void handle_potential_label(Context& context, const ParsedLine& parsed_line)
     {
         if (!parsed_line.tokens.label.empty())
         {
-            define_symbol_or_fail(context, options, symbol_table, parsed_line.tokens.label,
-                                  parsed_line.line_address, parsed_line.instruction);
+            define_symbol_or_fail(context, parsed_line.tokens.label, parsed_line.line_address,
+                                  parsed_line.instruction);
         }
     }
 }
 
-void first_pass(const Context& context, FileReader& file_reader, SymbolTable& symbol_table,
-                std::vector<ParsedLine>& parsed_lines)
+void first_pass(Context& context, FileReader& file_reader, std::vector<ParsedLine>& parsed_lines)
 {
     // In the first pass, we parse through lines to build a symbol table
     // What is parsed is kept into the "parsed_lines" container for the second pass.
     const auto& options = context.options;
+    auto& symbol_table = context.symbol_table;
+
     if (options.debug || options.verbose)
     {
         std::cout << "Pass number One:  Read and Define Symbols\n";
@@ -82,7 +84,7 @@ void first_pass(const Context& context, FileReader& file_reader, SymbolTable& sy
                                         std::move(instruction), input_line});
             }
 
-            handle_potential_label(context, options, symbol_table, parsed_lines.back());
+            handle_potential_label(context, parsed_lines.back());
             auto& instruction = parsed_lines.back().instruction;
             current_address = instruction.first_pass(context, current_address);
         }
