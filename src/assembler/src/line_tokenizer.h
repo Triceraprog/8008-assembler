@@ -23,6 +23,6 @@ private:
     void adjust_label();
 };
 
-LineTokenizer parse_line(const Options& options, const std::string& line, int line_count);
+LineTokenizer parse_line(const Options& options, const std::string& line, std::size_t line_count);
 
 #endif //INC_8008_ASSEMBLER_LINE_TOKENIZER_H

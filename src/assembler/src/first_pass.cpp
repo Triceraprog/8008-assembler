@@ -64,11 +64,9 @@ void first_pass(const Context& context, FileReader& file_reader, SymbolTable& sy
         std::cout << "Pass number One:  Read and Define Symbols\n";
     }
 
-    int current_line_count = 0;
     int current_address = 0;
-    for (const std::string & input_line : file_reader)
+    for (const std::string& input_line : file_reader)
     {
-        current_line_count++;
         if (options.verbose || options.debug)
         {
             std::cout << "     0x" << std::hex << std::uppercase << current_address << " ";
@@ -77,10 +75,10 @@ void first_pass(const Context& context, FileReader& file_reader, SymbolTable& sy
 
         try
         {
-            LineTokenizer tokens = parse_line(options, input_line, current_line_count);
+            LineTokenizer tokens = parse_line(options, input_line, file_reader.get_line_number());
             {
                 Instruction instruction{context, tokens.opcode, tokens.arguments, file_reader};
-                parsed_lines.push_back({current_line_count, current_address, tokens,
+                parsed_lines.push_back({file_reader.get_line_number(), current_address, tokens,
                                         std::move(instruction), input_line});
             }
 
@@ -90,7 +88,7 @@ void first_pass(const Context& context, FileReader& file_reader, SymbolTable& sy
         }
         catch (const std::exception& ex)
         {
-            throw ParsingException(ex, current_line_count, input_line);
+            throw ParsingException(ex, file_reader.get_line_number(), input_line);
         }
     }
 }

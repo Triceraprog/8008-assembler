@@ -167,7 +167,7 @@ void LineTokenizer::adjust_label()
     }
 }
 
-LineTokenizer parse_line(const Options& options, const std::string& line, int line_count)
+LineTokenizer parse_line(const Options& options, const std::string& line, std::size_t line_count)
 {
     LineTokenizer tokens(line);
 

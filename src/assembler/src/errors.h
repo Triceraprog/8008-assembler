@@ -17,7 +17,8 @@ protected:
 class ParsingException : public ExceptionWithReason
 {
 public:
-    explicit ParsingException(const std::exception& ex, int line_number, const std::string& line);
+    explicit ParsingException(const std::exception& ex, std::size_t line_number,
+                              const std::string& line);
 };
 
 class InternalError : public ExceptionWithReason
@@ -25,6 +26,5 @@ class InternalError : public ExceptionWithReason
 public:
     explicit InternalError(const std::string& line);
 };
-
 
 #endif //INC_8008_ASSEMBLER_ERRORS_H
