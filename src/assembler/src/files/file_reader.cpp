@@ -9,6 +9,7 @@ void FileReader::append(std::unique_ptr<std::istream> stream)
 
     auto line_iterator = std::istream_iterator<line>(*input_streams.back());
     line_iterators.push_back(line_iterator);
+    current_line_counts.push_back(1);
 
     if (exhausted)
     {
@@ -27,6 +28,7 @@ void FileReader::insert_now(std::unique_ptr<std::istream> stream)
 
     auto line_iterator = std::istream_iterator<line>(*input_streams.front());
     line_iterators.push_front(line_iterator);
+    current_line_counts.push_front(1);
 
     interrupted = true; // Will not work if interrupted by an empty stream
     exhausted = false;
@@ -53,11 +55,13 @@ void FileReader::advance()
         // the first line of the new stream.
         assert(line_iterators.size() > 1);
         ++line_iterators[1];
+        ++current_line_counts[1];
         interrupted = false;
     }
     else
     {
         ++current_line_it;
+        current_line_counts.front() += 1;
     }
     drop_front_empty_providers();
     extract_line_or_stop();
@@ -116,6 +120,7 @@ void FileReader::drop_front_empty_providers()
     {
         line_iterators.pop_front();
         input_streams.pop_front();
+        current_line_counts.pop_front();
     }
 }
 
@@ -125,9 +130,15 @@ void FileReader::extract_line_or_stop()
     if (!line_iterators.empty() && (current_line_it != std::istream_iterator<line>()))
     {
         latest_read_line = *current_line_it;
+        current_line_count = current_line_counts.front();
     }
     else
     {
         exhausted = true;
     }
+}
+
+size_t FileReader::get_line_number() const
+{
+    return current_line_count;
 }
