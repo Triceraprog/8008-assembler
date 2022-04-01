@@ -3,13 +3,15 @@
 #include <cassert>
 #include <istream>
 
+FileReader::ReaderContext::ReaderContext(std::unique_ptr<std::istream>&& stream)
+    : input_stream{std::move(stream)}, current_line_count{1}
+{
+    line_iterator = std::istream_iterator<line>{*input_stream};
+}
+
 void FileReader::append(std::unique_ptr<std::istream> stream)
 {
-    input_streams.emplace_back(std::move(stream));
-
-    auto line_iterator = std::istream_iterator<line>(*input_streams.back());
-    line_iterators.push_back(line_iterator);
-    current_line_counts.push_back(1);
+    contexts.emplace_back(std::move(stream));
 
     if (exhausted)
     {
@@ -24,11 +26,7 @@ void FileReader::insert_now(std::unique_ptr<std::istream> stream)
     // As insert interrupts the current stream, the new stream is placed
     // in front of the streams. After it is consumed, it will naturally
     // go back to the previous streams, like in a stack.
-    input_streams.emplace_front(std::move(stream));
-
-    auto line_iterator = std::istream_iterator<line>(*input_streams.front());
-    line_iterators.push_front(line_iterator);
-    current_line_counts.push_front(1);
+    contexts.emplace_front(std::move(stream));
 
     interrupted = true; // Will not work if interrupted by an empty stream
     exhausted = false;
@@ -46,22 +44,21 @@ void FileReader::advance()
         return;
     }
 
-    auto& current_line_it = line_iterators.front();
-    assert(current_line_it != std::istream_iterator<line>());
+    assert(contexts.front().line_iterator != std::istream_iterator<line>());
     if (interrupted)
     {
         // A new stream was added in front.
         // In that case, advancing means advancing the interrupted stream and reading
         // the first line of the new stream.
-        assert(line_iterators.size() > 1);
-        ++line_iterators[1];
-        ++current_line_counts[1];
+        assert(contexts.size() > 1);
+        ++contexts[1].line_iterator;
+        ++contexts[1].current_line_count;
         interrupted = false;
     }
     else
     {
-        ++current_line_it;
-        current_line_counts.front() += 1;
+        ++contexts[0].line_iterator;
+        ++contexts[0].current_line_count;
     }
     drop_front_empty_providers();
     extract_line_or_stop();
@@ -116,21 +113,18 @@ std::istream& operator>>(std::istream& stream, line& line)
 
 void FileReader::drop_front_empty_providers()
 {
-    while (!line_iterators.empty() && (line_iterators.front() == std::istream_iterator<line>()))
+    while (!contexts.empty() && (contexts.front().line_iterator == std::istream_iterator<line>()))
     {
-        line_iterators.pop_front();
-        input_streams.pop_front();
-        current_line_counts.pop_front();
+        contexts.pop_front();
     }
 }
 
 void FileReader::extract_line_or_stop()
 {
-    auto& current_line_it = line_iterators.front();
-    if (!line_iterators.empty() && (current_line_it != std::istream_iterator<line>()))
+    if (!contexts.empty() && (contexts.front().line_iterator != std::istream_iterator<line>()))
     {
-        latest_read_line = *current_line_it;
-        current_line_count = current_line_counts.front();
+        latest_read_line = *contexts.front().line_iterator;
+        current_line_count = contexts.front().current_line_count;
     }
     else
     {
@@ -138,7 +132,4 @@ void FileReader::extract_line_or_stop()
     }
 }
 
-size_t FileReader::get_line_number() const
-{
-    return current_line_count;
-}
+std::size_t FileReader::get_line_number() const { return current_line_count; }

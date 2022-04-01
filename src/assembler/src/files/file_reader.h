@@ -44,7 +44,7 @@ public:
     Iterator begin();
     Iterator end();
 
-    size_t get_line_number() const;
+    [[nodiscard]] std::size_t get_line_number() const;
 
     // Appends a new stream for queueing. It will be read after the already present streams.
     void append(std::unique_ptr<std::istream> stream);
@@ -54,9 +54,16 @@ public:
     void insert_now(std::unique_ptr<std::istream> stream);
 
 private:
-    std::deque<std::unique_ptr<std::istream>> input_streams;
-    std::deque<std::istream_iterator<line>> line_iterators;
-    std::deque<std::size_t> current_line_counts;
+    struct ReaderContext
+    {
+        explicit ReaderContext(std::unique_ptr<std::istream>&& stream);
+
+        std::unique_ptr<std::istream> input_stream;
+        std::istream_iterator<line> line_iterator;
+        std::size_t current_line_count;
+    };
+    std::deque<ReaderContext> contexts;
+
     std::size_t current_line_count{0};
     bool exhausted{true};
     bool interrupted{false};
