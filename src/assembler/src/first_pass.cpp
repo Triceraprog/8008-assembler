@@ -90,7 +90,8 @@ void first_pass(Context& context, FileReader& file_reader, std::vector<ParsedLin
         }
         catch (const std::exception& ex)
         {
-            throw ParsingException(ex, file_reader.get_line_number(), input_line);
+            throw ParsingException(ex, file_reader.get_line_number(), file_reader.get_name_tag(),
+                                   input_line);
         }
     }
 }

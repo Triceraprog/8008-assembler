@@ -19,6 +19,8 @@ class ParsingException : public ExceptionWithReason
 public:
     explicit ParsingException(const std::exception& ex, std::size_t line_number,
                               const std::string& line);
+    explicit ParsingException(const std::exception& ex, std::size_t line_number,
+                              const std::string_view context_name, const std::string& line);
 };
 
 class InternalError : public ExceptionWithReason
