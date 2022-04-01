@@ -13,7 +13,7 @@ void Utility::append_file_by_name(FileReader& file_reader, const std::string& fi
         throw CannotOpenFile(filename, "input file");
     }
 
-    file_reader.append(std::move(stream));
+    file_reader.append(std::move(stream), std::string_view());
 }
 
 void Utility::insert_file_by_name(FileReader& file_reader, const std::string& filename)
@@ -25,5 +25,5 @@ void Utility::insert_file_by_name(FileReader& file_reader, const std::string& fi
         throw CannotOpenFile(filename, "include file");
     }
 
-    file_reader.insert_now(std::move(stream));
+    file_reader.insert_now(std::move(stream), std::string_view());
 }

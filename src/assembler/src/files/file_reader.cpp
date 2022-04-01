@@ -3,15 +3,16 @@
 #include <cassert>
 #include <istream>
 
-FileReader::ReaderContext::ReaderContext(std::unique_ptr<std::istream>&& stream)
-    : input_stream{std::move(stream)}, current_line_count{1}
+FileReader::ReaderContext::ReaderContext(std::unique_ptr<std::istream>&& stream,
+                                         std::string_view name_tag)
+    : input_stream{std::move(stream)}, current_line_count{1}, name_tag{name_tag}
 {
     line_iterator = std::istream_iterator<line>{*input_stream};
 }
 
-void FileReader::append(std::unique_ptr<std::istream> stream)
+void FileReader::append(std::unique_ptr<std::istream> stream, std::string_view name_tag)
 {
-    contexts.emplace_back(std::move(stream));
+    contexts.emplace_back(std::move(stream), name_tag);
 
     if (exhausted)
     {
@@ -21,12 +22,18 @@ void FileReader::append(std::unique_ptr<std::istream> stream)
     }
 }
 
-void FileReader::insert_now(std::unique_ptr<std::istream> stream)
+void FileReader::insert_now(std::unique_ptr<std::istream> stream, std::string_view name_tag)
 {
+    if (contexts.empty())
+    {
+        return append(std::move(stream), name_tag);
+    }
+
     // As insert interrupts the current stream, the new stream is placed
     // in front of the streams. After it is consumed, it will naturally
     // go back to the previous streams, like in a stack.
-    contexts.emplace_front(std::move(stream));
+    auto stacked_name_tag = contexts.front().name_tag + "::" + std::string{name_tag};
+    contexts.emplace_front(std::move(stream), stacked_name_tag);
 
     interrupted = true; // Will not work if interrupted by an empty stream
     exhausted = false;
@@ -125,6 +132,7 @@ void FileReader::extract_line_or_stop()
     {
         latest_read_line = *contexts.front().line_iterator;
         current_line_count = contexts.front().current_line_count;
+        current_name_tag = contexts.front().name_tag;
     }
     else
     {
@@ -133,3 +141,5 @@ void FileReader::extract_line_or_stop()
 }
 
 std::size_t FileReader::get_line_number() const { return current_line_count; }
+
+std::string FileReader::get_name_tag() const { return current_name_tag; }

@@ -47,20 +47,23 @@ public:
     [[nodiscard]] std::size_t get_line_number() const;
 
     // Appends a new stream for queueing. It will be read after the already present streams.
-    void append(std::unique_ptr<std::istream> stream);
+    void append(std::unique_ptr<std::istream> stream, std::string_view name_tag);
 
     // Inserts a new stream to be read just now. It interrupts the current stream and will
     // return to it after, as in a stack.
-    void insert_now(std::unique_ptr<std::istream> stream);
+    void insert_now(std::unique_ptr<std::istream> stream, std::string_view name_tag);
+
+    std::string get_name_tag() const;
 
 private:
     struct ReaderContext
     {
-        explicit ReaderContext(std::unique_ptr<std::istream>&& stream);
+        ReaderContext(std::unique_ptr<std::istream>&& stream, std::string_view name_tag);
 
         std::unique_ptr<std::istream> input_stream;
         std::istream_iterator<line> line_iterator;
         std::size_t current_line_count;
+        std::string name_tag;
     };
     std::deque<ReaderContext> contexts;
 
@@ -68,6 +71,7 @@ private:
     bool exhausted{true};
     bool interrupted{false};
     line latest_read_line;
+    std::string current_name_tag;
 
     [[nodiscard]] bool content_exhausted() const;
 
