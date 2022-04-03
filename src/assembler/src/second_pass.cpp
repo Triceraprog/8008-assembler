@@ -3,9 +3,8 @@
 #include "context.h"
 #include "errors.h"
 #include "options.h"
-#include "parsed_line.h"
-#include "symbol_table.h"
 #include "parsed_line_storage.h"
+#include "symbol_table.h"
 
 #include <cstdio>
 #include <iostream>
@@ -41,7 +40,7 @@ void second_pass(const Context& context, std::ostream& output_stream,
         }
         catch (const std::exception& ex)
         {
-            throw ParsingException(ex, line_number, input_line);
+            throw ParsingException(ex, line_number, *parsed_line.name_tag, input_line);
         }
     }
     writer.write_end();

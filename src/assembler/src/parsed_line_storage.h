@@ -24,6 +24,9 @@ public:
 
 private:
     std::vector<ParsedLine> parsed_lines;
+    std::vector<std::shared_ptr<std::string>> name_tags;
+
+    std::shared_ptr<std::string> get_name_tag_ref(const std::string& name_tag);
 };
 
 #endif //INC_8008_ASSEMBLER_PARSED_LINE_STORAGE_H

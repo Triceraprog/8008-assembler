@@ -13,6 +13,7 @@ struct ParsedLine
     LineTokenizer tokens;
     Instruction instruction;
     std::string line;
+    std::shared_ptr<std::string> name_tag;
 };
 
 #endif //INC_8008_ASSEMBLER_PARSED_LINE_H

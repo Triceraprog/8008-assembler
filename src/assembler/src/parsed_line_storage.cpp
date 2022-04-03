@@ -9,12 +9,30 @@ void ParsedLineStorage::append_line(const Context& context, FileReader& file_rea
                                     std::string_view input_line, std::size_t line_number,
                                     int address)
 {
+    auto name_tag_ref = get_name_tag_ref(file_reader.get_name_tag());
+
     LineTokenizer tokens = parse_line(context.options, input_line, line_number);
+    Instruction instruction{context, tokens.opcode, tokens.arguments, file_reader};
+    parsed_lines.push_back({line_number, address, tokens, std::move(instruction),
+                            std::string{input_line}, name_tag_ref});
+}
+
+std::shared_ptr<std::string> ParsedLineStorage::get_name_tag_ref(const std::string& name_tag)
+{
+    auto where = std::find_if(std::begin(name_tags), std::end(name_tags),
+                              [&name_tag](auto& name) { return *name == name_tag; });
+
+    std::shared_ptr<std::string> name_tag_ref;
+    if (where != std::end(name_tags))
     {
-        Instruction instruction{context, tokens.opcode, tokens.arguments, file_reader};
-        parsed_lines.push_back(
-                {line_number, address, tokens, std::move(instruction), std::string{input_line}});
+        name_tag_ref = *where;
     }
+    else
+    {
+        name_tags.push_back(std::make_shared<std::string>(name_tag));
+        name_tag_ref = name_tags.back();
+    }
+    return name_tag_ref;
 }
 
 const ParsedLine& ParsedLineStorage::latest_line() const { return parsed_lines.back(); }

@@ -1,8 +1,8 @@
-- Errors should tell the current file in addition to the current line.
 - Macro system
   - Needs a way to record the macro
   - Needs a way to bind an identifier to a value (string) in a context (.bind instruction ?)
   - Needs a way to inject the macro content with the binding context when it's called
+  - Resolving a symbol on a context searches up the hierarchy
   - Be careful of the line number with Macro. Maybe some stacked line number scheme.
 - Pseudo instructions
   - Specify syntax mode (.syntax old or new)
