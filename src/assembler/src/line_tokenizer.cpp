@@ -10,7 +10,7 @@ namespace
 {
     struct LineParser
     {
-        explicit LineParser(std::string view) : view{std::move(view)} {}
+        explicit LineParser(std::string_view view) : view{view} {}
 
         std::string next_string() { return next_with_delimiters(" \t;"); }
         std::string next_argument() { return next_with_delimiters(",;"); }
@@ -101,7 +101,7 @@ namespace
     };
 }
 
-LineTokenizer::LineTokenizer(const std::string& line)
+LineTokenizer::LineTokenizer(const std::string_view line)
 {
     if (line.empty())
     {
@@ -167,7 +167,8 @@ void LineTokenizer::adjust_label()
     }
 }
 
-LineTokenizer parse_line(const Options& options, const std::string& line, std::size_t line_count)
+LineTokenizer parse_line(const Options& options, const std::string_view line,
+                         std::size_t line_count)
 {
     LineTokenizer tokens(line);
 

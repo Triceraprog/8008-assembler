@@ -4,9 +4,9 @@
 #include "errors.h"
 #include "files/file_reader.h"
 #include "instruction.h"
-#include "line_tokenizer.h"
 #include "options.h"
 #include "parsed_line.h"
+#include "parsed_line_storage.h"
 #include "symbol_table.h"
 #include "utils.h"
 
@@ -54,7 +54,7 @@ namespace
     }
 }
 
-void first_pass(Context& context, FileReader& file_reader, std::vector<ParsedLine>& parsed_lines)
+void first_pass(Context& context, FileReader& file_reader, ParsedLineStorage& parsed_line_storage)
 {
     // In the first pass, we parse through lines to build a symbol table
     // What is parsed is kept into the "parsed_lines" container for the second pass.
@@ -77,15 +77,12 @@ void first_pass(Context& context, FileReader& file_reader, std::vector<ParsedLin
 
         try
         {
-            LineTokenizer tokens = parse_line(options, input_line, file_reader.get_line_number());
-            {
-                Instruction instruction{context, tokens.opcode, tokens.arguments, file_reader};
-                parsed_lines.push_back({file_reader.get_line_number(), current_address, tokens,
-                                        std::move(instruction), input_line});
-            }
+            parsed_line_storage.append_line(context, file_reader, input_line,
+                                            file_reader.get_line_number(), current_address);
 
-            handle_potential_label(context, parsed_lines.back());
-            auto& instruction = parsed_lines.back().instruction;
+            const auto& latest_parsed_line = parsed_line_storage.latest_line();
+            handle_potential_label(context, latest_parsed_line);
+            const auto& instruction = latest_parsed_line.instruction;
             current_address = instruction.first_pass(context, current_address);
         }
         catch (const std::exception& ex)

@@ -3,11 +3,11 @@
 #include "context.h"
 #include "listing.h"
 #include "options.h"
-#include "parsed_line.h"
+#include "parsed_line_storage.h"
 
 #include <iostream>
 
-void listing_pass(const Context& context, const std::vector<ParsedLine>& parsed_lines,
+void listing_pass(const Context& context, ParsedLineStorage& parsed_line_storage,
                   Listing& listing)
 {
     const auto& options = context.options;
@@ -23,7 +23,7 @@ void listing_pass(const Context& context, const std::vector<ParsedLine>& parsed_
 
     listing.write_listing_header();
 
-    for (auto& parsed_line : parsed_lines)
+    for (auto& parsed_line : parsed_line_storage)
     {
         const auto& input_line = parsed_line.line;
         const int line_number = parsed_line.line_number;

@@ -5,7 +5,7 @@
 #include "assembler/src/listing.h"
 #include "assembler/src/listing_pass.h"
 #include "assembler/src/options.h"
-#include "assembler/src/parsed_line.h"
+#include "assembler/src/parsed_line_storage.h"
 #include "assembler/src/second_pass.h"
 #include "assembler/src/symbol_table.h"
 
@@ -29,13 +29,13 @@ int main(int argc, const char** argv)
         Files files(global_options);
         SymbolTable symbol_table;
         Listing listing(files.listing_stream, global_options);
-        std::vector<ParsedLine> parsed_lines;
+        ParsedLineStorage parsed_line_storage;
 
         Context context{global_options, symbol_table};
 
-        first_pass(context, files.file_reader, parsed_lines);
-        second_pass(context, files.output_stream, parsed_lines);
-        listing_pass(context, parsed_lines, listing);
+        first_pass(context, files.file_reader, parsed_line_storage);
+        second_pass(context, files.output_stream, parsed_line_storage);
+        listing_pass(context, parsed_line_storage, listing);
 
         /* write symbol table to listfile */
         if (global_options.generate_list_file)

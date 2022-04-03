@@ -5,12 +5,13 @@
 #include "options.h"
 #include "parsed_line.h"
 #include "symbol_table.h"
+#include "parsed_line_storage.h"
 
 #include <cstdio>
 #include <iostream>
 
 void second_pass(const Context& context, std::ostream& output_stream,
-                 const std::vector<ParsedLine>& parsed_lines)
+                 ParsedLineStorage& parsed_line_storage)
 {
     /* Symbols are defined. Second pass. */
     const auto& options = context.options;
@@ -22,7 +23,7 @@ void second_pass(const Context& context, std::ostream& output_stream,
     ByteWriter writer(output_stream,
                       options.generate_binary_file ? ByteWriter::BINARY : ByteWriter::HEX);
 
-    for (auto& parsed_line : parsed_lines)
+    for (auto& parsed_line : parsed_line_storage)
     {
         const auto& input_line = parsed_line.line;
         const auto line_number = parsed_line.line_number;

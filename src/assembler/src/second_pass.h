@@ -2,13 +2,13 @@
 #define INC_8008_ASSEMBLER_SECOND_PASS_H
 
 #include <ostream>
-#include <vector>
 
 class Context;
 class ParsedLine;
 class SymbolTable;
+class ParsedLineStorage;
 
 void second_pass(const Context& context, std::ostream& output_stream,
-                 const std::vector<ParsedLine>& parsed_lines);
+                 ParsedLineStorage& parsed_line_storage);
 
 #endif //INC_8008_ASSEMBLER_SECOND_PASS_H
