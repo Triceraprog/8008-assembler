@@ -24,6 +24,7 @@ enum class InstructionEnum
     ORG,
     DATA,
     INCLUDE,
+    SYNTAX,
     OTHER,
 };
 
@@ -79,6 +80,13 @@ class InvalidCPU : public ExceptionWithReason
 public:
     InvalidCPU();
 };
+
+class InvalidSyntax : public ExceptionWithReason
+{
+public:
+    InvalidSyntax();
+};
+
 
 class MissingArgument : public ExceptionWithReason
 {

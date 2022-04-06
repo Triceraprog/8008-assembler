@@ -210,6 +210,44 @@ namespace
         }
     };
 
+    struct Instruction_SYNTAX : public Instruction::InstructionAction
+    {
+        Instruction_SYNTAX(const Context& context, const std::vector<std::string>& arguments)
+        {
+            if (arguments.empty())
+            {
+                throw MissingArgument(".syntax");
+            }
+
+            auto syntax_type = arguments[0];
+
+            if (context.options.debug)
+            {
+                std::cout << "got '" << syntax_type << "' as the new syntax.\n";
+            }
+
+            verify_syntax(syntax_type);
+            new_syntax = ci_equals(syntax_type, "NEW");
+        }
+
+        static void verify_syntax(const std::string& syntax)
+        {
+            if ((!ci_equals(syntax, "OLD")) && (!ci_equals(syntax, "NEW")))
+            {
+                throw InvalidSyntax();
+            }
+        }
+
+        int advance_address(const Context& context, int address) const override
+        {
+            // The syntax instruction changes the current syntax mode.
+            context.options.new_syntax = new_syntax;
+            return InstructionAction::advance_address(context, address);
+        }
+
+        bool new_syntax{};
+    };
+
     struct Instruction_EMPTY : public Instruction::InstructionAction
     {
     };
@@ -246,9 +284,10 @@ void Instruction::InstructionAction::write_listing(Listing& listing, const std::
 InstructionEnum instruction_to_enum(std::string_view opcode)
 {
     static std::vector<std::tuple<const char*, InstructionEnum>> association = {
-            {"equ", InstructionEnum::EQU},   {"end", InstructionEnum::END},
-            {"cpu", InstructionEnum::CPU},   {"org", InstructionEnum::ORG},
-            {"data", InstructionEnum::DATA}, {".include", InstructionEnum::INCLUDE},
+            {"equ", InstructionEnum::EQU},        {"end", InstructionEnum::END},
+            {"cpu", InstructionEnum::CPU},        {"org", InstructionEnum::ORG},
+            {"data", InstructionEnum::DATA},      {".include", InstructionEnum::INCLUDE},
+            {".syntax", InstructionEnum::SYNTAX},
     };
     if (opcode.empty())
     {
@@ -295,6 +334,9 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
         case InstructionEnum::INCLUDE:
             action = std::make_unique<Instruction_INCLUDE>(context, arguments, file_reader);
             break;
+        case InstructionEnum::SYNTAX:
+            action = std::make_unique<Instruction_SYNTAX>(context, arguments);
+            break;
         case InstructionEnum::OTHER:
             action = std::make_unique<Instruction_OTHER>(opcode, arguments,
                                                          context.options.new_syntax ? NEW : OLD);
@@ -324,7 +366,9 @@ void Instruction::listing_pass(Listing& listing, const std::string& input_line, 
     action->write_listing(listing, input_line, line_number, address);
 }
 
-InvalidCPU::InvalidCPU() { reason = R"(cpu only allowed is "8008" or "i8008")"; }
+InvalidCPU::InvalidCPU() { reason = R"(only allowed cpu is "8008" or "i8008")"; }
+
+InvalidSyntax::InvalidSyntax() { reason = R"(only allowed syntax is "OLD" or "NEW")"; }
 
 MissingArgument::MissingArgument(std::string_view instruction)
 {

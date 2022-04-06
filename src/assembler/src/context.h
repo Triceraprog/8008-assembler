@@ -6,7 +6,7 @@ class SymbolTable;
 
 struct Context
 {
-    const Options& options;
+    Options& options;
     SymbolTable& symbol_table;
 };
 
