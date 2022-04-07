@@ -4,6 +4,7 @@
 #include "errors.h"
 #include "files/file_reader.h"
 #include "instruction.h"
+#include "options.h"
 #include "parsed_line.h"
 #include "parsed_line_storage.h"
 #include "utils.h"

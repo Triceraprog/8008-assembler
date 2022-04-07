@@ -1,5 +1,7 @@
 #include "context.h"
 
+#include "options.h"
+
 Context::Context(const Options& options) { option_stack.push(options); }
 
 void Context::define_symbol(std::string_view symbol_name, int value)

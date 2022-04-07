@@ -1,10 +1,11 @@
 #ifndef INC_8008_ASSEMBLER_CONTEXT_H
 #define INC_8008_ASSEMBLER_CONTEXT_H
 
-#include "options.h"
 #include "symbol_table.h"
 
 #include <stack>
+
+class Options;
 
 struct Context
 {
