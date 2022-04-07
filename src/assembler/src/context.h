@@ -4,9 +4,11 @@
 #include "options.h"
 #include "symbol_table.h"
 
+#include <stack>
+
 struct Context
 {
-    explicit Context(Options options);
+    explicit Context(const Options& options);
 
     Options & get_options();
     const Options & get_options() const;
@@ -16,9 +18,10 @@ struct Context
     void list_symbols(std::ostream& output);
 
     void push();
+    void pop();
 
 private:
-    Options options;
+    std::stack<Options> option_stack;
     SymbolTable symbol_table;
 };
 
