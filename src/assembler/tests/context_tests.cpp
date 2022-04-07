@@ -38,7 +38,7 @@ TEST(Context, keeps_options_when_pushing_the_context)
     Context ctx(options);
     ctx.push();
 
-    ASSERT_THAT(ctx.options.new_syntax, IsTrue());
+    ASSERT_THAT(ctx.get_options().new_syntax, IsTrue());
 }
 
 TEST(Context, can_change_new_context_options)
@@ -48,7 +48,7 @@ TEST(Context, can_change_new_context_options)
 
     Context ctx(options);
     ctx.push();
-    ctx.options.new_syntax = false;
+    ctx.get_options().new_syntax = false;
 
-    ASSERT_THAT(ctx.options.new_syntax, IsFalse());
+    ASSERT_THAT(ctx.get_options().new_syntax, IsFalse());
 }

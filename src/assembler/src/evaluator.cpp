@@ -96,7 +96,8 @@ namespace
         }
         else
         {
-            return string_to_int(operand, EvaluationFlags::get_flags_from_options(context.options));
+            return string_to_int(operand,
+                                 EvaluationFlags::get_flags_from_options(context.get_options()));
         }
     }
 
@@ -144,7 +145,7 @@ namespace
                 const auto& operand = operands[j];
                 int val = operand_to_int(context, operand);
 
-                if (context.options.debug)
+                if (context.get_options().debug)
                 {
                     std::cout << "      for '" << operand << "' got value " << val;
                 }
@@ -188,7 +189,7 @@ int evaluate_argument(const Context& context, std::string_view arg)
         return (value & 0xFF);
     }
 
-    if (context.options.debug)
+    if (context.get_options().debug)
     {
         std::cout << "evaluating " << arg << "\n";
     }
@@ -235,7 +236,7 @@ int evaluate_argument(const Context& context, std::string_view arg)
 
     auto result = acc.resolve(context);
 
-    if (context.options.debug)
+    if (context.get_options().debug)
     {
         std::cout << "     got final value " << result << "\n";
     }

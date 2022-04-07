@@ -13,7 +13,7 @@ void second_pass(const Context& context, std::ostream& output_stream,
                  ParsedLineStorage& parsed_line_storage)
 {
     /* Symbols are defined. Second pass. */
-    const auto& options = context.options;
+    const auto& options = context.get_options();
     if (options.verbose || options.debug)
     {
         std::cout << "Pass number Two:  Re-read and assemble codes\n";

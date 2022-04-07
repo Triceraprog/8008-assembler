@@ -11,7 +11,7 @@ void ParsedLineStorage::append_line(const Context& context, FileReader& file_rea
 {
     auto name_tag_ref = get_name_tag_ref(file_reader.get_name_tag());
 
-    LineTokenizer tokens = parse_line(context.options, input_line, line_number);
+    LineTokenizer tokens = parse_line(context.get_options(), input_line, line_number);
     Instruction instruction{context, tokens.opcode, tokens.arguments, file_reader};
     parsed_lines.push_back({line_number, address, tokens, std::move(instruction),
                             std::string{input_line}, name_tag_ref});

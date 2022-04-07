@@ -37,14 +37,14 @@ TEST_F(EvaluateArgumentFixture, evaluates_octal_with_suffix_upper_case)
 
 TEST_F(EvaluateArgumentFixture, evaluates_octal_by_default)
 {
-    context.options.input_num_as_octal = true;
+    context.get_options().input_num_as_octal = true;
     auto value = evaluate_argument(context, "100");
     ASSERT_THAT(value, Eq(64));
 }
 
 TEST_F(EvaluateArgumentFixture, evaluates_octal_by_default_with_tabs)
 {
-    context.options.input_num_as_octal = true;
+    context.get_options().input_num_as_octal = true;
     auto value = evaluate_argument(context, "\t\t100\t\t\t");
     ASSERT_THAT(value, Eq(64));
 }

@@ -6,7 +6,10 @@
 
 struct Context
 {
-    explicit Context(Options  options);
+    explicit Context(Options options);
+
+    Options & get_options();
+    const Options & get_options() const;
 
     void define_symbol(std::string_view symbol_name, int value);
     [[nodiscard]] std::tuple<bool, int> get_symbol_value(std::string_view symbol_name) const;
@@ -14,8 +17,8 @@ struct Context
 
     void push();
 
-    Options options;
 private:
+    Options options;
     SymbolTable symbol_table;
 };
 

@@ -10,7 +10,7 @@
 void listing_pass(const Context& context, ParsedLineStorage& parsed_line_storage,
                   Listing& listing)
 {
-    const auto& options = context.options;
+    const auto& options = context.get_options();
     if (!options.generate_list_file)
     {
         return;

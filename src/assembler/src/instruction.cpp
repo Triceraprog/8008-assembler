@@ -96,7 +96,7 @@ namespace
         {
             data_size = decode_data(context, arguments, data_list);
 
-            if (context.options.debug)
+            if (context.get_options().debug)
             {
                 std::cout << "got " << std::dec << std::abs(data_size) << " items in data list\n";
             }
@@ -201,7 +201,7 @@ namespace
 
             auto include_filename = arguments[0];
 
-            if (context.options.debug)
+            if (context.get_options().debug)
             {
                 std::cout << "got '" << include_filename << "' as a filename to include.\n";
             }
@@ -221,7 +221,7 @@ namespace
 
             auto syntax_type = arguments[0];
 
-            if (context.options.debug)
+            if (context.get_options().debug)
             {
                 std::cout << "got '" << syntax_type << "' as the new syntax.\n";
             }
@@ -241,7 +241,7 @@ namespace
         void update_context(Context& context) const override
         {
             // The syntax instruction changes the current syntax mode.
-            context.options.new_syntax = new_syntax;
+            context.get_options().new_syntax = new_syntax;
             InstructionAction::update_context(context);
         }
 
@@ -340,8 +340,8 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
             action = std::make_unique<Instruction_SYNTAX>(context, arguments);
             break;
         case InstructionEnum::OTHER:
-            action = std::make_unique<Instruction_OTHER>(opcode, arguments,
-                                                         context.options.new_syntax ? NEW : OLD);
+            action = std::make_unique<Instruction_OTHER>(
+                    opcode, arguments, context.get_options().new_syntax ? NEW : OLD);
             break;
     }
 }

@@ -73,7 +73,7 @@ int decode_data(const Context& context, const std::vector<std::string>& tokens,
         }
 
         /* If "markascii" option is set, the highest bit of these ascii bytes are forced to 1. */
-        if (context.options.mark_8_ascii)
+        if (context.get_options().mark_8_ascii)
         {
             std::ranges::transform(out_data.begin(), out_data.end(), out_data.begin(),
                                    [](const auto p) { return p | 0x80; });

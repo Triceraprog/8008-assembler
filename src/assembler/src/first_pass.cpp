@@ -25,7 +25,7 @@ namespace
     void define_symbol_or_fail(Context& context, const std::string& label, const int line_address,
                                const Instruction& instruction)
     {
-        const auto& options = context.options;
+        const auto& options = context.get_options();
 
         throws_if_already_defined(context, label);
 
@@ -55,7 +55,7 @@ void first_pass(Context& context, FileReader& file_reader, ParsedLineStorage& pa
 {
     // In the first pass, we parse through lines to build a symbol table
     // What is parsed is kept into the "parsed_lines" container for the second pass.
-    const auto& options = context.options;
+    const auto& options = context.get_options();
 
     if (options.debug || options.verbose)
     {

@@ -71,7 +71,7 @@ struct InstructionEvaluationFixture : public InstructionFixture
 
 struct InstructionEvaluationFixtureNewSyntax : public InstructionFixture
 {
-    InstructionEvaluationFixtureNewSyntax() { context.options.new_syntax = true; }
+    InstructionEvaluationFixtureNewSyntax() { context.get_options().new_syntax = true; }
 
     Instruction get_instruction_mvi()
     {
@@ -190,7 +190,6 @@ TEST_F(InstructionEvaluationFixture, throws_if_syntax_as_no_parameter)
     ASSERT_THROW(get_instruction_syntax_without_param(), MissingArgument);
 }
 
-
 /// TESTS FOR THE FIRST PASS
 
 TEST_F(FirstPassFixture, does_not_advance_address_for_empty)
@@ -263,11 +262,11 @@ TEST_F(FirstPassFixture, syntax_changes_context_and_keeps_address)
 {
     auto instruction = get_instruction_syntax();
 
-    context.options.new_syntax = true;
+    context.get_options().new_syntax = true;
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address));
-    ASSERT_THAT(context.options.new_syntax, IsFalse());
+    ASSERT_THAT(context.get_options().new_syntax, IsFalse());
 }
 
 /// TESTS FOR THE SECOND PASS
