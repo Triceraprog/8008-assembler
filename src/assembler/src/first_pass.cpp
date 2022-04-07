@@ -4,10 +4,8 @@
 #include "errors.h"
 #include "files/file_reader.h"
 #include "instruction.h"
-#include "options.h"
 #include "parsed_line.h"
 #include "parsed_line_storage.h"
-#include "symbol_table.h"
 #include "utils.h"
 
 #include <iostream>
@@ -16,9 +14,9 @@
 
 namespace
 {
-    void throws_if_already_defined(const SymbolTable& symbol_table, const std::string& label)
+    void throws_if_already_defined(const Context& context, const std::string& label)
     {
-        if (auto symbol_value = symbol_table.get_symbol_value(label); std::get<0>(symbol_value))
+        if (auto symbol_value = context.get_symbol_value(label); std::get<0>(symbol_value))
         {
             throw AlreadyDefinedSymbol(label, std::get<1>(symbol_value));
         }
@@ -28,12 +26,11 @@ namespace
                                const Instruction& instruction)
     {
         const auto& options = context.options;
-        auto& symbol_table = context.symbol_table;
 
-        throws_if_already_defined(symbol_table, label);
+        throws_if_already_defined(context, label);
 
         int val = instruction.get_evaluation(context, line_address);
-        symbol_table.define_symbol(label, val);
+        context.define_symbol(label, val);
 
         if (options.debug)
         {
@@ -59,7 +56,6 @@ void first_pass(Context& context, FileReader& file_reader, ParsedLineStorage& pa
     // In the first pass, we parse through lines to build a symbol table
     // What is parsed is kept into the "parsed_lines" container for the second pass.
     const auto& options = context.options;
-    auto& symbol_table = context.symbol_table;
 
     if (options.debug || options.verbose)
     {

@@ -1,9 +1,7 @@
 #include "evaluator.h"
 #include "context.h"
-#include "files/files.h"
 #include "opcodes/opcodes.h"
 #include "options.h"
-#include "symbol_table.h"
 #include "utils.h"
 
 #include <iostream>
@@ -80,9 +78,9 @@ namespace
         return val;
     }
 
-    int symbol_to_int(const SymbolTable& symbol_table, const std::basic_string<char>& to_parse)
+    int symbol_to_int(const Context& context, const std::basic_string<char>& to_parse)
     {
-        if (auto symbol_value = symbol_table.get_symbol_value(to_parse); std::get<0>(symbol_value))
+        if (auto symbol_value = context.get_symbol_value(to_parse); std::get<0>(symbol_value))
         {
             return std::get<1>(symbol_value);
         }
@@ -94,7 +92,7 @@ namespace
         auto front = operand.front();
         if (isalpha(front) && front != '\'')
         {
-            return symbol_to_int(context.symbol_table, operand);
+            return symbol_to_int(context, operand);
         }
         else
         {
