@@ -1,6 +1,4 @@
 - Push and Pop context
-  - Copy on write for Options
-  - Resolution on SymbolTable
   - When listing the symbols, only the top level symbols should be listed.
 - Macro system
   - Needs a way to record the macro
@@ -18,3 +16,4 @@
 - If the accumulator results in a negative number, various weird things happen, because it's passed as int (wrong hex, wrong lst)
 - Support for priorities in expressions (with optional compatibilities with as8)
 - Change the hardcoded path in functional tests to a parameter and generate the call to tests from CMake
+- If the push/pop contexts have performance problems with copying the options, copy on write could be used.

@@ -16,7 +16,16 @@ void Context::define_symbol(std::string_view symbol_name, int value)
 
 std::tuple<bool, int> Context::get_symbol_value(std::string_view symbol_name) const
 {
-    return symbol_tables.front().get_symbol_value(symbol_name);
+    for (const auto& table : symbol_tables)
+    {
+        auto [success, value] = table.get_symbol_value(symbol_name);
+
+        if (success)
+        {
+            return {success, value};
+        }
+    }
+    return {false, 0};
 }
 
 void Context::list_symbols(std::ostream& output) { symbol_tables.front().list_symbols(output); }
@@ -27,7 +36,7 @@ const Options& Context::get_options() const { return option_stack.top(); }
 void Context::push()
 {
     option_stack.push(option_stack.top());
-    symbol_tables.emplace_front(symbol_tables.front());
+    symbol_tables.emplace_front();
 }
 
 void Context::pop()
