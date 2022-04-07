@@ -110,4 +110,11 @@ TEST(Context, can_change_context_symbol_and_pop_gets_the_old_value_back)
     ASSERT_THAT(old_value, Eq(123));
 }
 
-// TODO: Next Test: protection vs. pop when at top
+TEST(Context, pop_when_top_level_is_silent)
+{
+    Options options;
+    Context ctx(options);
+
+    ASSERT_NO_THROW(ctx.pop());
+    ASSERT_NO_THROW(ctx.pop());
+}

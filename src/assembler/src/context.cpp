@@ -41,6 +41,12 @@ void Context::push()
 
 void Context::pop()
 {
+    if (option_stack.size() <= 1)
+    {
+        // Always keep the top level context.
+        return;
+    }
+
     option_stack.pop();
     symbol_tables.pop_front();
 }
