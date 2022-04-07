@@ -1,6 +1,8 @@
 #include "context.h"
 
 #include "options.h"
+#include "symbol_table.h"
+
 #include "gmock/gmock.h"
 
 using namespace testing;
@@ -55,4 +57,34 @@ TEST(Context, can_change_new_context_options_and_pop_gets_old_value)
     ctx.pop();
 
     ASSERT_THAT(ctx.get_options().new_syntax, IsTrue());
+}
+
+TEST(Context, keeps_symbol_when_pushing_the_context)
+{
+    Options options;
+    Context ctx(options);
+
+    ctx.define_symbol("TEST", 123);
+    ctx.push();
+
+    auto [success, value] = ctx.get_symbol_value("TEST");
+    ASSERT_THAT(success, IsTrue());
+    ASSERT_THAT(value, Eq(123));
+}
+
+TEST(Context, can_create_new_context_symbol_and_pop_forgets_it)
+{
+    Options options;
+    Context ctx(options);
+
+    ctx.push();
+    ctx.define_symbol("TEST", 123);
+
+    auto [success, value] = ctx.get_symbol_value("TEST");
+    ASSERT_THAT(success, IsTrue());
+    ASSERT_THAT(value, Eq(123));
+
+    ctx.pop();
+    auto [failure, no_value] = ctx.get_symbol_value("TEST");
+    ASSERT_THAT(failure, IsFalse());
 }

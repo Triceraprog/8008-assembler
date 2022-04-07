@@ -1,5 +1,7 @@
 #include "data_extraction.h"
+
 #include "options.h"
+#include "symbol_table.h"
 
 #include "gmock/gmock.h"
 

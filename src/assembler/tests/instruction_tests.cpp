@@ -5,6 +5,7 @@
 #include "files/file_reader.h"
 #include "listing.h"
 #include "options.h"
+#include "symbol_table.h"
 
 #include "gmock/gmock.h"
 
