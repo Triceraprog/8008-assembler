@@ -2,7 +2,6 @@
 
 #include "byte_writer.h"
 #include "options.h"
-#include "symbol_table.h"
 
 #include "opcodes/opcode_action_inpout.h"
 #include "opcodes/opcode_action_noarg.h"
@@ -17,8 +16,7 @@ using namespace testing;
 struct OpcodeActionFixture : public Test
 {
     Options options;
-    SymbolTable symbol_table;
-    Context context{options, symbol_table};
+    Context context{options};
 
     std::stringstream byte_buffer;
     ByteWriter byte_writer{byte_buffer, ByteWriter::BINARY};

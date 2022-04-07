@@ -5,12 +5,22 @@
 
 using namespace testing;
 
+TEST(Context, needs_options)
+{
+    Options options;
+
+    options.new_syntax = true;
+
+    Context ctx(options);
+
+    ASSERT_THAT(options.new_syntax, IsTrue());
+}
+
 TEST(Context, can_define_a_symbol_associated_to_int_value)
 {
     Options options;
-    SymbolTable symbol_table;
 
-    Context ctx{options, symbol_table};
+    Context ctx(options);
 
     ctx.define_symbol("TEST", 123);
 
@@ -21,16 +31,3 @@ TEST(Context, can_define_a_symbol_associated_to_int_value)
     auto [failure, no_value] = ctx.get_symbol_value("NO");
     ASSERT_THAT(failure, IsFalse());
 }
-
-/*
-TEST(Context, needs_options)
-{
-    Options options;
-
-    options.new_syntax = true;
-
-    //Context ctx(options);
-
-    ASSERT_THAT(options.new_syntax, IsTrue());
-}
- */

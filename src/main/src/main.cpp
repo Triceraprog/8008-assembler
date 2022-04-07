@@ -27,11 +27,10 @@ int main(int argc, const char** argv)
     try
     {
         Files files(global_options);
-        SymbolTable symbol_table;
         Listing listing(files.listing_stream, global_options);
         ParsedLineStorage parsed_line_storage;
 
-        Context context{global_options, symbol_table};
+        Context context(global_options);
 
         first_pass(context, files.file_reader, parsed_line_storage);
         second_pass(context, files.output_stream, parsed_line_storage);
@@ -40,7 +39,7 @@ int main(int argc, const char** argv)
         /* write symbol table to listfile */
         if (global_options.generate_list_file)
         {
-            symbol_table.list_symbols(files.listing_stream);
+            context.list_symbols(files.listing_stream);
         }
     }
     catch (const CannotOpenFile& ex)

@@ -5,7 +5,6 @@
 #include "files/file_reader.h"
 #include "listing.h"
 #include "options.h"
-#include "symbol_table.h"
 
 #include "gmock/gmock.h"
 
@@ -14,8 +13,7 @@ using namespace testing;
 struct InstructionFixture : public Test
 {
     Options options;
-    SymbolTable symbol_table;
-    Context context{options, symbol_table};
+    Context context{options};
     FileReader file_reader;
 
     Instruction get_instruction_empty() { return Instruction{context, {}, {}, file_reader}; }
@@ -73,7 +71,7 @@ struct InstructionEvaluationFixture : public InstructionFixture
 
 struct InstructionEvaluationFixtureNewSyntax : public InstructionFixture
 {
-    InstructionEvaluationFixtureNewSyntax() { options.new_syntax = true; }
+    InstructionEvaluationFixtureNewSyntax() { context.options.new_syntax = true; }
 
     Instruction get_instruction_mvi()
     {

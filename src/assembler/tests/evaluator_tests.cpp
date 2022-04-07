@@ -1,6 +1,5 @@
 #include "evaluator.h"
 #include "options.h"
-#include "symbol_table.h"
 
 #include "gmock/gmock.h"
 
@@ -9,8 +8,7 @@ using namespace testing;
 struct EvaluateArgumentFixture : public Test
 {
     Options options;
-    SymbolTable table;
-    Context context{options, table};
+    Context context{options};
 };
 
 TEST_F(EvaluateArgumentFixture, evaluates_int)
@@ -39,14 +37,14 @@ TEST_F(EvaluateArgumentFixture, evaluates_octal_with_suffix_upper_case)
 
 TEST_F(EvaluateArgumentFixture, evaluates_octal_by_default)
 {
-    options.input_num_as_octal = true;
+    context.options.input_num_as_octal = true;
     auto value = evaluate_argument(context, "100");
     ASSERT_THAT(value, Eq(64));
 }
 
 TEST_F(EvaluateArgumentFixture, evaluates_octal_by_default_with_tabs)
 {
-    options.input_num_as_octal = true;
+    context.options.input_num_as_octal = true;
     auto value = evaluate_argument(context, "\t\t100\t\t\t");
     ASSERT_THAT(value, Eq(64));
 }
@@ -107,14 +105,14 @@ TEST_F(EvaluateArgumentFixture, evaluates_division)
 
 TEST_F(EvaluateArgumentFixture, evaluates_symbol)
 {
-    table.define_symbol("TEST", 127);
+    context.define_symbol("TEST", 127);
     auto value = evaluate_argument(context, "TEST");
     ASSERT_THAT(value, Eq(127));
 }
 
 TEST_F(EvaluateArgumentFixture, evaluates_FFh_as_a_symbol)
 {
-    table.define_symbol("FFh", 123);
+    context.define_symbol("FFh", 123);
     auto value = evaluate_argument(context, "FFh");
     ASSERT_THAT(value, Eq(123));
 }

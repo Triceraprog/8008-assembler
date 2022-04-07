@@ -1,6 +1,5 @@
 #include "data_extraction.h"
 #include "options.h"
-#include "symbol_table.h"
 
 #include "gmock/gmock.h"
 
@@ -8,9 +7,8 @@ using namespace testing;
 
 struct DataExtractorFixture : public Test
 {
-    SymbolTable table;
     Options options;
-    Context context{options, table};
+    Context context{options};
 };
 
 TEST_F(DataExtractorFixture, evaluates_int)

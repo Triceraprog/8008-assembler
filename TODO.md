@@ -1,7 +1,7 @@
 - Push and Pop context
-  - Getter for indirection
   - Copy on write for Options
   - Resolution on SymbolTable
+  - When listing the symbols, only the top level symbols should be listed.
 - Macro system
   - Needs a way to record the macro
   - Needs a way to bind an identifier to a value (string) in a context (.bind instruction ?)
