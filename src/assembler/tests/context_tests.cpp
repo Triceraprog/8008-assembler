@@ -88,3 +88,26 @@ TEST(Context, can_create_new_context_symbol_and_pop_forgets_it)
     auto [failure, no_value] = ctx.get_symbol_value("TEST");
     ASSERT_THAT(failure, IsFalse());
 }
+
+TEST(Context, can_change_context_symbol_and_pop_gets_the_old_value_back)
+{
+    Options options;
+    Context ctx(options);
+
+    ctx.define_symbol("TEST", 123);
+    ctx.push();
+
+    ctx.define_symbol("TEST", 456);
+
+    auto [success, value] = ctx.get_symbol_value("TEST");
+    ASSERT_THAT(success, IsTrue());
+    ASSERT_THAT(value, Eq(456));
+
+    ctx.pop();
+
+    auto [old_success, old_value] = ctx.get_symbol_value("TEST");
+    ASSERT_THAT(old_success, IsTrue());
+    ASSERT_THAT(old_value, Eq(123));
+}
+
+// TODO: Next Test: protection vs. pop when at top
