@@ -30,7 +30,7 @@ set(ASSEMBLER_LIB_FILES
         src/opcodes/opcode_action_twobyte_arg.cpp src/opcodes/opcode_action_twobyte_arg.h
         src/opcodes/opcode_action_inpout.cpp src/opcodes/opcode_action_inpout.h
         src/opcodes/opcode_action_rst.cpp src/opcodes/opcode_action_rst.h
-        src/context.h
+        src/context.cpp src/context.h
         src/listing_pass.cpp src/listing_pass.h
         src/files/files.cpp src/files/files.h
         src/files/file_reader.cpp src/files/file_reader.h
@@ -47,7 +47,7 @@ set(ASSEMBLER_TEST_FILES
         tests/line_tokenizer_tests.cpp
         tests/instruction_tests.cpp
         tests/opcode_action_tests.cpp
-        tests/file_reader_tests.cpp)
+        tests/file_reader_tests.cpp tests/context_tests.cpp)
 
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})
 target_include_directories(${ASSEMBLER_LIB_NAME} PUBLIC src/)
