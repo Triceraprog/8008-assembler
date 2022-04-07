@@ -36,7 +36,7 @@ public:
 
     [[nodiscard]] int get_evaluation(const Context& context, int address) const;
 
-    [[nodiscard]] int first_pass(const Context& context, int address) const;
+    [[nodiscard]] int first_pass(Context& context, int address) const;
 
     void second_pass(const Context& context, ByteWriter& writer, int address) const;
 
@@ -56,6 +56,9 @@ public:
         // This is used by the first pass to know how many bytes are needed for this instruction.
         // The default is a need of 0, and so returns the given address.
         [[nodiscard]] virtual int advance_address(const Context& context, int address) const;
+
+        // Some instruction can modify the context
+        virtual void update_context(Context& context) const;
 
         // If the construction needs information from the first pass, then it is constructed
         // at build time.

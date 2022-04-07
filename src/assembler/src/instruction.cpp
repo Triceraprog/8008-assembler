@@ -238,11 +238,11 @@ namespace
             }
         }
 
-        int advance_address(const Context& context, int address) const override
+        void update_context(Context& context) const override
         {
             // The syntax instruction changes the current syntax mode.
             context.options.new_syntax = new_syntax;
-            return InstructionAction::advance_address(context, address);
+            InstructionAction::update_context(context);
         }
 
         bool new_syntax{};
@@ -280,6 +280,8 @@ void Instruction::InstructionAction::write_listing(Listing& listing, const std::
 {
     listing.simple_line(line_number, input_line);
 }
+
+void Instruction::InstructionAction::update_context(Context& context) const {}
 
 InstructionEnum instruction_to_enum(std::string_view opcode)
 {
@@ -349,8 +351,9 @@ int Instruction::get_evaluation(const Context& context, int address) const
     return action->evaluate_fixed_address(context, address);
 }
 
-int Instruction::first_pass(const Context& context, int address) const
+int Instruction::first_pass(Context& context, int address) const
 {
+    action->update_context(context);
     return action->advance_address(context, address);
 }
 
