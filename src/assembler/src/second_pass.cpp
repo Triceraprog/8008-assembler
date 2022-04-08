@@ -9,18 +9,17 @@
 #include <cstdio>
 #include <iostream>
 
-void second_pass(const Context& context, std::ostream& output_stream,
+void second_pass(const Options& global_options, std::ostream& output_stream,
                  ParsedLineStorage& parsed_line_storage)
 {
     /* Symbols are defined. Second pass. */
-    const auto& options = context.get_options();
-    if (options.verbose || options.debug)
+    if (global_options.verbose || global_options.debug)
     {
         std::cout << "Pass number Two:  Re-read and assemble codes\n";
     }
 
     ByteWriter writer(output_stream,
-                      options.generate_binary_file ? ByteWriter::BINARY : ByteWriter::HEX);
+                      global_options.generate_binary_file ? ByteWriter::BINARY : ByteWriter::HEX);
 
     for (auto& parsed_line : parsed_line_storage)
     {
@@ -30,13 +29,14 @@ void second_pass(const Context& context, std::ostream& output_stream,
 
         try
         {
-            if (options.verbose || options.debug)
+            if (global_options.verbose || global_options.debug)
             {
                 printf("     0x%X \"%s\"\n", line_address, input_line.c_str());
             }
 
             const auto& instruction = parsed_line.instruction;
-            instruction.second_pass(context, writer, line_address);
+            const auto& associated_context = parsed_line.context;
+            instruction.second_pass(*associated_context, writer, line_address);
         }
         catch (const std::exception& ex)
         {

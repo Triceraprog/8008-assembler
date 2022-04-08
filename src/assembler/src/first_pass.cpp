@@ -74,7 +74,7 @@ void first_pass(ContextStack context_stack, FileReader& file_reader,
 
         try
         {
-            parsed_line_storage.append_line(*context_stack.get_current_context(), file_reader,
+            parsed_line_storage.append_line(context_stack.get_current_context(), file_reader,
                                             input_line, file_reader.get_line_number(),
                                             current_address);
 

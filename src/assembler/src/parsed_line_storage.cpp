@@ -5,16 +5,16 @@
 #include "instruction.h"
 #include "line_tokenizer.h"
 
-void ParsedLineStorage::append_line(const Context& context, FileReader& file_reader,
+void ParsedLineStorage::append_line(std::shared_ptr<Context> context, FileReader& file_reader,
                                     std::string_view input_line, std::size_t line_number,
                                     int address)
 {
     auto name_tag_ref = get_name_tag_ref(file_reader.get_name_tag());
 
-    LineTokenizer tokens = parse_line(context.get_options(), input_line, line_number);
-    Instruction instruction{context, tokens.opcode, tokens.arguments, file_reader};
+    LineTokenizer tokens = parse_line(context->get_options(), input_line, line_number);
+    Instruction instruction{*context, tokens.opcode, tokens.arguments, file_reader};
     parsed_lines.push_back({line_number, address, tokens, std::move(instruction),
-                            std::string{input_line}, name_tag_ref});
+                            std::string{input_line}, name_tag_ref, context});
 }
 
 std::shared_ptr<std::string> ParsedLineStorage::get_name_tag_ref(const std::string& name_tag)

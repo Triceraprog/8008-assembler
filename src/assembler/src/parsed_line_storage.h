@@ -13,7 +13,7 @@ class FileReader;
 class ParsedLineStorage
 {
 public:
-    void append_line(const Context& context, FileReader& file_reader, std::string_view input_line,
+    void append_line(std::shared_ptr<Context> context, FileReader& file_reader, std::string_view input_line,
                      std::size_t line_number, int address);
 
     [[nodiscard]] const ParsedLine& latest_line() const;

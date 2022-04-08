@@ -6,6 +6,8 @@
 
 #include <memory>
 
+class Context;
+
 struct ParsedLine
 {
     std::size_t line_number;
@@ -14,6 +16,7 @@ struct ParsedLine
     Instruction instruction;
     std::string line;
     std::shared_ptr<std::string> name_tag;
+    std::shared_ptr<Context> context;
 };
 
 #endif //INC_8008_ASSEMBLER_PARSED_LINE_H
