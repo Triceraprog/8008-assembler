@@ -35,7 +35,8 @@ set(ASSEMBLER_LIB_FILES
         src/files/files.cpp src/files/files.h
         src/files/file_reader.cpp src/files/file_reader.h
         src/files/file_utility.cpp src/files/file_utility.h
-        src/parsed_line_storage.cpp src/parsed_line_storage.h)
+        src/parsed_line_storage.cpp src/parsed_line_storage.h
+        src/context_stack.cpp src/context_stack.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp
@@ -47,7 +48,8 @@ set(ASSEMBLER_TEST_FILES
         tests/line_tokenizer_tests.cpp
         tests/instruction_tests.cpp
         tests/opcode_action_tests.cpp
-        tests/file_reader_tests.cpp tests/context_tests.cpp)
+        tests/file_reader_tests.cpp tests/context_tests.cpp
+        tests/context_stack_tests.cpp)
 
 add_library(${ASSEMBLER_LIB_NAME} ${ASSEMBLER_LIB_FILES})
 target_include_directories(${ASSEMBLER_LIB_NAME} PUBLIC src/)

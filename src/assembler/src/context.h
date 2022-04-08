@@ -1,17 +1,18 @@
 #ifndef INC_8008_ASSEMBLER_CONTEXT_H
 #define INC_8008_ASSEMBLER_CONTEXT_H
 
-#include <deque>
-#include <ostream>
-#include <stack>
-#include <string_view>
+#include "options.h"
+#include "symbol_table.h"
 
-class Options;
-class SymbolTable;
+#include <memory>
+#include <ostream>
+#include <string_view>
 
 struct Context
 {
-    explicit Context(const Options& options);
+    explicit Context(Options options);
+    explicit Context(const std::shared_ptr<Context>& other_context);
+    Context(Context&) = delete;
 
     Options& get_options();
     [[nodiscard]] const Options& get_options() const;
@@ -20,12 +21,11 @@ struct Context
     [[nodiscard]] std::tuple<bool, int> get_symbol_value(std::string_view symbol_name) const;
     void list_symbols(std::ostream& output);
 
-    void push();
-    void pop();
-
 private:
-    std::stack<Options> option_stack;
-    std::deque<SymbolTable> symbol_tables;
+    Options options;
+    SymbolTable symbol_table;
+
+    const std::shared_ptr<Context> parent;
 };
 
 #endif //INC_8008_ASSEMBLER_CONTEXT_H

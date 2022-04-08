@@ -32,89 +32,37 @@ TEST(Context, can_define_a_symbol_associated_to_int_value)
     ASSERT_THAT(failure, IsFalse());
 }
 
-TEST(Context, keeps_options_when_pushing_the_context)
-{
-    Options options;
-
-    options.new_syntax = true;
-    Context ctx(options);
-    ctx.push();
-
-    ASSERT_THAT(ctx.get_options().new_syntax, IsTrue());
-}
-
-TEST(Context, can_change_new_context_options_and_pop_gets_old_value)
+TEST(Context, context_can_be_copy_constructed)
 {
     Options options;
     options.new_syntax = true;
 
-    Context ctx(options);
-    ctx.push();
-    ctx.get_options().new_syntax = false;
+    auto ctx_1 = std::make_shared<Context>(options);
+    Context ctx_2(ctx_1);
 
-    ASSERT_THAT(ctx.get_options().new_syntax, IsFalse());
-
-    ctx.pop();
-
-    ASSERT_THAT(ctx.get_options().new_syntax, IsTrue());
+    ASSERT_THAT(ctx_2.get_options().new_syntax, IsTrue());
 }
 
-TEST(Context, keeps_symbol_when_pushing_the_context)
+TEST(Context, context_can_be_copy_constructed_and_has_local_symbol_definitions)
 {
     Options options;
-    Context ctx(options);
+    auto ctx_1 = std::make_shared<Context>(options);
+    Context ctx_2(ctx_1);
 
-    ctx.define_symbol("TEST", 123);
-    ctx.push();
+    ctx_1->define_symbol("TEST", 123);
+    ctx_2.define_symbol("TEST_2", 321);
 
-    auto [success, value] = ctx.get_symbol_value("TEST");
-    ASSERT_THAT(success, IsTrue());
-    ASSERT_THAT(value, Eq(123));
-}
-
-TEST(Context, can_create_new_context_symbol_and_pop_forgets_it)
-{
-    Options options;
-    Context ctx(options);
-
-    ctx.push();
-    ctx.define_symbol("TEST", 123);
-
-    auto [success, value] = ctx.get_symbol_value("TEST");
+    auto [success, value] = ctx_2.get_symbol_value("TEST");
     ASSERT_THAT(success, IsTrue());
     ASSERT_THAT(value, Eq(123));
 
-    ctx.pop();
-    auto [failure, no_value] = ctx.get_symbol_value("TEST");
+    auto [success_2, value_2] = ctx_2.get_symbol_value("TEST_2");
+    ASSERT_THAT(success_2, IsTrue());
+    ASSERT_THAT(value_2, Eq(321));
+
+    auto [failure, no_value] = ctx_2.get_symbol_value("NO");
     ASSERT_THAT(failure, IsFalse());
-}
 
-TEST(Context, can_change_context_symbol_and_pop_gets_the_old_value_back)
-{
-    Options options;
-    Context ctx(options);
-
-    ctx.define_symbol("TEST", 123);
-    ctx.push();
-
-    ctx.define_symbol("TEST", 456);
-
-    auto [success, value] = ctx.get_symbol_value("TEST");
-    ASSERT_THAT(success, IsTrue());
-    ASSERT_THAT(value, Eq(456));
-
-    ctx.pop();
-
-    auto [old_success, old_value] = ctx.get_symbol_value("TEST");
-    ASSERT_THAT(old_success, IsTrue());
-    ASSERT_THAT(old_value, Eq(123));
-}
-
-TEST(Context, pop_when_top_level_is_silent)
-{
-    Options options;
-    Context ctx(options);
-
-    ASSERT_NO_THROW(ctx.pop());
-    ASSERT_NO_THROW(ctx.pop());
+    auto [failure_2, no_value_2] = ctx_1->get_symbol_value("TEST_1");
+    ASSERT_THAT(failure, IsFalse());
 }
