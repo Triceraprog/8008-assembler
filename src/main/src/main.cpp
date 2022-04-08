@@ -33,7 +33,7 @@ int main(int argc, const char** argv)
 
         first_pass(context_stack, files.file_reader, parsed_line_storage);
         second_pass(global_options, files.output_stream, parsed_line_storage);
-        listing_pass(*context_stack.get_current_context(), parsed_line_storage, listing);
+        listing_pass(global_options, parsed_line_storage, listing);
 
         /* write symbol table to listfile */
         if (global_options.generate_list_file)

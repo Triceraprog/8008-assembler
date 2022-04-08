@@ -1,22 +1,20 @@
 #include "listing_pass.h"
 
-#include "context.h"
 #include "listing.h"
 #include "options.h"
 #include "parsed_line_storage.h"
 
 #include <iostream>
 
-void listing_pass(const Context& context, ParsedLineStorage& parsed_line_storage,
+void listing_pass(const Options& global_options, ParsedLineStorage& parsed_line_storage,
                   Listing& listing)
 {
-    const auto& options = context.get_options();
-    if (!options.generate_list_file)
+    if (!global_options.generate_list_file)
     {
         return;
     }
 
-    if (options.verbose || options.debug)
+    if (global_options.verbose || global_options.debug)
     {
         std::cout << "Pass number Three:  Re-read and assemble codes\n";
     }
@@ -26,7 +24,7 @@ void listing_pass(const Context& context, ParsedLineStorage& parsed_line_storage
     for (auto& parsed_line : parsed_line_storage)
     {
         const auto& input_line = parsed_line.line;
-        const int line_number = parsed_line.line_number;
+        const auto line_number = parsed_line.line_number;
         int line_address = parsed_line.line_address;
 
         const auto& instruction = parsed_line.instruction;
