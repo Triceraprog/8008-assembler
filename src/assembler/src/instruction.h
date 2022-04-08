@@ -40,7 +40,7 @@ public:
 
     void second_pass(const Context& context, ByteWriter& writer, int address) const;
 
-    void listing_pass(Listing& listing, const std::string& input_line, int line_number,
+    void listing_pass(Listing& listing, const std::string& input_line, uint32_t line_number,
                       int address) const;
 
     class InstructionAction
@@ -68,7 +68,8 @@ public:
         // Currently, also emits the listing, it will have to go
         virtual void write_bytes(const Context& context, ByteWriter& writer, int address) const;
 
-        virtual void write_listing(Listing& listing, const std::string& input_line, int line_number,
+        virtual void write_listing(Listing& listing, const std::string& input_line,
+                                   uint32_t line_number,
                                    int address) const;
     };
 

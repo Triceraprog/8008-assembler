@@ -118,7 +118,7 @@ namespace
             }
         }
 
-        void write_listing(Listing& listing, const std::string& input_line, int line_number,
+        void write_listing(Listing& listing, const std::string& input_line, uint32_t line_number,
                            int address) const override
         {
             if (data_size < 0)
@@ -178,7 +178,7 @@ namespace
             opcode_action->emit_byte_stream(writer);
         }
 
-        void write_listing(Listing& listing, const std::string& input_line, int line_number,
+        void write_listing(Listing& listing, const std::string& input_line, uint32_t line_number,
                            int address) const override
         {
             opcode_action->emit_listing(listing, line_number, input_line);
@@ -276,7 +276,7 @@ void Instruction::InstructionAction::write_bytes(const Context& context, ByteWri
 }
 
 void Instruction::InstructionAction::write_listing(Listing& listing, const std::string& input_line,
-                                                   int line_number, int address) const
+                                                   uint32_t line_number, int address) const
 {
     listing.simple_line(line_number, input_line);
 }
@@ -363,8 +363,8 @@ void Instruction::second_pass(const Context& context, ByteWriter& writer, const 
     action->write_bytes(context, writer, address);
 }
 
-void Instruction::listing_pass(Listing& listing, const std::string& input_line, int line_number,
-                               int address) const
+void Instruction::listing_pass(Listing& listing, const std::string& input_line,
+                               uint32_t line_number, int address) const
 {
     action->write_listing(listing, input_line, line_number, address);
 }

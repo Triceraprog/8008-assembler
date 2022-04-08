@@ -7,14 +7,14 @@ class ListingLine
 {
 public:
     ListingLine();
-    explicit ListingLine(int line_number);
+    explicit ListingLine(uint32_t line_number);
     ListingLine(int line_number, int line_address);
 
     void add_line_content(std::string_view line_content);
     void add_byte(int byte);
     void add_address(int line_address);
 
-    std::string str() const;
+    [[nodiscard]] std::string str() const;
 
     void short_format();
 

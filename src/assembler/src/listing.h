@@ -12,7 +12,7 @@ class Listing
 public:
     Listing(std::ostream& output, const Options& options);
     void write_listing_header();
-    void simple_line(int line_number, const std::string& line_content);
+    void simple_line(uint32_t line_number, const std::string& line_content);
     void data(int line_number, int line_address, const std::string& line_content,
               const std::vector<int>& data_list);
 

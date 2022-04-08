@@ -5,7 +5,7 @@
 
 ListingLine::ListingLine() { line.reserve(128); }
 
-ListingLine::ListingLine(int line_number) : ListingLine()
+ListingLine::ListingLine(uint32_t line_number) : ListingLine()
 {
     std::stringstream str;
     str << std::setw(4) << line_number << " ";

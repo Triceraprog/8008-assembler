@@ -39,7 +39,7 @@ void Listing::write_listing_header()
     }
 }
 
-void Listing::simple_line(int line_number, const std::string& line_content)
+void Listing::simple_line(uint32_t line_number, const std::string& line_content)
 {
     const auto& short_format = options.single_byte_list;
     ListingLine line{line_number};
