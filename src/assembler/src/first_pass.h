@@ -2,6 +2,7 @@
 #define INC_8008_ASSEMBLER_FIRST_PASS_H
 
 #include "errors.h"
+#include "context_stack.h"
 
 #include <vector>
 
@@ -11,7 +12,7 @@ class ParsedLine;
 class SymbolTable;
 class ParsedLineStorage;
 
-void first_pass(Context& context, FileReader& file_reader, ParsedLineStorage& parsed_line_storage);
+void first_pass(ContextStack context_stack, FileReader& file_reader, ParsedLineStorage& parsed_line_storage);
 
 class AlreadyDefinedSymbol : public ExceptionWithReason
 {

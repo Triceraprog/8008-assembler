@@ -4,7 +4,6 @@
 #include "errors.h"
 #include "files/file_reader.h"
 #include "instruction.h"
-#include "options.h"
 #include "parsed_line.h"
 #include "parsed_line_storage.h"
 #include "utils.h"
@@ -52,11 +51,12 @@ namespace
     }
 }
 
-void first_pass(Context& context, FileReader& file_reader, ParsedLineStorage& parsed_line_storage)
+void first_pass(ContextStack context_stack, FileReader& file_reader,
+                ParsedLineStorage& parsed_line_storage)
 {
     // In the first pass, we parse through lines to build a symbol table
     // What is parsed is kept into the "parsed_lines" container for the second pass.
-    const auto& options = context.get_options();
+    const auto& options = context_stack.get_current_context()->get_options();
 
     if (options.debug || options.verbose)
     {
@@ -74,13 +74,15 @@ void first_pass(Context& context, FileReader& file_reader, ParsedLineStorage& pa
 
         try
         {
-            parsed_line_storage.append_line(context, file_reader, input_line,
-                                            file_reader.get_line_number(), current_address);
+            parsed_line_storage.append_line(*context_stack.get_current_context(), file_reader,
+                                            input_line, file_reader.get_line_number(),
+                                            current_address);
 
             const auto& latest_parsed_line = parsed_line_storage.latest_line();
-            handle_potential_label(context, latest_parsed_line);
+            handle_potential_label(*context_stack.get_current_context(), latest_parsed_line);
             const auto& instruction = latest_parsed_line.instruction;
-            current_address = instruction.first_pass(context, current_address);
+            current_address =
+                    instruction.first_pass(*context_stack.get_current_context(), current_address);
         }
         catch (const std::exception& ex)
         {

@@ -1,4 +1,3 @@
-#include "assembler/src/context.h"
 #include "assembler/src/errors.h"
 #include "assembler/src/files/files.h"
 #include "assembler/src/first_pass.h"
@@ -7,7 +6,7 @@
 #include "assembler/src/options.h"
 #include "assembler/src/parsed_line_storage.h"
 #include "assembler/src/second_pass.h"
-#include "assembler/src/symbol_table.h"
+#include "context_stack.h"
 
 #include <iostream>
 
@@ -30,16 +29,16 @@ int main(int argc, const char** argv)
         Listing listing(files.listing_stream, global_options);
         ParsedLineStorage parsed_line_storage;
 
-        Context context(global_options);
+        ContextStack context_stack(global_options);
 
-        first_pass(context, files.file_reader, parsed_line_storage);
-        second_pass(context, files.output_stream, parsed_line_storage);
-        listing_pass(context, parsed_line_storage, listing);
+        first_pass(context_stack, files.file_reader, parsed_line_storage);
+        second_pass(*context_stack.get_current_context(), files.output_stream, parsed_line_storage);
+        listing_pass(*context_stack.get_current_context(), parsed_line_storage, listing);
 
         /* write symbol table to listfile */
         if (global_options.generate_list_file)
         {
-            context.list_symbols(files.listing_stream);
+            context_stack.get_current_context()->list_symbols(files.listing_stream);
         }
     }
     catch (const CannotOpenFile& ex)
