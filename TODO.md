@@ -1,5 +1,4 @@
 - Push and Pop context
-  - Associate context to lines
   - When listing the symbols, only the top level symbols should be listed.
 - Macro system
   - Needs a way to record the macro

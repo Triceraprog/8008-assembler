@@ -43,3 +43,12 @@ TEST(ContextStack, can_change_new_context_options_and_pop_gets_old_value)
     ctx_stack.pop();
     ASSERT_THAT(ctx_stack.get_current_context()->get_options().new_syntax, IsTrue());
 }
+
+TEST(ContextStack, is_protected_against_too_much_pop)
+{
+    Options options;
+    ContextStack ctx_stack(options);
+
+    ctx_stack.pop();
+    ctx_stack.pop();
+}
