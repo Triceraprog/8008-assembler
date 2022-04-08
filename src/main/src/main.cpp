@@ -30,6 +30,7 @@ int main(int argc, const char** argv)
         ParsedLineStorage parsed_line_storage;
 
         ContextStack context_stack(global_options);
+        auto top_level_context = context_stack.get_current_context();
 
         first_pass(context_stack, files.file_reader, parsed_line_storage);
         second_pass(global_options, files.output_stream, parsed_line_storage);
@@ -38,7 +39,7 @@ int main(int argc, const char** argv)
         /* write symbol table to listfile */
         if (global_options.generate_list_file)
         {
-            context_stack.get_current_context()->list_symbols(files.listing_stream);
+            top_level_context->list_symbols(files.listing_stream);
         }
     }
     catch (const CannotOpenFile& ex)
