@@ -362,18 +362,30 @@ TEST_F(FirstPassFixture, if_pushes_context_and_sets_parsing_mode_if_true)
     auto instruction = get_instruction_if_true();
 
     const int current_address = 0xff;
+    ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
     ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
+    ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
+
+    context_stack.pop(); // Change in "ensure context was pushed. Can be reused above
+
+    ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
 }
 
-TEST_F(FirstPassFixture, if_does_not_pushes_context_and_sets_parsing_mode_if_false)
+TEST_F(FirstPassFixture, if_pushes_context_and_sets_parsing_mode_if_false)
 {
     auto instruction = get_instruction_if_false();
 
     const int current_address = 0xff;
+    ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
     ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
+    ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsFalse());
+
+    context_stack.pop();
+
+    ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
 }
 
-TEST_F(FirstPassFixture, else_pushes_context_and_sets_parsing_mode_when_if_false)
+TEST_F(FirstPassFixture, else_uses_if_context_and_sets_parsing_mode_when_if_false)
 {
     auto instruction = get_instruction_else();
 
@@ -381,7 +393,7 @@ TEST_F(FirstPassFixture, else_pushes_context_and_sets_parsing_mode_when_if_false
     ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
 }
 
-TEST_F(FirstPassFixture, else_does_not_pushes_context_and_sets_parsing_mode_when_if_true)
+TEST_F(FirstPassFixture, else_uses_if_context_and_sets_parsing_mode_when_if_true)
 {
     auto instruction = get_instruction_else();
 

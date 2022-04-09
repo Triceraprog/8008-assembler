@@ -302,7 +302,19 @@ namespace
     {
         Instruction_IF(const Context& context, const std::vector<std::string>& arguments)
             : Validated_Instruction(".if", arguments)
-        {}
+        {
+            evaluated_argument = evaluate_argument(context, arguments[0]);
+        }
+
+        void update_context_stack(ContextStack& context_stack) const override
+        {
+            context_stack.push();
+            context_stack.get_current_context()->set_parsing_mode(
+                    evaluated_argument ? Context::CONDITIONAL_TRUE : Context::CONDITIONAL_FALSE);
+            InstructionAction::update_context_stack(context_stack);
+        }
+
+        int evaluated_argument;
     };
 
     struct Instruction_ELSE : public Instruction::InstructionAction

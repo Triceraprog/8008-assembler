@@ -21,11 +21,22 @@ struct Context
     [[nodiscard]] std::tuple<bool, int> get_symbol_value(std::string_view symbol_name) const;
     void list_symbols(std::ostream& output);
 
+    enum ParsingMode
+    {
+        ACTIVE,
+        CONDITIONAL_TRUE,
+        CONDITIONAL_FALSE,
+    };
+
+    [[nodiscard]] bool is_parsing_active() const;
+    void set_parsing_mode(ParsingMode mode);
+
 private:
+    const std::shared_ptr<Context> parent;
+
     Options options;
     SymbolTable symbol_table;
-
-    const std::shared_ptr<Context> parent;
+    ParsingMode parsing_mode;
 };
 
 #endif //INC_8008_ASSEMBLER_CONTEXT_H

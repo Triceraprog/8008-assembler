@@ -33,3 +33,5 @@ void Context::list_symbols(std::ostream& output) { symbol_table.list_symbols(out
 
 Options& Context::get_options() { return options; }
 const Options& Context::get_options() const { return options; }
+bool Context::is_parsing_active() const { return parsing_mode != CONDITIONAL_FALSE; }
+void Context::set_parsing_mode(Context::ParsingMode mode) { parsing_mode = mode; }
