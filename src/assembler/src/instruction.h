@@ -27,6 +27,9 @@ enum class InstructionEnum
     INCLUDE,
     SYNTAX,
     CONTEXT,
+    IF,
+    ELSE,
+    ENDIF,
     OTHER,
 };
 

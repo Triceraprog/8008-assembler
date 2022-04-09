@@ -88,6 +88,30 @@ struct InstructionFixture : public Test
     {
         return Instruction{*context_stack.get_current_context(), "INVALID_OPCODE", {}, file_reader};
     }
+
+    Instruction get_instruction_if_false()
+    {
+        return Instruction{*context_stack.get_current_context(), ".IF", {"0"}, file_reader};
+    }
+
+    Instruction get_instruction_if_true()
+    {
+        return Instruction{*context_stack.get_current_context(), ".IF", {"1"}, file_reader};
+    }
+
+    Instruction get_instruction_if_without_param()
+    {
+        return Instruction{*context_stack.get_current_context(), ".IF", {}, file_reader};
+    }
+
+    Instruction get_instruction_else()
+    {
+        return Instruction{*context_stack.get_current_context(), ".ELSE", {}, file_reader};
+    }
+    Instruction get_instruction_endif()
+    {
+        return Instruction{*context_stack.get_current_context(), ".ENDIF", {}, file_reader};
+    }
 };
 
 struct InstructionEvaluationFixture : public InstructionFixture
@@ -197,6 +221,8 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_equ)
     ASSERT_THAT(instruction.get_evaluation(context, current_address), Eq(0x2000));
 }
 
+/// JUST CHECK SYNTAX
+
 TEST_F(InstructionEvaluationFixture, throws_if_equ_as_no_parameter)
 {
     ASSERT_THROW(get_instruction_equ_without_param(), MissingArgument);
@@ -230,6 +256,11 @@ TEST_F(InstructionEvaluationFixture, throws_if_syntax_as_no_parameter)
 TEST_F(InstructionEvaluationFixture, throws_if_context_as_no_parameter)
 {
     ASSERT_THROW(get_instruction_context_without_param(), MissingArgument);
+}
+
+TEST_F(InstructionEvaluationFixture, throws_if_if_as_no_parameter)
+{
+    ASSERT_THROW(get_instruction_if_without_param(), MissingArgument);
 }
 
 /// TESTS FOR THE FIRST PASS
@@ -324,6 +355,46 @@ TEST_F(FirstPassFixture, context_pushes_context_and_keeps_address)
     const auto [result, value] = context_stack.get_current_context()->get_symbol_value("TEST");
     ASSERT_THAT(result, IsTrue());
     ASSERT_THAT(value, Eq(123));
+}
+
+TEST_F(FirstPassFixture, if_pushes_context_and_sets_parsing_mode_if_true)
+{
+    auto instruction = get_instruction_if_true();
+
+    const int current_address = 0xff;
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
+}
+
+TEST_F(FirstPassFixture, if_does_not_pushes_context_and_sets_parsing_mode_if_false)
+{
+    auto instruction = get_instruction_if_false();
+
+    const int current_address = 0xff;
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
+}
+
+TEST_F(FirstPassFixture, else_pushes_context_and_sets_parsing_mode_when_if_false)
+{
+    auto instruction = get_instruction_else();
+
+    const int current_address = 0xff;
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
+}
+
+TEST_F(FirstPassFixture, else_does_not_pushes_context_and_sets_parsing_mode_when_if_true)
+{
+    auto instruction = get_instruction_else();
+
+    const int current_address = 0xff;
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
+}
+
+TEST_F(FirstPassFixture, endif_pops_context)
+{
+    auto instruction = get_instruction_endif();
+
+    const int current_address = 0xff;
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
 }
 
 /// TESTS FOR THE SECOND PASS

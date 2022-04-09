@@ -298,6 +298,23 @@ namespace
         Action action;
     };
 
+    struct Instruction_IF : public Validated_Instruction
+    {
+        Instruction_IF(const Context& context, const std::vector<std::string>& arguments)
+            : Validated_Instruction(".if", arguments)
+        {}
+    };
+
+    struct Instruction_ELSE : public Instruction::InstructionAction
+    {
+        explicit Instruction_ELSE(const Context& context) {}
+    };
+
+    struct Instruction_ENDIF : public Instruction::InstructionAction
+    {
+        explicit Instruction_ENDIF(const Context& context) {}
+    };
+
     struct Instruction_EMPTY : public Instruction::InstructionAction
     {
     };
@@ -339,7 +356,9 @@ InstructionEnum instruction_to_enum(std::string_view opcode)
             {"equ", InstructionEnum::EQU},        {"end", InstructionEnum::END},
             {"cpu", InstructionEnum::CPU},        {"org", InstructionEnum::ORG},
             {"data", InstructionEnum::DATA},      {".include", InstructionEnum::INCLUDE},
-            {".syntax", InstructionEnum::SYNTAX}, {".context", InstructionEnum::CONTEXT}};
+            {".syntax", InstructionEnum::SYNTAX}, {".context", InstructionEnum::CONTEXT},
+            {".if", InstructionEnum::IF},         {".else", InstructionEnum::ELSE},
+            {".endif", InstructionEnum::ENDIF}};
     if (opcode.empty())
     {
         return InstructionEnum::EMPTY;
@@ -395,6 +414,17 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
             action = std::make_unique<Instruction_OTHER>(
                     context, opcode, arguments, context.get_options().new_syntax ? NEW : OLD);
             break;
+        case InstructionEnum::IF:
+            action = std::make_unique<Instruction_IF>(context, arguments);
+            break;
+        case InstructionEnum::ELSE:
+            action = std::make_unique<Instruction_ELSE>(context);
+            break;
+        case InstructionEnum::ENDIF:
+            action = std::make_unique<Instruction_ENDIF>(context);
+            break;
+        default:
+            assert(0 && "Missing case in the Instruction Factory.");
     }
 }
 
