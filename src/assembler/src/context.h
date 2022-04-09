@@ -30,6 +30,7 @@ struct Context
 
     [[nodiscard]] bool is_parsing_active() const;
     void set_parsing_mode(ParsingMode mode);
+    [[nodiscard]] ParsingMode get_parsing_mode() const;
 
 private:
     const std::shared_ptr<Context> parent;

@@ -6,7 +6,6 @@
 #include "files/file_reader.h"
 #include "listing.h"
 #include "options.h"
-#include "symbol_table.h"
 
 #include "gmock/gmock.h"
 
@@ -392,20 +391,45 @@ TEST_F(FirstPassFixture, if_pushes_context_and_sets_parsing_mode_if_false)
     ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
 }
 
+TEST_F(FirstPassFixture, else_without_if_throws)
+{
+    ASSERT_THROW(get_instruction_else(), InvalidElse);
+}
+
 TEST_F(FirstPassFixture, else_uses_if_context_and_sets_parsing_mode_when_if_false)
 {
+    context_stack.get_current_context()->set_parsing_mode(Context::CONDITIONAL_FALSE);
     auto instruction = get_instruction_else();
+
+    auto initial_context = context_stack.get_current_context();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
+    ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
+
+    // If by changing the current context, we get the same result in the initial context,
+    // if means the context was not pushed.
+    context_stack.get_current_context()->define_symbol("MARKER", 123);
+    const auto [result, value] = initial_context->get_symbol_value("MARKER");
+    ASSERT_THAT(result, IsTrue());
 }
 
 TEST_F(FirstPassFixture, else_uses_if_context_and_sets_parsing_mode_when_if_true)
 {
+    context_stack.get_current_context()->set_parsing_mode(Context::CONDITIONAL_TRUE);
     auto instruction = get_instruction_else();
+
+    auto initial_context = context_stack.get_current_context();
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
+    ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsFalse());
+
+    // If by changing the current context, we get the same result in the initial context,
+    // if means the context was not pushed.
+    context_stack.get_current_context()->define_symbol("MARKER", 123);
+    const auto [result, value] = initial_context->get_symbol_value("MARKER");
+    ASSERT_THAT(result, IsTrue());
 }
 
 TEST_F(FirstPassFixture, endif_pops_context)

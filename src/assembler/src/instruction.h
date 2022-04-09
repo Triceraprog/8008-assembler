@@ -74,8 +74,7 @@ public:
         virtual void write_bytes(const Context& context, ByteWriter& writer, int address) const;
 
         virtual void write_listing(Listing& listing, const std::string& input_line,
-                                   uint32_t line_number,
-                                   int address) const;
+                                   uint32_t line_number, int address) const;
     };
 
 private:
@@ -100,6 +99,12 @@ class InvalidContextAction : public ExceptionWithReason
 {
 public:
     InvalidContextAction();
+};
+
+class InvalidElse : public ExceptionWithReason
+{
+public:
+    InvalidElse();
 };
 
 class MissingArgument : public ExceptionWithReason

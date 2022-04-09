@@ -319,7 +319,26 @@ namespace
 
     struct Instruction_ELSE : public Instruction::InstructionAction
     {
-        explicit Instruction_ELSE(const Context& context) {}
+        explicit Instruction_ELSE(const Context& context)
+        {
+            previous_mode = context.get_parsing_mode();
+
+            if (previous_mode != Context::ParsingMode::CONDITIONAL_TRUE &&
+                previous_mode != Context::ParsingMode::CONDITIONAL_FALSE)
+            {
+                throw InvalidElse();
+            }
+        }
+
+        void update_context_stack(ContextStack& context_stack) const override
+        {
+            context_stack.get_current_context()->set_parsing_mode(
+                    previous_mode == Context::CONDITIONAL_TRUE ? Context::CONDITIONAL_FALSE
+                                                               : Context::CONDITIONAL_TRUE);
+            InstructionAction::update_context_stack(context_stack);
+        }
+
+        Context::ParsingMode previous_mode;
     };
 
     struct Instruction_ENDIF : public Instruction::InstructionAction
@@ -467,7 +486,12 @@ InvalidCPU::InvalidCPU() { reason = R"(only allowed cpu is "8008" or "i8008")"; 
 
 InvalidSyntax::InvalidSyntax() { reason = R"(only allowed syntax is "OLD" or "NEW")"; }
 
-InvalidContextAction::InvalidContextAction() { reason = R"(only allowed action is "PUSH" or "POP")"; }
+InvalidContextAction::InvalidContextAction()
+{
+    reason = R"(only allowed action is "PUSH" or "POP")";
+}
+
+InvalidElse::InvalidElse() { reason = R"(found .else without .if)"; }
 
 MissingArgument::MissingArgument(std::string_view instruction)
 {
