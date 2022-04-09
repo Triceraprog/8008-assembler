@@ -271,7 +271,7 @@ namespace
         {
             if ((!ci_equals(syntax, "PUSH")) && (!ci_equals(syntax, "POP")))
             {
-                throw InvalidSyntax();
+                throw InvalidContextAction();
             }
         }
 
@@ -466,6 +466,8 @@ void Instruction::listing_pass(Listing& listing, const std::string& input_line,
 InvalidCPU::InvalidCPU() { reason = R"(only allowed cpu is "8008" or "i8008")"; }
 
 InvalidSyntax::InvalidSyntax() { reason = R"(only allowed syntax is "OLD" or "NEW")"; }
+
+InvalidContextAction::InvalidContextAction() { reason = R"(only allowed action is "PUSH" or "POP")"; }
 
 MissingArgument::MissingArgument(std::string_view instruction)
 {

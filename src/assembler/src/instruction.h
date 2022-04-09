@@ -96,6 +96,11 @@ public:
     InvalidSyntax();
 };
 
+class InvalidContextAction : public ExceptionWithReason
+{
+public:
+    InvalidContextAction();
+};
 
 class MissingArgument : public ExceptionWithReason
 {
