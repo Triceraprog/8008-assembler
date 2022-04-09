@@ -6,7 +6,9 @@
   - Be careful of the line number with Macro. Maybe some stacked line number scheme.
 - Pseudo instructions
   - Conditional compilation (.if)
-  - Context manipulation (.context push/pop)
+  - In instructions, factorize the first argument or throw
+  - Fix warnings on the instruction.cpp file
+- Simplify file declaration in tests (based on a naming scheme)
 - The responsibility of the short format should probably be in Listing
 - The listing can be reconstructed without keeping the initial line.
 - Option to output an expended, simple assembly code with a syntax for another assembler, especially as8

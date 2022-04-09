@@ -316,9 +316,14 @@ TEST_F(FirstPassFixture, context_pushes_context_and_keeps_address)
     auto instruction = get_instruction_context();
 
     const int current_address = 0xff;
+    context_stack.get_current_context()->define_symbol("TEST", 123);
     ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
+    context_stack.get_current_context()->define_symbol("TEST", 321);
+    context_stack.pop();
 
-    //ASSERT_THAT(context_stack.get_current_context()->get_options().new_syntax, IsFalse());
+    const auto [result, value] = context_stack.get_current_context()->get_symbol_value("TEST");
+    ASSERT_THAT(result, IsTrue());
+    ASSERT_THAT(value, Eq(123));
 }
 
 /// TESTS FOR THE SECOND PASS

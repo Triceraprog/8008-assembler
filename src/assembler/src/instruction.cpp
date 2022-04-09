@@ -139,9 +139,14 @@ namespace
 
     struct Instruction_OTHER : public Instruction::InstructionAction
     {
-        Instruction_OTHER(std::string_view opcode_string, std::vector<std::string> arguments,
-                          SyntaxType syntax_type)
+        Instruction_OTHER(const Context& context, std::string_view opcode_string,
+                          std::vector<std::string> arguments, SyntaxType syntax_type)
         {
+            if (context.get_options().debug)
+            {
+                std::cout << "\n";
+            }
+
             auto find_opcode = get_opcode_matcher(syntax_type);
             if (auto [found, found_opcode, consumed] = find_opcode(opcode_string, arguments); found)
             {
@@ -259,7 +264,47 @@ namespace
             }
 
             auto context_action = arguments[0];
+
+            if (context.get_options().debug)
+            {
+                std::cout << "got '" << context_action << "' as the context action.\n";
+            }
+
+            if (ci_equals(context_action, "PUSH"))
+            {
+                action = PUSH;
+            }
+            else if (ci_equals(context_action, "POP"))
+            {
+                action = POP;
+            }
+            else
+            {
+                throw InvalidSyntax();
+            }
         }
+
+        void update_context_stack(ContextStack& context_stack) const override
+        {
+            switch (action)
+            {
+                case PUSH:
+                    context_stack.push();
+                    break;
+                case POP:
+                    context_stack.pop();
+                    break;
+            }
+            InstructionAction::update_context_stack(context_stack);
+        }
+
+        enum Action
+        {
+            PUSH,
+            POP
+        };
+
+        Action action;
     };
 
     struct Instruction_EMPTY : public Instruction::InstructionAction
@@ -357,7 +402,7 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
             break;
         case InstructionEnum::OTHER:
             action = std::make_unique<Instruction_OTHER>(
-                    opcode, arguments, context.get_options().new_syntax ? NEW : OLD);
+                    context, opcode, arguments, context.get_options().new_syntax ? NEW : OLD);
             break;
     }
 }
