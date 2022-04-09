@@ -5,9 +5,9 @@
 #include "instruction.h"
 #include "line_tokenizer.h"
 
-void ParsedLineStorage::append_line(std::shared_ptr<Context> context, FileReader& file_reader,
-                                    std::string_view input_line, std::size_t line_number,
-                                    int address)
+void ParsedLineStorage::append_line(const std::shared_ptr<Context>& context,
+                                    FileReader& file_reader, std::string_view input_line,
+                                    std::size_t line_number, int address)
 {
     auto name_tag_ref = get_name_tag_ref(file_reader.get_name_tag());
 
