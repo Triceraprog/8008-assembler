@@ -348,6 +348,13 @@ namespace
 
     struct Instruction_EMPTY : public Instruction::InstructionAction
     {
+        Instruction_EMPTY(const Context& context)
+        {
+            if (context.get_options().debug)
+            {
+                std::cout << "\n";
+            }
+        }
     };
 }
 
@@ -412,13 +419,19 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
 {
     auto opcode_enum = instruction_to_enum(opcode);
 
+    if (!context.is_parsing_active() &&
+        (opcode_enum != InstructionEnum::ELSE && opcode_enum != InstructionEnum::ENDIF))
+    {
+        opcode_enum = InstructionEnum::EMPTY;
+    }
+
     switch (opcode_enum)
     {
         case InstructionEnum::CPU:
             action = std::make_unique<Instruction_CPU>(arguments);
             break;
         case InstructionEnum::EMPTY:
-            action = std::make_unique<Instruction_EMPTY>();
+            action = std::make_unique<Instruction_EMPTY>(context);
             break;
         case InstructionEnum::EQU:
             action = std::make_unique<Instruction_EQU>(arguments);

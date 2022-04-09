@@ -37,7 +37,7 @@ private:
 
     Options options;
     SymbolTable symbol_table;
-    ParsingMode parsing_mode;
+    ParsingMode parsing_mode{ACTIVE};
 };
 
 #endif //INC_8008_ASSEMBLER_CONTEXT_H
