@@ -101,10 +101,10 @@ public:
     InvalidContextAction();
 };
 
-class InvalidElse : public ExceptionWithReason
+class InvalidConditional : public ExceptionWithReason
 {
 public:
-    InvalidElse();
+    explicit InvalidConditional(std::string_view conditional_name);
 };
 
 class MissingArgument : public ExceptionWithReason

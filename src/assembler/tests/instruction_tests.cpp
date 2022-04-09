@@ -393,7 +393,7 @@ TEST_F(FirstPassFixture, if_pushes_context_and_sets_parsing_mode_if_false)
 
 TEST_F(FirstPassFixture, else_without_if_throws)
 {
-    ASSERT_THROW(get_instruction_else(), InvalidElse);
+    ASSERT_THROW(get_instruction_else(), InvalidConditional);
 }
 
 TEST_F(FirstPassFixture, else_uses_if_context_and_sets_parsing_mode_when_if_false)
@@ -432,12 +432,27 @@ TEST_F(FirstPassFixture, else_uses_if_context_and_sets_parsing_mode_when_if_true
     ASSERT_THAT(result, IsTrue());
 }
 
+TEST_F(FirstPassFixture, endif_without_if_throws)
+{
+    ASSERT_THROW(get_instruction_endif(), InvalidConditional);
+}
+
 TEST_F(FirstPassFixture, endif_pops_context)
 {
+    // Simulate a previous "if" conditional.
+    context_stack.push();
+    context_stack.get_current_context()->set_parsing_mode(Context::CONDITIONAL_TRUE);
     auto instruction = get_instruction_endif();
+
+    // Sets a marker to detect the context stack pop
+    context_stack.get_current_context()->define_symbol("MARKER", 123);
 
     const int current_address = 0xff;
     ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
+    ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
+
+    const auto [result, value] = context_stack.get_current_context()->get_symbol_value("MARKER");
+    ASSERT_THAT(result, IsFalse());
 }
 
 /// TESTS FOR THE SECOND PASS

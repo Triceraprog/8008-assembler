@@ -326,7 +326,7 @@ namespace
             if (previous_mode != Context::ParsingMode::CONDITIONAL_TRUE &&
                 previous_mode != Context::ParsingMode::CONDITIONAL_FALSE)
             {
-                throw InvalidElse();
+                throw InvalidConditional(".else");
             }
         }
 
@@ -343,12 +343,27 @@ namespace
 
     struct Instruction_ENDIF : public Instruction::InstructionAction
     {
-        explicit Instruction_ENDIF(const Context& context) {}
+        explicit Instruction_ENDIF(const Context& context)
+        {
+            auto previous_mode = context.get_parsing_mode();
+
+            if (previous_mode != Context::ParsingMode::CONDITIONAL_TRUE &&
+                previous_mode != Context::ParsingMode::CONDITIONAL_FALSE)
+            {
+                throw InvalidConditional(".endif");
+            }
+        }
+
+        void update_context_stack(ContextStack& context_stack) const override
+        {
+            context_stack.pop();
+            InstructionAction::update_context_stack(context_stack);
+        }
     };
 
     struct Instruction_EMPTY : public Instruction::InstructionAction
     {
-        Instruction_EMPTY(const Context& context)
+        explicit Instruction_EMPTY(const Context& context)
         {
             if (context.get_options().debug)
             {
@@ -504,7 +519,10 @@ InvalidContextAction::InvalidContextAction()
     reason = R"(only allowed action is "PUSH" or "POP")";
 }
 
-InvalidElse::InvalidElse() { reason = R"(found .else without .if)"; }
+InvalidConditional::InvalidConditional(std::string_view conditional_name)
+{
+    reason = "found " + std::string{conditional_name} + " without .if)";
+}
 
 MissingArgument::MissingArgument(std::string_view instruction)
 {
