@@ -10,6 +10,7 @@
 
 class ByteWriter;
 class Context;
+class ContextStack;
 class FileReader;
 class Listing;
 class Options;
@@ -37,7 +38,7 @@ public:
 
     [[nodiscard]] int get_evaluation(const Context& context, int address) const;
 
-    [[nodiscard]] int first_pass(Context& context, int address) const;
+    [[nodiscard]] int first_pass(ContextStack& context_stack, int address) const;
 
     void second_pass(const Context& context, ByteWriter& writer, int address) const;
 
@@ -58,8 +59,8 @@ public:
         // The default is a need of 0, and so returns the given address.
         [[nodiscard]] virtual int advance_address(const Context& context, int address) const;
 
-        // Some instruction can modify the context
-        virtual void update_context(Context& context) const;
+        // Some instruction can modify the context_stack
+        virtual void update_context_stack(ContextStack& context_stack) const;
 
         // If the construction needs information from the first pass, then it is constructed
         // at build time.

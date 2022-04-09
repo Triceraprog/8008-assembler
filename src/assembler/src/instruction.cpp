@@ -1,6 +1,7 @@
 #include "instruction.h"
 #include "byte_writer.h"
 #include "context.h"
+#include "context_stack.h"
 #include "data_extraction.h"
 #include "evaluator.h"
 #include "files/file_utility.h"
@@ -238,11 +239,11 @@ namespace
             }
         }
 
-        void update_context(Context& context) const override
+        void update_context_stack(ContextStack& context_stack) const override
         {
             // The syntax instruction changes the current syntax mode.
-            context.get_options().new_syntax = new_syntax;
-            InstructionAction::update_context(context);
+            context_stack.get_current_context()->get_options().new_syntax = new_syntax;
+            InstructionAction::update_context_stack(context_stack);
         }
 
         bool new_syntax{};
@@ -294,7 +295,7 @@ void Instruction::InstructionAction::write_listing(Listing& listing, const std::
     listing.simple_line(line_number, input_line);
 }
 
-void Instruction::InstructionAction::update_context(Context& context) const {}
+void Instruction::InstructionAction::update_context_stack(ContextStack& context_stack) const {}
 
 InstructionEnum instruction_to_enum(std::string_view opcode)
 {
@@ -366,10 +367,10 @@ int Instruction::get_evaluation(const Context& context, int address) const
     return action->evaluate_fixed_address(context, address);
 }
 
-int Instruction::first_pass(Context& context, int address) const
+int Instruction::first_pass(ContextStack& context_stack, int address) const
 {
-    action->update_context(context);
-    return action->advance_address(context, address);
+    action->update_context_stack(context_stack);
+    return action->advance_address(*context_stack.get_current_context(), address);
 }
 
 void Instruction::second_pass(const Context& context, ByteWriter& writer, const int address) const

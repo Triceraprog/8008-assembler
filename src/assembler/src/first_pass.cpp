@@ -81,8 +81,7 @@ void first_pass(ContextStack context_stack, FileReader& file_reader,
             const auto& latest_parsed_line = parsed_line_storage.latest_line();
             handle_potential_label(*context_stack.get_current_context(), latest_parsed_line);
             const auto& instruction = latest_parsed_line.instruction;
-            current_address =
-                    instruction.first_pass(*context_stack.get_current_context(), current_address);
+            current_address = instruction.first_pass(context_stack, current_address);
         }
         catch (const std::exception& ex)
         {

@@ -2,6 +2,7 @@
 
 #include "byte_writer.h"
 #include "context.h"
+#include "context_stack.h"
 #include "files/file_reader.h"
 #include "listing.h"
 #include "options.h"
@@ -14,63 +15,78 @@ using namespace testing;
 struct InstructionFixture : public Test
 {
     Options options;
-    Context context{options};
+    ContextStack context_stack{options};
     FileReader file_reader;
 
-    Instruction get_instruction_empty() { return Instruction{context, {}, {}, file_reader}; }
-    Instruction get_instruction_end() { return Instruction{context, "END", {}, file_reader}; }
+    Instruction get_instruction_empty()
+    {
+        return Instruction{*context_stack.get_current_context(), {}, {}, file_reader};
+    }
+    Instruction get_instruction_end()
+    {
+        return Instruction{*context_stack.get_current_context(), "END", {}, file_reader};
+    }
     Instruction get_instruction_equ()
     {
-        return Instruction{context, "EQU", {"0x2000"}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "EQU", {"0x2000"}, file_reader};
     }
     Instruction get_instruction_equ_without_param()
     {
-        return Instruction{context, "EQU", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "EQU", {}, file_reader};
     }
     Instruction get_instruction_org()
     {
-        return Instruction{context, "ORG", {"0x1000"}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "ORG", {"0x1000"}, file_reader};
     }
     Instruction get_instruction_org_without_param()
     {
-        return Instruction{context, "ORG", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "ORG", {}, file_reader};
     }
     Instruction get_instruction_cpu_known()
     {
-        return Instruction{context, "CPU", {"8008"}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "CPU", {"8008"}, file_reader};
     }
     Instruction get_instruction_cpu_unknown()
     {
-        return Instruction{context, "CPU", {"unknown_cpu"}, file_reader};
+        return Instruction{*context_stack.get_current_context(),
+                           "CPU",
+                           {"unknown_cpu"},
+                           file_reader};
     }
     Instruction get_instruction_cpu_without_param()
     {
-        return Instruction{context, "CPU", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "CPU", {}, file_reader};
     }
     Instruction get_instruction_data()
     {
-        return Instruction{context, "DATA", {"1", "2", "3"}, file_reader};
+        return Instruction{*context_stack.get_current_context(),
+                           "DATA",
+                           {"1", "2", "3"},
+                           file_reader};
     }
     Instruction get_instruction_syntax()
     {
-        return Instruction{context, ".SYNTAX", {"OLD"}, file_reader};
+        return Instruction{*context_stack.get_current_context(), ".SYNTAX", {"OLD"}, file_reader};
     }
     Instruction get_instruction_syntax_without_param()
     {
-        return Instruction{context, ".SYNTAX", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), ".SYNTAX", {}, file_reader};
     }
     Instruction get_instruction_context()
     {
-        return Instruction{context, ".CONTEXT", {"PUSH"}, file_reader};
+        return Instruction{*context_stack.get_current_context(), ".CONTEXT", {"PUSH"}, file_reader};
     }
     Instruction get_instruction_context_without_param()
     {
-        return Instruction{context, ".CONTEXT", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), ".CONTEXT", {}, file_reader};
     }
-    Instruction get_instruction_nop() { return Instruction{context, "LAA", {}, file_reader}; }
+    Instruction get_instruction_nop()
+    {
+        return Instruction{*context_stack.get_current_context(), "LAA", {}, file_reader};
+    }
     Instruction get_instruction_invalid_opcode()
     {
-        return Instruction{context, "INVALID_OPCODE", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "INVALID_OPCODE", {}, file_reader};
     }
 };
 
@@ -80,13 +96,19 @@ struct InstructionEvaluationFixture : public InstructionFixture
 
 struct InstructionEvaluationFixtureNewSyntax : public InstructionFixture
 {
-    InstructionEvaluationFixtureNewSyntax() { context.get_options().new_syntax = true; }
+    InstructionEvaluationFixtureNewSyntax()
+    {
+        context_stack.get_current_context()->get_options().new_syntax = true;
+    }
 
     Instruction get_instruction_mvi()
     {
-        return Instruction{context, "MVI", {"A", "0x42"}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "MVI", {"A", "0x42"}, file_reader};
     }
-    Instruction get_instruction_add() { return Instruction{context, "ADD", {"A"}, file_reader}; }
+    Instruction get_instruction_add()
+    {
+        return Instruction{*context_stack.get_current_context(), "ADD", {"A"}, file_reader};
+    }
 };
 
 struct FirstPassFixture : public InstructionFixture
@@ -134,6 +156,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_empty)
     auto instruction = get_instruction_empty();
 
     const int current_address = 0xff;
+    auto& context = *context_stack.get_current_context();
     ASSERT_THAT(instruction.get_evaluation(context, current_address), Eq(current_address));
 }
 
@@ -142,6 +165,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_end)
     auto instruction = get_instruction_end();
 
     const int current_address = 0xff;
+    auto& context = *context_stack.get_current_context();
     ASSERT_THAT(instruction.get_evaluation(context, current_address), Eq(current_address));
 }
 
@@ -150,6 +174,8 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_cpu)
     auto instruction = get_instruction_cpu_known();
 
     const int current_address = 0xff;
+    auto& context = *context_stack.get_current_context();
+
     ASSERT_THAT(instruction.get_evaluation(context, current_address), Eq(current_address));
 }
 
@@ -158,6 +184,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_org)
     auto instruction = get_instruction_org();
 
     const int current_address = 0xff;
+    auto& context = *context_stack.get_current_context();
     ASSERT_THAT(instruction.get_evaluation(context, current_address), Eq(0x1000));
 }
 
@@ -166,6 +193,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_equ)
     auto instruction = get_instruction_equ();
 
     const int current_address = 0xff;
+    auto& context = *context_stack.get_current_context();
     ASSERT_THAT(instruction.get_evaluation(context, current_address), Eq(0x2000));
 }
 
@@ -211,7 +239,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_empty)
     auto instruction = get_instruction_empty();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address));
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
 }
 
 TEST_F(FirstPassFixture, does_not_advance_address_for_end)
@@ -219,7 +247,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_end)
     auto instruction = get_instruction_end();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address));
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
 }
 
 TEST_F(FirstPassFixture, does_not_advance_address_for_equ)
@@ -227,7 +255,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_equ)
     auto instruction = get_instruction_equ();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address));
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
 }
 
 TEST_F(FirstPassFixture, sets_address_for_org)
@@ -235,7 +263,7 @@ TEST_F(FirstPassFixture, sets_address_for_org)
     auto instruction = get_instruction_org();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(0x1000));
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(0x1000));
 }
 
 TEST_F(FirstPassFixture, throws_if_wrong_CPU)
@@ -248,7 +276,7 @@ TEST_F(FirstPassFixture, does_not_advance_address_for_correct_cpu)
     auto instruction = get_instruction_cpu_known();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address));
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
 }
 
 TEST_F(FirstPassFixture, advance_address_with_declared_data)
@@ -256,7 +284,7 @@ TEST_F(FirstPassFixture, advance_address_with_declared_data)
     auto instruction = get_instruction_data();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address + 3));
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address + 3));
 }
 
 TEST_F(FirstPassFixture, throws_if_unknown_opcode)
@@ -269,18 +297,18 @@ TEST_F(FirstPassFixture, advances_one_byte_if_nop)
     auto instruction = get_instruction_nop();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address + 1));
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address + 1));
 }
 
 TEST_F(FirstPassFixture, syntax_changes_context_and_keeps_address)
 {
     auto instruction = get_instruction_syntax();
 
-    context.get_options().new_syntax = true;
+    context_stack.get_current_context()->get_options().new_syntax = true;
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address));
-    ASSERT_THAT(context.get_options().new_syntax, IsFalse());
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
+    ASSERT_THAT(context_stack.get_current_context()->get_options().new_syntax, IsFalse());
 }
 
 TEST_F(FirstPassFixture, context_pushes_context_and_keeps_address)
@@ -288,9 +316,9 @@ TEST_F(FirstPassFixture, context_pushes_context_and_keeps_address)
     auto instruction = get_instruction_context();
 
     const int current_address = 0xff;
-    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address));
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
 
-    //ASSERT_THAT(context.get_options().new_syntax, IsFalse());
+    //ASSERT_THAT(context_stack.get_current_context()->get_options().new_syntax, IsFalse());
 }
 
 /// TESTS FOR THE SECOND PASS
@@ -299,6 +327,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_empty)
 {
     auto instruction = get_instruction_empty();
 
+    auto& context = *context_stack.get_current_context();
     instruction.second_pass(context, byte_writer, current_address);
     byte_writer.write_end();
 
@@ -309,6 +338,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_end)
 {
     auto instruction = get_instruction_end();
 
+    auto& context = *context_stack.get_current_context();
     instruction.second_pass(context, byte_writer, current_address);
     byte_writer.write_end();
 
@@ -319,6 +349,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_equ)
 {
     auto instruction = get_instruction_equ();
 
+    auto& context = *context_stack.get_current_context();
     instruction.second_pass(context, byte_writer, current_address);
     byte_writer.write_end();
 
@@ -329,6 +360,7 @@ TEST_F(SecondPassFixture, does_not_output_byte_if_org)
 {
     auto instruction = get_instruction_org();
 
+    auto& context = *context_stack.get_current_context();
     instruction.second_pass(context, byte_writer, current_address);
     byte_writer.write_end();
 
@@ -339,6 +371,7 @@ TEST_F(SecondPassFixture, outputs_declared_data)
 {
     auto instruction = get_instruction_data();
 
+    auto& context = *context_stack.get_current_context();
     instruction.second_pass(context, byte_writer, current_address);
     byte_writer.write_end();
 
@@ -351,6 +384,7 @@ TEST_F(SecondPassFixture, outputs_opcode_data)
 {
     auto instruction = get_instruction_nop();
 
+    auto& context = *context_stack.get_current_context();
     instruction.second_pass(context, byte_writer, current_address);
     byte_writer.write_end();
 
