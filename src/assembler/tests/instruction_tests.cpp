@@ -59,6 +59,14 @@ struct InstructionFixture : public Test
     {
         return Instruction{context, ".SYNTAX", {}, file_reader};
     }
+    Instruction get_instruction_context()
+    {
+        return Instruction{context, ".CONTEXT", {"PUSH"}, file_reader};
+    }
+    Instruction get_instruction_context_without_param()
+    {
+        return Instruction{context, ".CONTEXT", {}, file_reader};
+    }
     Instruction get_instruction_nop() { return Instruction{context, "LAA", {}, file_reader}; }
     Instruction get_instruction_invalid_opcode()
     {
@@ -191,6 +199,11 @@ TEST_F(InstructionEvaluationFixture, throws_if_syntax_as_no_parameter)
     ASSERT_THROW(get_instruction_syntax_without_param(), MissingArgument);
 }
 
+TEST_F(InstructionEvaluationFixture, throws_if_context_as_no_parameter)
+{
+    ASSERT_THROW(get_instruction_context_without_param(), MissingArgument);
+}
+
 /// TESTS FOR THE FIRST PASS
 
 TEST_F(FirstPassFixture, does_not_advance_address_for_empty)
@@ -268,6 +281,16 @@ TEST_F(FirstPassFixture, syntax_changes_context_and_keeps_address)
     const int current_address = 0xff;
     ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address));
     ASSERT_THAT(context.get_options().new_syntax, IsFalse());
+}
+
+TEST_F(FirstPassFixture, context_pushes_context_and_keeps_address)
+{
+    auto instruction = get_instruction_context();
+
+    const int current_address = 0xff;
+    ASSERT_THAT(instruction.first_pass(context, current_address), Eq(current_address));
+
+    //ASSERT_THAT(context.get_options().new_syntax, IsFalse());
 }
 
 /// TESTS FOR THE SECOND PASS

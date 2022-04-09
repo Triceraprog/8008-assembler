@@ -248,6 +248,19 @@ namespace
         bool new_syntax{};
     };
 
+    struct Instruction_CONTEXT : public Instruction::InstructionAction
+    {
+        Instruction_CONTEXT(const Context& context, const std::vector<std::string>& arguments)
+        {
+            if (arguments.empty())
+            {
+                throw MissingArgument(".context");
+            }
+
+            auto context_action = arguments[0];
+        }
+    };
+
     struct Instruction_EMPTY : public Instruction::InstructionAction
     {
     };
@@ -289,8 +302,7 @@ InstructionEnum instruction_to_enum(std::string_view opcode)
             {"equ", InstructionEnum::EQU},        {"end", InstructionEnum::END},
             {"cpu", InstructionEnum::CPU},        {"org", InstructionEnum::ORG},
             {"data", InstructionEnum::DATA},      {".include", InstructionEnum::INCLUDE},
-            {".syntax", InstructionEnum::SYNTAX},
-    };
+            {".syntax", InstructionEnum::SYNTAX}, {".context", InstructionEnum::CONTEXT}};
     if (opcode.empty())
     {
         return InstructionEnum::EMPTY;
@@ -338,6 +350,9 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
             break;
         case InstructionEnum::SYNTAX:
             action = std::make_unique<Instruction_SYNTAX>(context, arguments);
+            break;
+        case InstructionEnum::CONTEXT:
+            action = std::make_unique<Instruction_CONTEXT>(context, arguments);
             break;
         case InstructionEnum::OTHER:
             action = std::make_unique<Instruction_OTHER>(

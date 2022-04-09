@@ -7,6 +7,7 @@
 - Pseudo instructions
   - Conditional compilation (.if)
   - Context manipulation (.context push/pop)
+    - Needs to pass a context stack to the instructions.
 - The responsibility of the short format should probably be in Listing
 - The listing can be reconstructed without keeping the initial line.
 - Option to output an expended, simple assembly code with a syntax for another assembler, especially as8

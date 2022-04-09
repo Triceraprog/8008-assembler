@@ -25,6 +25,7 @@ enum class InstructionEnum
     DATA,
     INCLUDE,
     SYNTAX,
+    CONTEXT,
     OTHER,
 };
 
