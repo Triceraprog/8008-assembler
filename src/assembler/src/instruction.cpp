@@ -21,16 +21,25 @@
 
 namespace
 {
-    struct Instruction_EQU : public Instruction::InstructionAction
+    struct Validated_Instruction : public Instruction::InstructionAction
     {
-        explicit Instruction_EQU(const std::vector<std::string>& arguments)
+        Validated_Instruction(std::string_view name, const std::vector<std::string>& arguments)
         {
             if (arguments.empty())
             {
-                throw MissingArgument("EQU");
+                throw MissingArgument(name);
             }
+        }
+    };
+
+    struct Instruction_EQU : public Validated_Instruction
+    {
+        explicit Instruction_EQU(const std::vector<std::string>& arguments)
+            : Validated_Instruction("EQU", arguments)
+        {
             first_arg = arguments[0];
         }
+
         [[nodiscard]] int evaluate_fixed_address(const Context& context,
                                                  int current_address) const override
         {
@@ -47,14 +56,11 @@ namespace
         // Said otherwise: END is ignored.
     };
 
-    struct Instruction_CPU : public Instruction::InstructionAction
+    struct Instruction_CPU : public Validated_Instruction
     {
         explicit Instruction_CPU(const std::vector<std::string>& arguments)
+            : Validated_Instruction("CPU", arguments)
         {
-            if (arguments.empty())
-            {
-                throw MissingArgument("CPU");
-            }
             verify_cpu(arguments[0]);
         }
 
@@ -67,21 +73,20 @@ namespace
         }
     };
 
-    struct Instruction_ORG : public Instruction::InstructionAction
+    struct Instruction_ORG : public Validated_Instruction
     {
         Instruction_ORG(const Context& context, const std::vector<std::string>& arguments)
+            : Validated_Instruction("ORG", arguments)
         {
-            if (arguments.empty())
-            {
-                throw MissingArgument("ORG");
-            }
             evaluated_argument = evaluate_argument(context, arguments[0]);
         }
+
         [[nodiscard]] int evaluate_fixed_address(const Context& context,
                                                  int current_address) const override
         {
             return evaluated_argument;
         }
+
         [[nodiscard]] int advance_address(const Context& context,
                                           int current_address) const override
         {
@@ -195,16 +200,12 @@ namespace
         Opcode opcode;
     };
 
-    struct Instruction_INCLUDE : public Instruction::InstructionAction
+    struct Instruction_INCLUDE : public Validated_Instruction
     {
         Instruction_INCLUDE(const Context& context, const std::vector<std::string>& arguments,
                             FileReader& file_reader)
+            : Validated_Instruction(".include", arguments)
         {
-            if (arguments.empty())
-            {
-                throw MissingArgument(".include");
-            }
-
             auto include_filename = arguments[0];
 
             if (context.get_options().debug)
@@ -216,15 +217,11 @@ namespace
         }
     };
 
-    struct Instruction_SYNTAX : public Instruction::InstructionAction
+    struct Instruction_SYNTAX : public Validated_Instruction
     {
         Instruction_SYNTAX(const Context& context, const std::vector<std::string>& arguments)
+            : Validated_Instruction(".syntax", arguments)
         {
-            if (arguments.empty())
-            {
-                throw MissingArgument(".syntax");
-            }
-
             auto syntax_type = arguments[0];
 
             if (context.get_options().debug)
@@ -254,15 +251,11 @@ namespace
         bool new_syntax{};
     };
 
-    struct Instruction_CONTEXT : public Instruction::InstructionAction
+    struct Instruction_CONTEXT : public Validated_Instruction
     {
         Instruction_CONTEXT(const Context& context, const std::vector<std::string>& arguments)
+            : Validated_Instruction(".context", arguments)
         {
-            if (arguments.empty())
-            {
-                throw MissingArgument(".context");
-            }
-
             auto context_action = arguments[0];
 
             if (context.get_options().debug)
@@ -270,15 +263,13 @@ namespace
                 std::cout << "got '" << context_action << "' as the context action.\n";
             }
 
-            if (ci_equals(context_action, "PUSH"))
-            {
-                action = PUSH;
-            }
-            else if (ci_equals(context_action, "POP"))
-            {
-                action = POP;
-            }
-            else
+            verify_syntax(context_action);
+            action = ci_equals(context_action, "POP") ? POP : PUSH;
+        }
+
+        static void verify_syntax(const std::string& syntax)
+        {
+            if ((!ci_equals(syntax, "PUSH")) && (!ci_equals(syntax, "POP")))
             {
                 throw InvalidSyntax();
             }
