@@ -51,7 +51,7 @@ void Listing::simple_line(uint32_t line_number, const std::string& line_content)
     output << line.str() << "\n";
 }
 
-void Listing::reserved_data(int line_number, int line_address, const std::string& line_content)
+void Listing::reserved_data(uint32_t line_number, int line_address, const std::string& line_content)
 {
     const auto& short_format = options.single_byte_list;
     ListingLine line{line_number, line_address};
@@ -63,7 +63,7 @@ void Listing::reserved_data(int line_number, int line_address, const std::string
     output << line.str() << "\n";
 }
 
-void Listing::opcode_line_with_space(int line_number, int line_address,
+void Listing::opcode_line_with_space(std::uint32_t line_number, int line_address,
                                      Opcode::OpcodeByteType opcode_byte,
                                      const std::string_view line_content)
 {
@@ -73,7 +73,7 @@ void Listing::opcode_line_with_space(int line_number, int line_address,
     output << line.str() << "\n";
 }
 
-void Listing::opcode_line_with_space_1_arg(int line_number, int line_address,
+void Listing::opcode_line_with_space_1_arg(std::uint32_t line_number, int line_address,
                                            Opcode::OpcodeByteType opcode_byte, int arg1,
                                            const std::string_view line_content)
 {
@@ -84,7 +84,7 @@ void Listing::opcode_line_with_space_1_arg(int line_number, int line_address,
     output << line.str() << "\n";
 }
 
-void Listing::opcode_line_with_space_2_arg(int line_number, int line_address,
+void Listing::opcode_line_with_space_2_arg(std::uint32_t line_number, int line_address,
                                            Opcode::OpcodeByteType opcode_byte, int arg1, int arg2,
                                            const std::string_view line_content)
 {
@@ -96,7 +96,7 @@ void Listing::opcode_line_with_space_2_arg(int line_number, int line_address,
     output << line.str() << "\n";
 }
 
-void Listing::one_byte_of_data_with_address(int line_number, int line_address, int data,
+void Listing::one_byte_of_data_with_address(std::uint32_t line_number, int line_address, int data,
                                             const std::string_view line_content) const
 {
     ListingLine line{line_number, line_address};
@@ -114,7 +114,7 @@ void Listing::one_byte_of_data_continued(int line_address, int data) const
     output << line.str() << "\n";
 }
 
-void Listing::data(int line_number, int line_address, const std::string& line_content,
+void Listing::data(std::uint32_t line_number, int line_address, const std::string& line_content,
                    const std::vector<int>& data_list)
 {
     if (options.single_byte_list)

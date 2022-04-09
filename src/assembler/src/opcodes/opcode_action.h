@@ -18,7 +18,7 @@ class OpcodeAction
 {
 public:
     virtual void emit_byte_stream(ByteWriter& byte_writer) const = 0;
-    virtual void emit_listing(Listing& listing, int line_number,
+    virtual void emit_listing(Listing& listing, std::uint32_t line_number,
                               std::string_view input_line) const = 0;
 
     virtual ~OpcodeAction() = default;

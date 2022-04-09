@@ -22,7 +22,7 @@ void OpcodeActionRst::emit_byte_stream(ByteWriter& byte_writer) const
     byte_writer.write_byte(opcode, address);
 }
 
-void OpcodeActionRst::emit_listing(Listing& listing, int line_number,
+void OpcodeActionRst::emit_listing(Listing& listing, std::uint32_t line_number,
                                    std::string_view input_line) const
 {
     listing.opcode_line_with_space(line_number, address, opcode, input_line);

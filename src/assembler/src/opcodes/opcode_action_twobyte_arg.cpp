@@ -27,7 +27,7 @@ void OpcodeActionTwoByteArg::emit_byte_stream(ByteWriter& byte_writer) const
     byte_writer.write_byte(high_byte, address + 2);
 }
 
-void OpcodeActionTwoByteArg::emit_listing(Listing& listing, int line_number,
+void OpcodeActionTwoByteArg::emit_listing(Listing& listing, std::uint32_t line_number,
                                           std::string_view input_line) const
 {
     const int low_byte = (0xFF & evaluated_argument);

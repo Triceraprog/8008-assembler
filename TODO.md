@@ -7,7 +7,6 @@
 - Pseudo instructions
   - Conditional compilation (.if)
   - In instructions, factorize the first argument or throw
-  - Fix warnings on the instruction.cpp file
 - Simplify file declaration in tests (based on a naming scheme)
 - The responsibility of the short format should probably be in Listing
 - The listing can be reconstructed without keeping the initial line.

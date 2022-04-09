@@ -10,7 +10,7 @@ public:
                        const std::vector<std::string>& arguments, std::string_view mnemonic);
 
     void emit_byte_stream(ByteWriter& byte_writer) const override;
-    void emit_listing(Listing& listing, int line_number,
+    void emit_listing(Listing& listing, std::uint32_t line_number,
                       std::string_view input_line) const override;
 
 private:

@@ -7,8 +7,8 @@ class ListingLine
 {
 public:
     ListingLine();
-    explicit ListingLine(uint32_t line_number);
-    ListingLine(int line_number, int line_address);
+    explicit ListingLine(std::uint32_t line_number);
+    ListingLine(uint32_t line_number, int line_address);
 
     void add_line_content(std::string_view line_content);
     void add_byte(int byte);

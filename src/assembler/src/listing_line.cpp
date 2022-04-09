@@ -5,7 +5,7 @@
 
 ListingLine::ListingLine() { line.reserve(128); }
 
-ListingLine::ListingLine(uint32_t line_number) : ListingLine()
+ListingLine::ListingLine(std::uint32_t line_number) : ListingLine()
 {
     std::stringstream str;
     str << std::setw(4) << line_number << " ";
@@ -13,7 +13,7 @@ ListingLine::ListingLine(uint32_t line_number) : ListingLine()
     line = std::move(str.str());
 }
 
-ListingLine::ListingLine(int line_number, int line_address) : ListingLine()
+ListingLine::ListingLine(uint32_t line_number, int line_address) : ListingLine()
 {
     std::stringstream str;
     str << std::setw(4) << line_number << " ";

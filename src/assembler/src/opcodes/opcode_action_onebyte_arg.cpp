@@ -22,7 +22,7 @@ void OpcodeActionOneByteArg::emit_byte_stream(ByteWriter& byte_writer) const
     byte_writer.write_byte(evaluated_argument, address + 1);
 }
 
-void OpcodeActionOneByteArg::emit_listing(Listing& listing, int line_number,
+void OpcodeActionOneByteArg::emit_listing(Listing& listing, std::uint32_t line_number,
                                           std::string_view input_line) const
 {
     if (listing.short_format())
