@@ -137,6 +137,17 @@ struct InstructionEvaluationFixtureNewSyntax : public InstructionFixture
 
 struct FirstPassFixture : public InstructionFixture
 {
+    void context_pop_and_verify()
+    {
+        // Place a symbol on the current context.
+        // Then pops the context.
+        // If the symbol is not found, we can say the context was really popped.
+        context_stack.get_current_context()->define_symbol("CONTEXT_MARKER", 12345);
+        context_stack.pop();
+        const auto [result, value] =
+                context_stack.get_current_context()->get_symbol_value("CONTEXT_MARKER");
+        ASSERT_THAT(result, IsFalse());
+    }
 };
 
 struct SecondPassFixture : public InstructionFixture
@@ -349,12 +360,8 @@ TEST_F(FirstPassFixture, context_pushes_context_and_keeps_address)
     const int current_address = 0xff;
     context_stack.get_current_context()->define_symbol("TEST", 123);
     ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
-    context_stack.get_current_context()->define_symbol("TEST", 321);
-    context_stack.pop();
 
-    const auto [result, value] = context_stack.get_current_context()->get_symbol_value("TEST");
-    ASSERT_THAT(result, IsTrue());
-    ASSERT_THAT(value, Eq(123));
+    context_pop_and_verify();
 }
 
 TEST_F(FirstPassFixture, if_pushes_context_and_sets_parsing_mode_if_true)
@@ -366,7 +373,7 @@ TEST_F(FirstPassFixture, if_pushes_context_and_sets_parsing_mode_if_true)
     ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
     ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
 
-    context_stack.pop(); // Change in "ensure context was pushed. Can be reused above
+    context_pop_and_verify();
 
     ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
 }
@@ -380,7 +387,7 @@ TEST_F(FirstPassFixture, if_pushes_context_and_sets_parsing_mode_if_false)
     ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
     ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsFalse());
 
-    context_stack.pop();
+    context_pop_and_verify();
 
     ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
 }
