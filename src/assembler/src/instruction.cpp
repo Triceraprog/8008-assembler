@@ -256,7 +256,7 @@ namespace
         Instruction_CONTEXT(const Context& context, const std::vector<std::string>& arguments)
             : Validated_Instruction(".context", arguments)
         {
-            auto context_action = arguments[0];
+            const auto& context_action = arguments[0];
 
             if (context.get_options().debug)
             {
