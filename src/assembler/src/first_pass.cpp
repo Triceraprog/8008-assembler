@@ -29,15 +29,20 @@ namespace
 
         throws_if_already_defined(context, label);
 
-        int val = instruction.get_evaluation(context, line_address);
-        context.define_symbol(label, val);
+        auto optional_value = instruction.get_value_for_label(context, line_address);
 
-        if (options.debug)
+        if (optional_value.has_value())
         {
-            std::cout << "at address=" << line_address;
-            std::cout << std::hex << std::uppercase << "=" << line_address;
-            std::cout << " defining " << label << " = " << std::dec << val;
-            std::cout << " =0x" << std::hex << std::uppercase << val << "\n";
+            auto& value = optional_value.value();
+            context.define_symbol(label, value);
+
+            if (options.debug)
+            {
+                std::cout << "at address=" << line_address;
+                std::cout << std::hex << std::uppercase << "=" << line_address;
+                std::cout << " defining " << label << " = " << std::dec << value;
+                std::cout << " =0x" << std::hex << std::uppercase << value << "\n";
+            }
         }
     }
 

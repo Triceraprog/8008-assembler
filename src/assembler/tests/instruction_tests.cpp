@@ -191,7 +191,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_empty)
 
     const int current_address = 0xff;
     auto& context = *context_stack.get_current_context();
-    ASSERT_THAT(instruction.get_evaluation(context, current_address), Eq(current_address));
+    ASSERT_THAT(instruction.get_value_for_label(context, current_address), Eq(current_address));
 }
 
 TEST_F(InstructionEvaluationFixture, returns_the_address_if_end)
@@ -200,7 +200,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_end)
 
     const int current_address = 0xff;
     auto& context = *context_stack.get_current_context();
-    ASSERT_THAT(instruction.get_evaluation(context, current_address), Eq(current_address));
+    ASSERT_THAT(instruction.get_value_for_label(context, current_address), Eq(current_address));
 }
 
 TEST_F(InstructionEvaluationFixture, returns_the_address_if_cpu)
@@ -210,7 +210,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_address_if_cpu)
     const int current_address = 0xff;
     auto& context = *context_stack.get_current_context();
 
-    ASSERT_THAT(instruction.get_evaluation(context, current_address), Eq(current_address));
+    ASSERT_THAT(instruction.get_value_for_label(context, current_address), Eq(current_address));
 }
 
 TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_org)
@@ -219,7 +219,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_org)
 
     const int current_address = 0xff;
     auto& context = *context_stack.get_current_context();
-    ASSERT_THAT(instruction.get_evaluation(context, current_address), Eq(0x1000));
+    ASSERT_THAT(instruction.get_value_for_label(context, current_address), Eq(0x1000));
 }
 
 TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_equ)
@@ -228,7 +228,7 @@ TEST_F(InstructionEvaluationFixture, returns_the_argument_address_if_equ)
 
     const int current_address = 0xff;
     auto& context = *context_stack.get_current_context();
-    ASSERT_THAT(instruction.get_evaluation(context, current_address), Eq(0x2000));
+    ASSERT_THAT(instruction.get_value_for_label(context, current_address), Eq(0x2000));
 }
 
 /// JUST CHECK SYNTAX

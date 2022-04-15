@@ -39,7 +39,7 @@ public:
     Instruction(const Context& context, const std::string& opcode,
                 const std::vector<std::string>& arguments, FileReader& file_reader);
 
-    [[nodiscard]] int get_evaluation(const Context& context, int address) const;
+    [[nodiscard]] std::optional<int> get_value_for_label(const Context& context, int address) const;
 
     [[nodiscard]] int first_pass(ContextStack& context_stack, int address) const;
 

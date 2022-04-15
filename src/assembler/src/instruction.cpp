@@ -487,7 +487,7 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
     }
 }
 
-int Instruction::get_evaluation(const Context& context, int address) const
+std::optional<int> Instruction::get_value_for_label(const Context& context, int address) const
 {
     return action->evaluate_fixed_address(context, address);
 }
