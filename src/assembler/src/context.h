@@ -26,6 +26,7 @@ struct Context
         ACTIVE,
         CONDITIONAL_TRUE,
         CONDITIONAL_FALSE,
+        MACRO_RECORDING,
     };
 
     [[nodiscard]] bool is_parsing_active() const;

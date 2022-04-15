@@ -111,6 +111,15 @@ struct InstructionFixture : public Test
     {
         return Instruction{*context_stack.get_current_context(), ".ENDIF", {}, file_reader};
     }
+
+    Instruction get_instruction_macro()
+    {
+        return Instruction{*context_stack.get_current_context(), ".MACRO", {}, file_reader};
+    }
+    Instruction get_instruction_endmacro()
+    {
+        return Instruction{*context_stack.get_current_context(), ".ENDMACRO", {}, file_reader};
+    }
 };
 
 struct InstructionEvaluationFixture : public InstructionFixture
@@ -443,6 +452,38 @@ TEST_F(FirstPassFixture, endif_pops_context)
     context_stack.push();
     context_stack.get_current_context()->set_parsing_mode(Context::CONDITIONAL_TRUE);
     auto instruction = get_instruction_endif();
+
+    // Sets a marker to detect the context stack pop
+    context_stack.get_current_context()->define_symbol("MARKER", 123);
+
+    const int current_address = 0xff;
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
+    ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
+
+    const auto [result, value] = context_stack.get_current_context()->get_symbol_value("MARKER");
+    ASSERT_THAT(result, IsFalse());
+}
+
+TEST_F(FirstPassFixture, macro_pushes_context_and_sets_parsing_mode_to_false)
+{
+    auto instruction = get_instruction_macro();
+
+    const int current_address = 0xff;
+    ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
+    ASSERT_THAT(instruction.first_pass(context_stack, current_address), Eq(current_address));
+    ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsFalse());
+
+    context_pop_and_verify();
+
+    ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
+}
+
+TEST_F(FirstPassFixture, endmacro_pops_context)
+{
+    // Simulate a previous "macro" declaration.
+    context_stack.push();
+    context_stack.get_current_context()->set_parsing_mode(Context::MACRO_RECORDING);
+    auto instruction = get_instruction_endmacro();
 
     // Sets a marker to detect the context stack pop
     context_stack.get_current_context()->define_symbol("MARKER", 123);

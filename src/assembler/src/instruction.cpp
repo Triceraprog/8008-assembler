@@ -361,6 +361,29 @@ namespace
         }
     };
 
+    struct Instruction_MACRO : public Instruction::InstructionAction
+    {
+        Instruction_MACRO(const Context& context, const std::vector<std::string>& arguments) {}
+
+        void update_context_stack(ContextStack& context_stack) const override
+        {
+            context_stack.push();
+            context_stack.get_current_context()->set_parsing_mode(Context::MACRO_RECORDING);
+            InstructionAction::update_context_stack(context_stack);
+        }
+    };
+
+    struct Instruction_ENDMACRO : public Instruction::InstructionAction
+    {
+        Instruction_ENDMACRO(const Context& context) {}
+
+        void update_context_stack(ContextStack& context_stack) const override
+        {
+            context_stack.pop();
+            InstructionAction::update_context_stack(context_stack);
+        }
+    };
+
     struct Instruction_EMPTY : public Instruction::InstructionAction
     {
         explicit Instruction_EMPTY(const Context& context)
@@ -406,12 +429,19 @@ void Instruction::InstructionAction::update_context_stack(ContextStack& context_
 InstructionEnum instruction_to_enum(std::string_view opcode)
 {
     static std::vector<std::tuple<const char*, InstructionEnum>> association = {
-            {"equ", InstructionEnum::EQU},        {"end", InstructionEnum::END},
-            {"cpu", InstructionEnum::CPU},        {"org", InstructionEnum::ORG},
-            {"data", InstructionEnum::DATA},      {".include", InstructionEnum::INCLUDE},
-            {".syntax", InstructionEnum::SYNTAX}, {".context", InstructionEnum::CONTEXT},
-            {".if", InstructionEnum::IF},         {".else", InstructionEnum::ELSE},
-            {".endif", InstructionEnum::ENDIF}};
+            {"equ", InstructionEnum::EQU},
+            {"end", InstructionEnum::END},
+            {"cpu", InstructionEnum::CPU},
+            {"org", InstructionEnum::ORG},
+            {"data", InstructionEnum::DATA},
+            {".include", InstructionEnum::INCLUDE},
+            {".syntax", InstructionEnum::SYNTAX},
+            {".context", InstructionEnum::CONTEXT},
+            {".if", InstructionEnum::IF},
+            {".else", InstructionEnum::ELSE},
+            {".endif", InstructionEnum::ENDIF},
+            {".macro", InstructionEnum::MACRO},
+            {".endmacro", InstructionEnum::ENDMACRO}};
     if (opcode.empty())
     {
         return InstructionEnum::EMPTY;
@@ -435,7 +465,8 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
     auto opcode_enum = instruction_to_enum(opcode);
 
     if (!context.is_parsing_active() &&
-        (opcode_enum != InstructionEnum::ELSE && opcode_enum != InstructionEnum::ENDIF))
+        (opcode_enum != InstructionEnum::ELSE && opcode_enum != InstructionEnum::ENDIF) &&
+        opcode_enum != InstructionEnum::ENDMACRO)
     {
         opcode_enum = InstructionEnum::EMPTY;
     }
@@ -481,6 +512,12 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
             break;
         case InstructionEnum::ENDIF:
             action = std::make_unique<Instruction_ENDIF>(context);
+            break;
+        case InstructionEnum::MACRO:
+            action = std::make_unique<Instruction_MACRO>(context, arguments);
+            break;
+        case InstructionEnum::ENDMACRO:
+            action = std::make_unique<Instruction_ENDMACRO>(context);
             break;
         default:
             assert(0 && "Missing case in the Instruction Factory.");

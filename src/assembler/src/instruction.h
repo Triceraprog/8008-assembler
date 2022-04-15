@@ -30,6 +30,8 @@ enum class InstructionEnum
     IF,
     ELSE,
     ENDIF,
+    MACRO,
+    ENDMACRO,
     OTHER,
 };
 
