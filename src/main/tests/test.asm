@@ -1,19 +1,44 @@
 OK: EQU 1
 NO: EQU 0
 
-    .macro INC_HL
-    INL
-    JFZ skip
-    INH
-skip:
-    .endmacro
 
-;     .macro INC,register
-;     INC low(register)
-;     JFZ skip
-;     INC high(register)
-; skip:
-;     .endmacro
+INC_HL: .macro
+        .syntax     old
+        INL
+        JFZ skip
+        INH
+skip:
+        .endmacro
+
+        ; LD immediate specifying two registers
+LD_IMM: .macro  r1,r2,imm
+        .syntax new
+
+        MOV r1,\HB\imm
+        MOV r2,\LB\imm
+
+        .endmacro
+
+        ; MOV for a double register
+MOVI:   .macro  reg,imm
+        .syntax new
+
+        MOV high(reg),\HB\imm
+        MOV low(reg),\LB\imm
+
+        .endmacro
+
+INCR:   .macro registrer,value
+        .syntax new
+
+        INC low(register)
+        JFZ skip
+        INC high(register)
+skip:
+        .endmacro
+
+        .INC_HL
+        .LD_IMM H,L,$1234
 
     .syntax old
     LLH
@@ -38,4 +63,6 @@ skip:
 
 
     END
+
+
 
