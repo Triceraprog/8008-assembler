@@ -206,7 +206,7 @@ namespace
                             FileReader& file_reader)
             : Validated_Instruction(".include", arguments)
         {
-            auto include_filename = arguments[0];
+            const auto& include_filename = arguments[0];
 
             if (context.get_options().debug)
             {
@@ -222,7 +222,7 @@ namespace
         Instruction_SYNTAX(const Context& context, const std::vector<std::string>& arguments)
             : Validated_Instruction(".syntax", arguments)
         {
-            auto syntax_type = arguments[0];
+            const auto& syntax_type = arguments[0];
 
             if (context.get_options().debug)
             {
