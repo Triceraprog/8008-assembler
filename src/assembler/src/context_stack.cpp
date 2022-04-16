@@ -8,6 +8,7 @@ ContextStack::ContextStack(const Options& options)
 }
 
 std::shared_ptr<Context> ContextStack::get_current_context() { return stack.top(); }
+std::shared_ptr<Context> ContextStack::get_current_context() const { return stack.top(); }
 
 void ContextStack::push() { stack.push(std::make_shared<Context>(stack.top())); }
 void ContextStack::pop()

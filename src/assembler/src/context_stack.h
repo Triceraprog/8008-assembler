@@ -16,6 +16,7 @@ public:
     void pop();
 
     std::shared_ptr<Context> get_current_context();
+    std::shared_ptr<Context> get_current_context() const;
 
 private:
     std::stack<std::shared_ptr<Context>> stack;
