@@ -54,6 +54,16 @@ namespace
                                   parsed_line.instruction);
         }
     }
+
+    bool is_exiting_macro(const ContextStack& context_stack, const ParsedLineStorage& parsed_lines)
+    {
+        const auto& tokens = parsed_lines.latest_line().tokens;
+
+        return (context_stack.get_current_context()->get_parsing_mode() ==
+                Context::MACRO_RECORDING) &&
+               ci_equals(tokens.opcode, ".endmacro");
+    }
+
 }
 
 void first_pass(ContextStack context_stack, FileReader& file_reader,
@@ -83,10 +93,17 @@ void first_pass(ContextStack context_stack, FileReader& file_reader,
                                             input_line, file_reader.get_line_number(),
                                             current_address);
 
-            const auto& latest_parsed_line = parsed_line_storage.latest_line();
-            handle_potential_label(*context_stack.get_current_context(), latest_parsed_line);
-            const auto& instruction = latest_parsed_line.instruction;
-            current_address = instruction.first_pass(context_stack, current_address);
+            const bool exiting_macro = is_exiting_macro(context_stack, parsed_line_storage);
+
+            if (context_stack.get_current_context()->get_parsing_mode() !=
+                        Context::MACRO_RECORDING ||
+                exiting_macro)
+            {
+                const auto& latest_parsed_line = parsed_line_storage.latest_line();
+                handle_potential_label(*context_stack.get_current_context(), latest_parsed_line);
+                const auto& instruction = latest_parsed_line.instruction;
+                current_address = instruction.first_pass(context_stack, current_address);
+            }
         }
         catch (const std::exception& ex)
         {
