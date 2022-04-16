@@ -53,7 +53,7 @@ public:
     // return to it after, as in a stack.
     void insert_now(std::unique_ptr<std::istream> stream, std::string_view name_tag);
 
-    std::string get_name_tag() const;
+    [[nodiscard]] std::string get_name_tag() const;
 
 private:
     struct ReaderContext
