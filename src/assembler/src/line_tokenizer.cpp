@@ -167,6 +167,12 @@ void LineTokenizer::adjust_label()
     }
 }
 
+namespace
+{
+    bool is_data_opcode(std::string_view opcode) { return ci_equals(opcode, "data"); }
+    bool is_extended_command(std::string_view opcode) { return opcode[0] == '.'; }
+}
+
 LineTokenizer parse_line(const Options& options, const std::string_view line,
                          std::size_t line_count)
 {
@@ -178,7 +184,8 @@ LineTokenizer parse_line(const Options& options, const std::string_view line,
                   << " lacking colon, and not 'equ' pseudo-op.\n";
     }
 
-    if ((tokens.arguments.size() > 2) && (!ci_equals(tokens.opcode, "data")))
+    if ((tokens.arguments.size() > 2) &&
+        (!is_data_opcode(tokens.opcode) && !is_extended_command(tokens.opcode)))
     {
         std::cerr << "WARNING: extra text on line " << line_count << " " << line << "\n";
     }
