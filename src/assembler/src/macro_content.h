@@ -9,10 +9,11 @@
 class MacroContent
 {
 public:
-    MacroContent(std::string_view name, const std::vector<std::string>& parameters);
+    using Parameters = std::vector<std::string>;
+    MacroContent(std::string_view name, const Parameters& parameters);
 
     [[nodiscard]] std::string_view get_name() const;
-    [[nodiscard]] const std::vector<std::string>& get_parameters() const;
+    [[nodiscard]] const Parameters& get_parameters() const;
 
     void append_line(std::string_view line);
 
@@ -20,7 +21,7 @@ public:
 
 private:
     std::string name;
-    std::vector<std::string> parameters;
+    Parameters parameters;
 
     std::string content;
 };

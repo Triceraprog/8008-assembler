@@ -8,7 +8,7 @@ using namespace testing;
 
 TEST(MacroContent, is_constructed_with_a_name_and_parameters)
 {
-    const std::vector<std::string> parameters;
+    const MacroContent::Parameters parameters;
     MacroContent macro{"my_macro", parameters};
 
     ASSERT_THAT(macro.get_name(), Eq("my_macro"));

@@ -2,8 +2,7 @@
 
 #include <sstream>
 
-MacroContent::MacroContent(std::string_view name, const std::vector<std::string>& parameters)
-    : name{name}
+MacroContent::MacroContent(std::string_view name, const Parameters& parameters) : name{name}
 {
     this->parameters.reserve(parameters.size());
     std::copy(parameters.begin(), parameters.end(), this->parameters.begin());
@@ -11,7 +10,7 @@ MacroContent::MacroContent(std::string_view name, const std::vector<std::string>
 
 std::string_view MacroContent::get_name() const { return name; }
 
-const std::vector<std::string>& MacroContent::get_parameters() const { return parameters; }
+const MacroContent::Parameters& MacroContent::get_parameters() const { return parameters; }
 
 void MacroContent::append_line(std::string_view line)
 {
