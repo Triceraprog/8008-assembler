@@ -1,5 +1,7 @@
 #include "context.h"
 
+#include "macro_content.h"
+
 #include <utility>
 
 Context::Context(Options options) : options{std::move(options)} {}
@@ -7,6 +9,8 @@ Context::Context(Options options) : options{std::move(options)} {}
 Context::Context(const std::shared_ptr<Context>& other_context)
     : options{other_context->options}, parent{other_context}
 {}
+
+Context::~Context() = default;
 
 void Context::define_symbol(std::string_view symbol_name, int value)
 {
@@ -39,3 +43,21 @@ bool Context::is_parsing_active() const
 }
 void Context::set_parsing_mode(Context::ParsingMode mode) { parsing_mode = mode; }
 Context::ParsingMode Context::get_parsing_mode() const { return parsing_mode; }
+
+void Context::declare_macro(std::unique_ptr<MacroContent> macro_content)
+{
+    const std::string macro_name{macro_content->get_name()};
+
+    if (macros.contains(macro_name))
+    {
+        throw AlreadyDefinedMacro(macro_name);
+    }
+    macros[macro_name] = std::move(macro_content);
+}
+
+bool Context::has_macro(const std::string& macro_name) const { return macros.contains(macro_name); }
+
+AlreadyDefinedMacro::AlreadyDefinedMacro(const std::string& macro_name)
+{
+    reason = "macro '" + macro_name + "' was already defined";
+}
