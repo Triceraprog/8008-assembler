@@ -1,8 +1,9 @@
 - Macro system
   - Needs a way to record the macro
-  - Needs a way to bind an identifier to a value (string) in a context (.bind instruction ?)
+    - The Context must know the current Macro Content to fill
+    - When ending the Macro, the current Macro Content is committed
   - Needs a way to inject the macro content with the binding context when it's called
-  - Resolving a symbol on a context searches up the hierarchy
+    - Add the MacroCallContext, which binds the MacroContent and the Arguments.
   - Be careful of the line number with Macro. Maybe some stacked line number scheme.
 - Simplify file declaration in tests (based on a naming scheme)
 - The responsibility of the short format should probably be in Listing

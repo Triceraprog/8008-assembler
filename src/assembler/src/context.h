@@ -38,7 +38,10 @@ struct Context
     [[nodiscard]] ParsingMode get_parsing_mode() const;
 
     void declare_macro(std::unique_ptr<MacroContent> macro_content);
-    [[nodiscard]] bool has_macro(const std::string& macro_name) const;
+    [[nodiscard]] bool has_macro(const std::string_view& macro_name) const;
+    void* create_call_context(std::string_view macro_name,
+                              const std::vector<std::string>& arguments) const;
+    void activate_macro(void* call_context);
 
 private:
     const std::shared_ptr<Context> parent;
@@ -52,7 +55,7 @@ private:
 class AlreadyDefinedMacro : public ExceptionWithReason
 {
 public:
-    AlreadyDefinedMacro(const std::string& macro_name);
+    explicit AlreadyDefinedMacro(const std::string& macro_name);
 };
 
 #endif //INC_8008_ASSEMBLER_CONTEXT_H

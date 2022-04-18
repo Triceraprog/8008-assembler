@@ -120,6 +120,11 @@ struct InstructionFixture : public Test
     {
         return Instruction{*context_stack.get_current_context(), ".ENDMACRO", {}, file_reader};
     }
+
+    Instruction get_macro_call()
+    {
+        return Instruction{*context_stack.get_current_context(), ".a_macro", {}, file_reader};
+    }
 };
 
 struct InstructionEvaluationFixture : public InstructionFixture
@@ -280,6 +285,11 @@ TEST_F(InstructionEvaluationFixture, throws_if_context_as_no_parameter)
 TEST_F(InstructionEvaluationFixture, throws_if_if_as_no_parameter)
 {
     ASSERT_THROW(get_instruction_if_without_param(), MissingArgument);
+}
+
+TEST_F(InstructionEvaluationFixture, does_throw_if_macro_does_not_exist)
+{
+    ASSERT_THROW(get_macro_call(), UndefinedMacro);
 }
 
 /// TESTS FOR THE FIRST PASS

@@ -32,6 +32,7 @@ enum class InstructionEnum
     ENDIF,
     MACRO,
     ENDMACRO,
+    MACRO_CALL,
     OTHER,
 };
 
@@ -114,5 +115,12 @@ class MissingArgument : public ExceptionWithReason
 public:
     explicit MissingArgument(std::string_view instruction);
 };
+
+class UndefinedMacro : public ExceptionWithReason
+{
+public:
+    explicit UndefinedMacro(std::string_view macro_name);
+};
+
 
 #endif //INC_8008_ASSEMBLER_INSTRUCTION_H

@@ -7,6 +7,7 @@
 #include "files/file_utility.h"
 #include "files/files.h"
 #include "listing.h"
+#include "macro_content.h"
 #include "opcodes/opcode_action.h"
 #include "opcodes/opcodes.h"
 #include "options.h"
@@ -375,13 +376,36 @@ namespace
 
     struct Instruction_ENDMACRO : public Instruction::InstructionAction
     {
-        Instruction_ENDMACRO(const Context& context) {}
+        explicit Instruction_ENDMACRO(const Context& context){};
 
         void update_context_stack(ContextStack& context_stack) const override
         {
             context_stack.pop();
             InstructionAction::update_context_stack(context_stack);
         }
+    };
+
+    struct Instruction_MACRO_CALL : public Instruction::InstructionAction
+    {
+        Instruction_MACRO_CALL(const Context& context, std::string_view command_string,
+                               const std::vector<std::string>& arguments)
+        {
+            macro_name = command_string.substr(1);
+            if (!context.has_macro(macro_name))
+            {
+                throw UndefinedMacro(command_string);
+            }
+
+            call_context = context.create_call_context(macro_name, arguments);
+        }
+
+        void update_context_stack(ContextStack& context_stack) const override
+        {
+            context_stack.get_current_context()->activate_macro(call_context);
+        }
+
+        std::string macro_name;
+        void* call_context{};
     };
 
     struct Instruction_EMPTY : public Instruction::InstructionAction
@@ -453,7 +477,7 @@ InstructionEnum instruction_to_enum(std::string_view opcode)
 
     if (found_op_code == association.end())
     {
-        return InstructionEnum::OTHER;
+        return opcode[0] == '.' ? InstructionEnum::MACRO_CALL : InstructionEnum::OTHER;
     }
 
     return std::get<1>(*found_op_code);
@@ -519,6 +543,9 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
         case InstructionEnum::ENDMACRO:
             action = std::make_unique<Instruction_ENDMACRO>(context);
             break;
+        case InstructionEnum::MACRO_CALL:
+            action = std::make_unique<Instruction_MACRO_CALL>(context, opcode, arguments);
+            break;
         default:
             assert(0 && "Missing case in the Instruction Factory.");
     }
@@ -558,10 +585,15 @@ InvalidContextAction::InvalidContextAction()
 
 InvalidConditional::InvalidConditional(std::string_view conditional_name)
 {
-    reason = "found " + std::string{conditional_name} + " without .if)";
+    reason = "found " + std::string{conditional_name} + " without .if";
 }
 
 MissingArgument::MissingArgument(std::string_view instruction)
 {
     reason = "Missing parameter(s) for instruction: " + std::string{instruction};
+}
+
+UndefinedMacro::UndefinedMacro(std::string_view macro_name)
+{
+    reason = "macro " + std::string{macro_name} + " was not defined.";
 }

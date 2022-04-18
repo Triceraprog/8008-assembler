@@ -46,7 +46,8 @@ Context::ParsingMode Context::get_parsing_mode() const { return parsing_mode; }
 
 void Context::declare_macro(std::unique_ptr<MacroContent> macro_content)
 {
-    const std::string macro_name{macro_content->get_name()};
+    std::string macro_name{macro_content->get_name()};
+    std::transform(macro_name.begin(), macro_name.end(), macro_name.begin(), toupper);
 
     if (macros.contains(macro_name))
     {
@@ -55,7 +56,21 @@ void Context::declare_macro(std::unique_ptr<MacroContent> macro_content)
     macros[macro_name] = std::move(macro_content);
 }
 
-bool Context::has_macro(const std::string& macro_name) const { return macros.contains(macro_name); }
+bool Context::has_macro(const std::string_view& macro_name) const
+{
+    std::string upper_macro_name{macro_name};
+    std::transform(upper_macro_name.begin(), upper_macro_name.end(), upper_macro_name.begin(),
+                   toupper);
+    return macros.contains(std::string{upper_macro_name});
+}
+
+void* Context::create_call_context(std::string_view macro_name,
+                                   const std::vector<std::string>& arguments) const
+{
+    return nullptr;
+}
+
+void Context::activate_macro(void* call_context) {}
 
 AlreadyDefinedMacro::AlreadyDefinedMacro(const std::string& macro_name)
 {
