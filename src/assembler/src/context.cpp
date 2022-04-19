@@ -1,7 +1,10 @@
 #include "context.h"
 
+#include "files/file_reader.h"
 #include "macro_content.h"
 
+#include <cassert>
+#include <sstream>
 #include <utility>
 
 Context::Context(Options options) : options{std::move(options)} {}
@@ -49,10 +52,7 @@ void Context::declare_macro(std::unique_ptr<MacroContent> macro_content)
     std::string macro_name{macro_content->get_name()};
     std::transform(macro_name.begin(), macro_name.end(), macro_name.begin(), toupper);
 
-    if (macros.contains(macro_name))
-    {
-        throw AlreadyDefinedMacro(macro_name);
-    }
+    assert(!macros.contains(macro_name)); // Because starting the macro already verifies it.
     macros[macro_name] = std::move(macro_content);
 }
 
@@ -64,13 +64,54 @@ bool Context::has_macro(const std::string_view& macro_name) const
     return macros.contains(std::string{upper_macro_name});
 }
 
-void* Context::create_call_context(std::string_view macro_name,
-                                   const std::vector<std::string>& arguments) const
+struct CallContext
 {
-    return nullptr;
+    MacroContent* macro_content;
+    FileReader& file_reader;
+};
+
+void* Context::create_call_context(std::string_view macro_name,
+                                   const std::vector<std::string>& arguments,
+                                   FileReader& file_reader) const
+{
+    std::string upper_macro_name{macro_name};
+    std::transform(upper_macro_name.begin(), upper_macro_name.end(), upper_macro_name.begin(),
+                   toupper);
+
+    auto it = macros.find(upper_macro_name);
+
+    return new CallContext{it->second.get(), file_reader};
 }
 
-void Context::activate_macro(void* call_context) {}
+void Context::activate_macro(void* call_context)
+{
+    auto* call = reinterpret_cast<CallContext*>(call_context);
+    auto stream = call->macro_content->get_line_stream();
+    call->file_reader.insert_now(std::move(stream), "Macro Name");
+
+    delete call;
+}
+
+void Context::start_macro(const std::string& macro_name, const std::vector<std::string>& arguments)
+{
+    assert(currently_recording_macro.get() == nullptr);
+    assert(get_parsing_mode() != Context::MACRO_RECORDING);
+
+    if (parent && parent->has_macro(macro_name))
+    {
+        throw AlreadyDefinedMacro(macro_name);
+    }
+    set_parsing_mode(Context::MACRO_RECORDING);
+    currently_recording_macro = std::make_unique<MacroContent>(macro_name, arguments);
+}
+
+void Context::stop_macro()
+{
+    if (parent)
+    {
+        parent->declare_macro(std::move(currently_recording_macro));
+    }
+}
 
 AlreadyDefinedMacro::AlreadyDefinedMacro(const std::string& macro_name)
 {

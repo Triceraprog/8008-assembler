@@ -366,11 +366,15 @@ namespace
     {
         Instruction_MACRO(const Context& context, const std::string& macro_name,
                           const std::vector<std::string>& arguments)
+            : name{macro_name}
         {
             if (context.get_options().debug)
             {
                 std::cout << "start recording macro: " << macro_name << "\n";
             }
+
+            formal_parameters.reserve(arguments.size());
+            std::copy(arguments.begin(), arguments.end(), std::back_inserter(formal_parameters));
         }
 
         [[nodiscard]] std::optional<int> evaluate_fixed_address(const Context& context,
@@ -382,9 +386,13 @@ namespace
         void update_context_stack(ContextStack& context_stack) const override
         {
             context_stack.push();
-            context_stack.get_current_context()->set_parsing_mode(Context::MACRO_RECORDING);
+            auto context = context_stack.get_current_context();
+            context->start_macro(name, formal_parameters);
             InstructionAction::update_context_stack(context_stack);
         }
+
+        std::string name;
+        std::vector<std::string> formal_parameters;
     };
 
     struct Instruction_ENDMACRO : public Instruction::InstructionAction
@@ -402,12 +410,11 @@ namespace
             {
                 std::cout << "stop recording macro\n";
             }
-
-            // context.commit_macro();
         };
 
         void update_context_stack(ContextStack& context_stack) const override
         {
+            context_stack.get_current_context()->stop_macro();
             context_stack.pop();
             InstructionAction::update_context_stack(context_stack);
         }
@@ -416,7 +423,7 @@ namespace
     struct Instruction_MACRO_CALL : public Instruction::InstructionAction
     {
         Instruction_MACRO_CALL(const Context& context, std::string_view command_string,
-                               const std::vector<std::string>& arguments)
+                               const std::vector<std::string>& arguments, FileReader& file_reader)
         {
             macro_name = command_string.substr(1);
             if (!context.has_macro(macro_name))
@@ -424,7 +431,7 @@ namespace
                 throw UndefinedMacro(command_string);
             }
 
-            call_context = context.create_call_context(macro_name, arguments);
+            call_context = context.create_call_context(macro_name, arguments, file_reader);
         }
 
         void update_context_stack(ContextStack& context_stack) const override
@@ -511,8 +518,9 @@ InstructionEnum instruction_to_enum(std::string_view opcode)
     return std::get<1>(*found_op_code);
 }
 
-Instruction::Instruction(const Context& context, const std::string& opcode,
-                         const std::vector<std::string>& arguments, FileReader& file_reader)
+Instruction::Instruction(const Context& context, const std::string& label,
+                         const std::string& opcode, const std::vector<std::string>& arguments,
+                         FileReader& file_reader)
 {
     auto opcode_enum = instruction_to_enum(opcode);
 
@@ -566,13 +574,14 @@ Instruction::Instruction(const Context& context, const std::string& opcode,
             action = std::make_unique<Instruction_ENDIF>(context);
             break;
         case InstructionEnum::MACRO:
-            action = std::make_unique<Instruction_MACRO>(context, arguments);
+            action = std::make_unique<Instruction_MACRO>(context, label, arguments);
             break;
         case InstructionEnum::ENDMACRO:
             action = std::make_unique<Instruction_ENDMACRO>(context);
             break;
         case InstructionEnum::MACRO_CALL:
-            action = std::make_unique<Instruction_MACRO_CALL>(context, opcode, arguments);
+            action = std::make_unique<Instruction_MACRO_CALL>(context, opcode, arguments,
+                                                              file_reader);
             break;
         default:
             assert(0 && "Missing case in the Instruction Factory.");

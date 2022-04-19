@@ -5,7 +5,7 @@
 MacroContent::MacroContent(std::string_view name, const Parameters& parameters) : name{name}
 {
     this->parameters.reserve(parameters.size());
-    std::copy(parameters.begin(), parameters.end(), this->parameters.begin());
+    std::copy(parameters.begin(), parameters.end(), std::back_inserter(this->parameters));
 }
 
 std::string_view MacroContent::get_name() const { return name; }

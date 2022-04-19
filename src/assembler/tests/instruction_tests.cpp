@@ -523,7 +523,7 @@ TEST_F(FirstPassFixture, endmacro_pops_context)
 {
     // Simulate a previous "macro" declaration.
     context_stack.push();
-    context_stack.get_current_context()->set_parsing_mode(Context::MACRO_RECORDING);
+    context_stack.get_current_context()->start_macro("a_macro", {});
     auto instruction = get_instruction_endmacro();
 
     // Sets a marker to detect the context stack pop

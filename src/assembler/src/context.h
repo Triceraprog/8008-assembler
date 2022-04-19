@@ -10,6 +10,7 @@
 #include <string_view>
 
 class MacroContent;
+class FileReader;
 
 struct Context
 {
@@ -37,10 +38,16 @@ struct Context
     void set_parsing_mode(ParsingMode mode);
     [[nodiscard]] ParsingMode get_parsing_mode() const;
 
-    void declare_macro(std::unique_ptr<MacroContent> macro_content);
+    /// Starts recording a macro in the context
+    void start_macro(const std::string& macro_name, const std::vector<std::string>& arguments);
+
+    /// Stops recoding the macro in the context and declares it in its parent context.
+    void stop_macro();
+
     [[nodiscard]] bool has_macro(const std::string_view& macro_name) const;
     void* create_call_context(std::string_view macro_name,
-                              const std::vector<std::string>& arguments) const;
+                              const std::vector<std::string>& arguments,
+                              FileReader& file_reader) const;
     void activate_macro(void* call_context);
 
 private:
@@ -49,7 +56,10 @@ private:
     Options options;
     SymbolTable symbol_table;
     ParsingMode parsing_mode{ACTIVE};
+    std::unique_ptr<MacroContent> currently_recording_macro{};
     std::unordered_map<std::string, std::unique_ptr<MacroContent>> macros;
+
+    void declare_macro(std::unique_ptr<MacroContent> macro_content);
 };
 
 class AlreadyDefinedMacro : public ExceptionWithReason

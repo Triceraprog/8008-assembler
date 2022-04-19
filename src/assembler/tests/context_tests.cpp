@@ -1,6 +1,5 @@
 #include "context.h"
 
-#include "macro_content.h"
 #include "options.h"
 
 #include <memory>
@@ -69,36 +68,41 @@ TEST(Context, context_can_be_copy_constructed_and_has_local_symbol_definitions)
     ASSERT_THAT(failure, IsFalse());
 }
 
-TEST(Context, can_receive_a_macro_content)
-{
-    Options options;
-    Context ctx(options);
-
-    auto macro_content = std::make_unique<MacroContent>("name", MacroContent::Parameters{});
-    ctx.declare_macro(std::move(macro_content));
-}
-
-TEST(Context, cannot_declare_twice_a_macro_with_the_same_name)
-{
-    Options options;
-    Context ctx(options);
-
-    {
-        auto macro_content = std::make_unique<MacroContent>("name", MacroContent::Parameters{});
-        ctx.declare_macro(std::move(macro_content));
-    }
-
-    {
-        auto second_macro_content =
-                std::make_unique<MacroContent>("name", MacroContent::Parameters{});
-        ASSERT_THROW(ctx.declare_macro(std::move(second_macro_content)), AlreadyDefinedMacro);
-    }
-}
-
 TEST(Context, can_check_if_it_has_a_macro_by_name)
 {
     Options options;
     Context ctx(options);
 
     ASSERT_THAT(ctx.has_macro("name"), IsFalse());
+}
+
+TEST(Context, declares_a_macro_in_its_parent_context_when_finished)
+{
+    Options options;
+    auto ctx_1 = std::make_shared<Context>(options);
+    Context ctx_2(ctx_1);
+
+    ctx_2.start_macro("a_macro_name", {});
+    ctx_2.stop_macro();
+
+    ASSERT_THAT(ctx_1->has_macro("a_macro_name"), IsTrue());
+}
+
+TEST(Context, cannot_declare_twice_a_macro_with_the_same_name)
+{
+    Options options;
+    auto ctx_1 = std::make_shared<Context>(options);
+
+    {
+        Context ctx_2(ctx_1);
+
+        ctx_2.start_macro("a_macro_name", {});
+        ctx_2.stop_macro();
+    }
+
+    {
+        Context ctx_2(ctx_1);
+
+        ASSERT_THROW(ctx_2.start_macro("a_macro_name", {}), AlreadyDefinedMacro);
+    }
 }

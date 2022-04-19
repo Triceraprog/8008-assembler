@@ -39,7 +39,7 @@ enum class InstructionEnum
 class Instruction
 {
 public:
-    Instruction(const Context& context, const std::string& opcode,
+    Instruction(const Context& context, const std::string& label, const std::string& opcode,
                 const std::vector<std::string>& arguments, FileReader& file_reader);
 
     [[nodiscard]] std::optional<int> get_value_for_label(const Context& context, int address) const;
