@@ -59,7 +59,8 @@ public:
         // This is used when there's a need of evaluation of an expression instruction like
         // ORG or EQU, before the first pass.
         // The default is to return the given address.
-        [[nodiscard]] virtual int evaluate_fixed_address(const Context& context, int address) const;
+        [[nodiscard]] virtual std::optional<int> evaluate_fixed_address(const Context& context,
+                                                                        int address) const;
 
         // This is used by the first pass to know how many bytes are needed for this instruction.
         // The default is a need of 0, and so returns the given address.

@@ -41,8 +41,8 @@ namespace
             first_arg = arguments[0];
         }
 
-        [[nodiscard]] int evaluate_fixed_address(const Context& context,
-                                                 int current_address) const override
+        [[nodiscard]] std::optional<int> evaluate_fixed_address(const Context& context,
+                                                                int current_address) const override
         {
             return evaluate_argument(context, first_arg);
         }
@@ -82,8 +82,8 @@ namespace
             evaluated_argument = evaluate_argument(context, arguments[0]);
         }
 
-        [[nodiscard]] int evaluate_fixed_address(const Context& context,
-                                                 int current_address) const override
+        [[nodiscard]] std::optional<int> evaluate_fixed_address(const Context& context,
+                                                                int current_address) const override
         {
             return evaluated_argument;
         }
@@ -366,6 +366,12 @@ namespace
     {
         Instruction_MACRO(const Context& context, const std::vector<std::string>& arguments) {}
 
+        [[nodiscard]] std::optional<int> evaluate_fixed_address(const Context& context,
+                                                                int address) const override
+        {
+            return {};
+        }
+
         void update_context_stack(ContextStack& context_stack) const override
         {
             context_stack.push();
@@ -430,8 +436,8 @@ namespace
     };
 }
 
-int Instruction::InstructionAction::evaluate_fixed_address(const Context& context,
-                                                           int address) const
+std::optional<int> Instruction::InstructionAction::evaluate_fixed_address(const Context& context,
+                                                                          int address) const
 {
     return address;
 }
