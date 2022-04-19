@@ -39,9 +39,9 @@ namespace
             if (options.debug)
             {
                 std::cout << "at address=" << line_address;
-                std::cout << std::hex << std::uppercase << "=" << line_address;
-                std::cout << " defining " << label << " = " << std::dec << value;
-                std::cout << " =0x" << std::hex << std::uppercase << value << "\n";
+                std::cout << std::hex << std::uppercase << " (= 0x" << line_address;
+                std::cout << ") defining " << label << " = " << std::dec << value;
+                std::cout << " (= 0x" << std::hex << std::uppercase << value << ")\n";
             }
         }
     }

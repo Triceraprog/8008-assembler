@@ -201,6 +201,8 @@ LineTokenizer parse_line(const Options& options, const std::string_view line,
         {
             std::cout << "arg" << index << "=<" << tokens.arguments[index] << "> ";
         }
+
+        std::cout << "\n";
     }
 
     return tokens;
