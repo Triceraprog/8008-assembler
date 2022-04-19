@@ -122,5 +122,10 @@ public:
     explicit UndefinedMacro(std::string_view macro_name);
 };
 
+class InvalidEndmacro : public ExceptionWithReason
+{
+public:
+    InvalidEndmacro();
+};
 
 #endif //INC_8008_ASSEMBLER_INSTRUCTION_H

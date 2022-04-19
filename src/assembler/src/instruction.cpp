@@ -376,7 +376,17 @@ namespace
 
     struct Instruction_ENDMACRO : public Instruction::InstructionAction
     {
-        explicit Instruction_ENDMACRO(const Context& context){};
+        explicit Instruction_ENDMACRO(const Context& context)
+        {
+            auto previous_mode = context.get_parsing_mode();
+
+            if (previous_mode != Context::ParsingMode::MACRO_RECORDING)
+            {
+                throw InvalidEndmacro();
+            }
+
+            // context.commit_macro();
+        };
 
         void update_context_stack(ContextStack& context_stack) const override
         {
@@ -597,3 +607,5 @@ UndefinedMacro::UndefinedMacro(std::string_view macro_name)
 {
     reason = "macro " + std::string{macro_name} + " was not defined.";
 }
+
+InvalidEndmacro::InvalidEndmacro() { reason = ".endmacro found without a matching .macro"; }

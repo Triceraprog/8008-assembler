@@ -488,6 +488,11 @@ TEST_F(FirstPassFixture, macro_pushes_context_and_sets_parsing_mode_to_false)
     ASSERT_THAT(context_stack.get_current_context()->is_parsing_active(), IsTrue());
 }
 
+TEST_F(FirstPassFixture, endmacro_without_macro_throws)
+{
+    ASSERT_THROW(get_instruction_endmacro(), InvalidEndmacro);
+}
+
 TEST_F(FirstPassFixture, endmacro_pops_context)
 {
     // Simulate a previous "macro" declaration.
