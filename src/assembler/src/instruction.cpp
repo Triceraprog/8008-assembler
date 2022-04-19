@@ -364,7 +364,14 @@ namespace
 
     struct Instruction_MACRO : public Instruction::InstructionAction
     {
-        Instruction_MACRO(const Context& context, const std::vector<std::string>& arguments) {}
+        Instruction_MACRO(const Context& context, const std::string& macro_name,
+                          const std::vector<std::string>& arguments)
+        {
+            if (context.get_options().debug)
+            {
+                std::cout << "start recording macro: " << macro_name << "\n";
+            }
+        }
 
         [[nodiscard]] std::optional<int> evaluate_fixed_address(const Context& context,
                                                                 int address) const override
@@ -389,6 +396,11 @@ namespace
             if (previous_mode != Context::ParsingMode::MACRO_RECORDING)
             {
                 throw InvalidEndmacro();
+            }
+
+            if (context.get_options().debug)
+            {
+                std::cout << "stop recording macro\n";
             }
 
             // context.commit_macro();

@@ -19,111 +19,133 @@ struct InstructionFixture : public Test
 
     Instruction get_instruction_empty()
     {
-        return Instruction{*context_stack.get_current_context(), {}, {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", {}, {}, file_reader};
     }
     Instruction get_instruction_end()
     {
-        return Instruction{*context_stack.get_current_context(), "END", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", "END", {}, file_reader};
     }
     Instruction get_instruction_equ()
     {
-        return Instruction{*context_stack.get_current_context(), "EQU", {"0x2000"}, file_reader};
+        return Instruction{*context_stack.get_current_context(),
+                           "",
+                           "EQU",
+                           {"0x2000"},
+                           file_reader};
     }
     Instruction get_instruction_equ_without_param()
     {
-        return Instruction{*context_stack.get_current_context(), "EQU", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", "EQU", {}, file_reader};
     }
     Instruction get_instruction_org()
     {
-        return Instruction{*context_stack.get_current_context(), "ORG", {"0x1000"}, file_reader};
+        return Instruction{*context_stack.get_current_context(),
+                           "",
+                           "ORG",
+                           {"0x1000"},
+                           file_reader};
     }
     Instruction get_instruction_org_without_param()
     {
-        return Instruction{*context_stack.get_current_context(), "ORG", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", "ORG", {}, file_reader};
     }
     Instruction get_instruction_cpu_known()
     {
-        return Instruction{*context_stack.get_current_context(), "CPU", {"8008"}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", "CPU", {"8008"}, file_reader};
     }
     Instruction get_instruction_cpu_unknown()
     {
         return Instruction{*context_stack.get_current_context(),
+                           "",
                            "CPU",
                            {"unknown_cpu"},
                            file_reader};
     }
     Instruction get_instruction_cpu_without_param()
     {
-        return Instruction{*context_stack.get_current_context(), "CPU", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", "CPU", {}, file_reader};
     }
     Instruction get_instruction_data()
     {
         return Instruction{*context_stack.get_current_context(),
+                           "",
                            "DATA",
                            {"1", "2", "3"},
                            file_reader};
     }
     Instruction get_instruction_syntax()
     {
-        return Instruction{*context_stack.get_current_context(), ".SYNTAX", {"OLD"}, file_reader};
+        return Instruction{*context_stack.get_current_context(),
+                           "",
+                           ".SYNTAX",
+                           {"OLD"},
+                           file_reader};
     }
     Instruction get_instruction_syntax_without_param()
     {
-        return Instruction{*context_stack.get_current_context(), ".SYNTAX", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", ".SYNTAX", {}, file_reader};
     }
     Instruction get_instruction_context()
     {
-        return Instruction{*context_stack.get_current_context(), ".CONTEXT", {"PUSH"}, file_reader};
+        return Instruction{*context_stack.get_current_context(),
+                           "",
+                           ".CONTEXT",
+                           {"PUSH"},
+                           file_reader};
     }
     Instruction get_instruction_context_without_param()
     {
-        return Instruction{*context_stack.get_current_context(), ".CONTEXT", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", ".CONTEXT", {}, file_reader};
     }
     Instruction get_instruction_nop()
     {
-        return Instruction{*context_stack.get_current_context(), "LAA", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", "LAA", {}, file_reader};
     }
     Instruction get_instruction_invalid_opcode()
     {
-        return Instruction{*context_stack.get_current_context(), "INVALID_OPCODE", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(),
+                           "",
+                           "INVALID_OPCODE",
+                           {},
+                           file_reader};
     }
 
     Instruction get_instruction_if_false()
     {
-        return Instruction{*context_stack.get_current_context(), ".IF", {"0"}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", ".IF", {"0"}, file_reader};
     }
 
     Instruction get_instruction_if_true()
     {
-        return Instruction{*context_stack.get_current_context(), ".IF", {"1"}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", ".IF", {"1"}, file_reader};
     }
 
     Instruction get_instruction_if_without_param()
     {
-        return Instruction{*context_stack.get_current_context(), ".IF", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", ".IF", {}, file_reader};
     }
 
     Instruction get_instruction_else()
     {
-        return Instruction{*context_stack.get_current_context(), ".ELSE", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", ".ELSE", {}, file_reader};
     }
     Instruction get_instruction_endif()
     {
-        return Instruction{*context_stack.get_current_context(), ".ENDIF", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", ".ENDIF", {}, file_reader};
     }
 
     Instruction get_instruction_macro()
     {
-        return Instruction{*context_stack.get_current_context(), ".MACRO", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", ".MACRO", {}, file_reader};
     }
     Instruction get_instruction_endmacro()
     {
-        return Instruction{*context_stack.get_current_context(), ".ENDMACRO", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", ".ENDMACRO", {}, file_reader};
     }
 
     Instruction get_macro_call()
     {
-        return Instruction{*context_stack.get_current_context(), ".a_macro", {}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", ".a_macro", {}, file_reader};
     }
 };
 
@@ -140,11 +162,15 @@ struct InstructionEvaluationFixtureNewSyntax : public InstructionFixture
 
     Instruction get_instruction_mvi()
     {
-        return Instruction{*context_stack.get_current_context(), "MVI", {"A", "0x42"}, file_reader};
+        return Instruction{*context_stack.get_current_context(),
+                           "",
+                           "MVI",
+                           {"A", "0x42"},
+                           file_reader};
     }
     Instruction get_instruction_add()
     {
-        return Instruction{*context_stack.get_current_context(), "ADD", {"A"}, file_reader};
+        return Instruction{*context_stack.get_current_context(), "", "ADD", {"A"}, file_reader};
     }
 };
 
