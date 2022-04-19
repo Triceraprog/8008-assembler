@@ -1,7 +1,6 @@
+- FileReader has a bug when "injecting now" an empty stream -> assert
 - Macro system
-  - Needs a way to record the macro
-    - The Context must know the current Macro Content to fill
-    - When ending the Macro, the current Macro Content is committed
+  - Recording the macro: add to the current recording context (ParsedLine's?)
   - Needs a way to inject the macro content with the binding context when it's called
     - Add the MacroCallContext, which binds the MacroContent and the Arguments.
   - Be careful of the line number with Macro. Maybe some stacked line number scheme.
