@@ -35,10 +35,18 @@ void FileReader::insert_now(std::unique_ptr<std::istream> stream, std::string_vi
     auto stacked_name_tag = contexts.front().name_tag + "::" + std::string{name_tag};
     contexts.emplace_front(std::move(stream), stacked_name_tag);
 
-    interrupted = true; // Will not work if interrupted by an empty stream
+    auto context_count = contexts.size();
     exhausted = false;
 
     drop_front_empty_providers();
+
+    if (contexts.size() == context_count)
+    {
+        // The inserted stream was not empty, so there's a real interruption.
+        // If the new size had been different, it would have meant that the
+        // drop_front_empty_providers() had dropped an empty stream.
+        interrupted = true;
+    }
 }
 
 bool FileReader::content_exhausted() const { return exhausted; }

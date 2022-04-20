@@ -160,3 +160,32 @@ TEST(FileReader, input_stream_interrupted_by_another)
     ++it;
     ASSERT_THAT(it, Eq(std::end(file_reader)));
 }
+
+TEST(FileReader, input_stream_interrupted_by_another_by_empty)
+{
+    const std::string input_value_1{"first line\nsecond line"};
+    const std::string input_value_2{""};
+
+    auto content_1 = std::make_unique<std::istringstream>(input_value_1);
+    auto content_2 = std::make_unique<std::istringstream>(input_value_2);
+
+    FileReader file_reader;
+    file_reader.append(std::move(content_1), "tag_1");
+
+    auto it = std::begin(file_reader);
+
+    ASSERT_THAT(*it, Eq("first line"));
+    ASSERT_THAT(file_reader.get_line_number(), Eq(1));
+
+    file_reader.insert_now(std::move(content_2), "tag_2");
+
+    ASSERT_THAT(*it, Eq("first line")); // Even with the insertion, the current line didn't change
+    ASSERT_THAT(file_reader.get_line_number(), Eq(1));
+
+    ++it;
+    ASSERT_THAT(*it, Eq("second line"));
+    ASSERT_THAT(file_reader.get_line_number(), Eq(2));
+    ASSERT_THAT(file_reader.get_name_tag(), Eq("tag_1"));
+    ++it;
+    ASSERT_THAT(it, Eq(std::end(file_reader)));
+}
