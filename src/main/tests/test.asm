@@ -37,8 +37,8 @@ INCR:   .macro registrer,value
 skip:
         .endmacro
 
-;        .INC_HL
-;        .LD_IMM H,L,$1234
+        .INC_HL
+        .LD_IMM H,L,$1234
 
     .syntax old
     LLH
@@ -58,8 +58,15 @@ skip:
     This will no be parsed
     .endif
 
-;    .inc_hl
-;    .inc_hl
+    .inc_hl
+    .inc_hl
+
+    .context push
+TEST:
+    JMP TEST
+    .context pop
+TEST:
+    JMP TEST
 
 
     END
