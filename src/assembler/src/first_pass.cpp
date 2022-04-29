@@ -110,6 +110,10 @@ void first_pass(ContextStack context_stack, FileReader& file_reader,
                 current_address =
                         first_pass_execution(context_stack, latest_parsed_line, current_address);
             }
+            else
+            {
+                context_stack.get_current_context()->record_macro_line(input_line);
+            }
         }
         catch (const std::exception& ex)
         {

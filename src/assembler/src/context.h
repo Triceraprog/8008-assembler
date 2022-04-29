@@ -44,6 +44,9 @@ struct Context
     /// Stops recoding the macro in the context and declares it in its parent context.
     void stop_macro();
 
+    /// Records a line for the current macro
+    void record_macro_line(const std::string& line);
+
     [[nodiscard]] bool has_macro(const std::string_view& macro_name) const;
     void* create_call_context(std::string_view macro_name,
                               const std::vector<std::string>& arguments,

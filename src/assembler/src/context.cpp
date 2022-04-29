@@ -113,6 +113,14 @@ void Context::stop_macro()
     }
 }
 
+void Context::record_macro_line(const std::string& line)
+{
+    assert(currently_recording_macro.get() != nullptr);
+    assert(get_parsing_mode() == Context::MACRO_RECORDING);
+
+    currently_recording_macro->append_line(line);
+}
+
 AlreadyDefinedMacro::AlreadyDefinedMacro(const std::string& macro_name)
 {
     reason = "macro '" + macro_name + "' was already defined";
