@@ -1,5 +1,9 @@
 - Macro system
   - Replace arguments
+    - Verify at call site that the number of arguments matches the number of parameters.
+    - Create a dictionary of replacement
+    - ... Check when recording that the parameters all have different names
+    - When doing an append_line, if there's a replacement directory, replace.
   - Use the FileReader callback to pop the macro local context.
   - Add a comment in the listing when doing a macro expansion
 - Simplify file declaration in functional tests (based on a naming scheme)
