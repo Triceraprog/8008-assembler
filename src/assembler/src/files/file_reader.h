@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <deque>
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -49,21 +50,29 @@ public:
     // Appends a new stream for queueing. It will be read after the already present streams.
     void append(std::unique_ptr<std::istream> stream, std::string_view name_tag);
 
+    void append(std::unique_ptr<std::istream> stream, std::string_view name_tag,
+                const std::function<void()>& callback);
+
     // Inserts a new stream to be read just now. It interrupts the current stream and will
     // return to it after, as in a stack.
     void insert_now(std::unique_ptr<std::istream> stream, std::string_view name_tag);
+
+    void insert_now(std::unique_ptr<std::istream> stream, std::string_view name_tag,
+                    const std::function<void()>& callback);
 
     [[nodiscard]] std::string get_name_tag() const;
 
 private:
     struct ReaderContext
     {
-        ReaderContext(std::unique_ptr<std::istream>&& stream, std::string_view name_tag);
+        ReaderContext(std::unique_ptr<std::istream>&& stream, std::string_view name_tag,
+                      std::function<void()> callback);
 
         std::unique_ptr<std::istream> input_stream;
         std::istream_iterator<line> line_iterator;
         std::size_t current_line_count;
         std::string name_tag;
+        std::function<void()> callback;
     };
     std::deque<ReaderContext> contexts;
 

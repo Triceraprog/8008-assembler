@@ -36,7 +36,6 @@ TEST(FileReader, has_a_name_tag_after_adding_an_iterator)
     ASSERT_THAT(file_reader.get_name_tag(), Eq("name_tag"));
 }
 
-
 TEST(FileReader, can_consume_one_line_and_reaches_end)
 {
     const std::string input_value{"a"};
@@ -103,7 +102,6 @@ TEST(FileReader, chains_two_input_streams_updates_name_tag)
     ASSERT_THAT(file_reader.get_name_tag(), Eq("tag_2"));
 }
 
-
 TEST(FileReader, chains_three_input_streams_and_ignores_empty_one)
 {
     const std::string input_value_1{"first line\nsecond line"};
@@ -164,7 +162,7 @@ TEST(FileReader, input_stream_interrupted_by_another)
 TEST(FileReader, input_stream_interrupted_by_another_by_empty)
 {
     const std::string input_value_1{"first line\nsecond line"};
-    const std::string input_value_2{""};
+    const std::string input_value_2;
 
     auto content_1 = std::make_unique<std::istringstream>(input_value_1);
     auto content_2 = std::make_unique<std::istringstream>(input_value_2);
@@ -188,4 +186,54 @@ TEST(FileReader, input_stream_interrupted_by_another_by_empty)
     ASSERT_THAT(file_reader.get_name_tag(), Eq("tag_1"));
     ++it;
     ASSERT_THAT(it, Eq(std::end(file_reader)));
+}
+
+TEST(FileReader, calls_back_a_function_when_an_appended_stream_is_exhausted)
+{
+    const std::string input_value_1{"first line\nsecond line"};
+    const std::string input_value_2{"third line\nfourth line"};
+
+    auto content_1 = std::make_unique<std::istringstream>(input_value_1);
+    auto content_2 = std::make_unique<std::istringstream>(input_value_2);
+
+    int count = 0;
+
+    FileReader file_reader;
+    file_reader.append(std::move(content_1), std::string_view(), [&count]() { count += 1; });
+    file_reader.append(std::move(content_2), std::string_view(), [&count]() { count += 3; });
+
+    std::vector<std::string> all_lines;
+    std::copy(std::begin(file_reader), std::end(file_reader), std::back_inserter(all_lines));
+
+    ASSERT_THAT(count, Eq(4));
+}
+
+TEST(FileReader, calls_back_a_function_when_an_inserted_stream_is_exhausted)
+{
+    const std::string input_value_1{"first line\nsecond line"};
+    const std::string input_value_2{"interruption\nsecond interruption"};
+
+    auto content_1 = std::make_unique<std::istringstream>(input_value_1);
+    auto content_2 = std::make_unique<std::istringstream>(input_value_2);
+
+    int count = 0;
+
+    FileReader file_reader;
+    file_reader.append(std::move(content_1), std::string_view(), [&count]() { count += 1; });
+
+    auto it = std::begin(file_reader);
+
+    file_reader.insert_now(std::move(content_2), std::string_view(), [&count]() { count += 3; });
+
+    ASSERT_THAT(count, Eq(0));
+
+    ++it;
+    ++it;
+    ++it;
+
+    ASSERT_THAT(count, Eq(3));
+
+    ++it;
+
+    ASSERT_THAT(count, Eq(4));
 }

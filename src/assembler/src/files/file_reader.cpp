@@ -2,17 +2,20 @@
 
 #include <cassert>
 #include <istream>
+#include <utility>
 
 FileReader::ReaderContext::ReaderContext(std::unique_ptr<std::istream>&& stream,
-                                         std::string_view name_tag)
-    : input_stream{std::move(stream)}, current_line_count{1}, name_tag{name_tag}
+                                         std::string_view name_tag, std::function<void()> callback)
+    : input_stream{std::move(stream)},
+      current_line_count{1}, name_tag{name_tag}, callback{std::move(callback)}
 {
     line_iterator = std::istream_iterator<line>{*input_stream};
 }
 
-void FileReader::append(std::unique_ptr<std::istream> stream, std::string_view name_tag)
+void FileReader::append(std::unique_ptr<std::istream> stream, std::string_view name_tag,
+                        const std::function<void()>& callback)
 {
-    contexts.emplace_back(std::move(stream), name_tag);
+    contexts.emplace_back(std::move(stream), name_tag, callback);
 
     if (exhausted)
     {
@@ -22,18 +25,25 @@ void FileReader::append(std::unique_ptr<std::istream> stream, std::string_view n
     }
 }
 
-void FileReader::insert_now(std::unique_ptr<std::istream> stream, std::string_view name_tag)
+void FileReader::append(std::unique_ptr<std::istream> stream, std::string_view name_tag)
 {
+    append(std::move(stream), name_tag, [] {});
+}
+
+void FileReader::insert_now(std::unique_ptr<std::istream> stream, std::string_view name_tag,
+                            const std::function<void()>& callback)
+{
+
     if (contexts.empty())
     {
-        return append(std::move(stream), name_tag);
+        return append(std::move(stream), name_tag, callback);
     }
 
     // As insert interrupts the current stream, the new stream is placed
     // in front of the streams. After it is consumed, it will naturally
     // go back to the previous streams, like in a stack.
     auto stacked_name_tag = contexts.front().name_tag + "::" + std::string{name_tag};
-    contexts.emplace_front(std::move(stream), stacked_name_tag);
+    contexts.emplace_front(std::move(stream), stacked_name_tag, callback);
 
     auto context_count = contexts.size();
     exhausted = false;
@@ -47,6 +57,11 @@ void FileReader::insert_now(std::unique_ptr<std::istream> stream, std::string_vi
         // drop_front_empty_providers() had dropped an empty stream.
         interrupted = true;
     }
+}
+
+void FileReader::insert_now(std::unique_ptr<std::istream> stream, std::string_view name_tag)
+{
+    insert_now(std::move(stream), name_tag, [] {});
 }
 
 bool FileReader::content_exhausted() const { return exhausted; }
@@ -130,6 +145,11 @@ void FileReader::drop_front_empty_providers()
 {
     while (!contexts.empty() && (contexts.front().line_iterator == std::istream_iterator<line>()))
     {
+        auto& callback = contexts.front().callback;
+        if (callback)
+        {
+            callback();
+        }
         contexts.pop_front();
     }
 }
