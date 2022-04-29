@@ -48,10 +48,9 @@ struct Context
     void record_macro_line(const std::string& line);
 
     [[nodiscard]] bool has_macro(const std::string_view& macro_name) const;
-    void* create_call_context(std::string_view macro_name,
-                              const std::vector<std::string>& arguments,
-                              FileReader& file_reader) const;
-    void activate_macro(void* call_context);
+    MacroContent* get_macro_content(std::string_view macro_name) const;
+    void call_macro(MacroContent* macro_content, const std::vector<std::string>& arguments,
+                    FileReader& file_reader);
 
 private:
     const std::shared_ptr<Context> parent;

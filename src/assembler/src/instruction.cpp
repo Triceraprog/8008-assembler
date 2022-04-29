@@ -424,6 +424,7 @@ namespace
     {
         Instruction_MACRO_CALL(const Context& context, std::string_view command_string,
                                const std::vector<std::string>& arguments, FileReader& file_reader)
+            : file_reader{file_reader}
         {
             std::string macro_name{command_string.substr(1)};
             if (!context.has_macro(macro_name))
@@ -431,7 +432,10 @@ namespace
                 throw UndefinedMacro(command_string);
             }
 
-            call_context = context.create_call_context(macro_name, arguments, file_reader);
+            macro_content = context.get_macro_content(macro_name);
+
+            actual_parameters.reserve(arguments.size());
+            std::copy(arguments.begin(), arguments.end(), std::back_inserter(actual_parameters));
 
             if (context.get_options().debug)
             {
@@ -441,10 +445,13 @@ namespace
 
         void update_context_stack(ContextStack& context_stack) const override
         {
-            context_stack.get_current_context()->activate_macro(call_context);
+            context_stack.get_current_context()->call_macro(macro_content, actual_parameters,
+                                                            file_reader);
         }
 
-        void* call_context{};
+        FileReader& file_reader;
+        std::vector<std::string> actual_parameters;
+        MacroContent* macro_content{};
     };
 
     struct Instruction_EMPTY : public Instruction::InstructionAction

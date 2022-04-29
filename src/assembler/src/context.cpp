@@ -64,32 +64,21 @@ bool Context::has_macro(const std::string_view& macro_name) const
     return macros.contains(std::string{upper_macro_name});
 }
 
-struct CallContext
-{
-    MacroContent* macro_content;
-    FileReader& file_reader;
-};
-
-void* Context::create_call_context(std::string_view macro_name,
-                                   const std::vector<std::string>& arguments,
-                                   FileReader& file_reader) const
+MacroContent* Context::get_macro_content(std::string_view macro_name) const
 {
     std::string upper_macro_name{macro_name};
     std::transform(upper_macro_name.begin(), upper_macro_name.end(), upper_macro_name.begin(),
                    toupper);
 
     auto it = macros.find(upper_macro_name);
-
-    return new CallContext{it->second.get(), file_reader};
+    return it->second.get();
 }
 
-void Context::activate_macro(void* call_context)
+void Context::call_macro(MacroContent* macro_content, const std::vector<std::string>& arguments,
+                         FileReader& file_reader)
 {
-    auto* call = reinterpret_cast<CallContext*>(call_context);
-    auto stream = call->macro_content->get_line_stream();
-    call->file_reader.insert_now(std::move(stream), "Macro Name");
-
-    delete call;
+    auto stream = macro_content->get_line_stream();
+    file_reader.insert_now(std::move(stream), "Macro Name");
 }
 
 void Context::start_macro(const std::string& macro_name, const std::vector<std::string>& arguments)
