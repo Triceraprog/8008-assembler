@@ -425,13 +425,18 @@ namespace
         Instruction_MACRO_CALL(const Context& context, std::string_view command_string,
                                const std::vector<std::string>& arguments, FileReader& file_reader)
         {
-            macro_name = command_string.substr(1);
+            std::string macro_name{command_string.substr(1)};
             if (!context.has_macro(macro_name))
             {
                 throw UndefinedMacro(command_string);
             }
 
             call_context = context.create_call_context(macro_name, arguments, file_reader);
+
+            if (context.get_options().debug)
+            {
+                std::cout << "start playing macro: " << macro_name << "\n";
+            }
         }
 
         void update_context_stack(ContextStack& context_stack) const override
@@ -439,7 +444,6 @@ namespace
             context_stack.get_current_context()->activate_macro(call_context);
         }
 
-        std::string macro_name;
         void* call_context{};
     };
 
