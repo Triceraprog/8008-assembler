@@ -75,10 +75,10 @@ MacroContent* Context::get_macro_content(std::string_view macro_name) const
 }
 
 void Context::call_macro(MacroContent* macro_content, const std::vector<std::string>& arguments,
-                         FileReader& file_reader)
+                         FileReader& file_reader, const std::function<void()>& callback)
 {
     auto stream = macro_content->get_line_stream();
-    file_reader.insert_now(std::move(stream), "Macro Name");
+    file_reader.insert_now(std::move(stream), "Macro Name", callback);
 }
 
 void Context::start_macro(const std::string& macro_name, const std::vector<std::string>& arguments)

@@ -5,6 +5,7 @@
 #include "options.h"
 #include "symbol_table.h"
 
+#include <functional>
 #include <memory>
 #include <ostream>
 #include <string_view>
@@ -49,8 +50,8 @@ struct Context
 
     [[nodiscard]] bool has_macro(const std::string_view& macro_name) const;
     MacroContent* get_macro_content(std::string_view macro_name) const;
-    void call_macro(MacroContent* macro_content, const std::vector<std::string>& arguments,
-                    FileReader& file_reader);
+    static void call_macro(MacroContent* macro_content, const std::vector<std::string>& arguments,
+                           FileReader& file_reader, const std::function<void()>& callback);
 
 private:
     const std::shared_ptr<Context> parent;

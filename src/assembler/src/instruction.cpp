@@ -457,8 +457,10 @@ namespace
                 throw WrongNumberOfParameters(macro_content->get_name(), expected_parameter_count,
                                               actual_parameter_count);
             }
-            context_stack.get_current_context()->call_macro(macro_content, actual_parameters,
-                                                            file_reader);
+            context_stack.push();
+            context_stack.get_current_context()->call_macro(
+                    macro_content, actual_parameters, file_reader,
+                    [&context_stack] { context_stack.pop(); });
         }
 
         FileReader& file_reader;
