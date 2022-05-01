@@ -1,6 +1,5 @@
 - Macro system
   - Replace arguments
-    - Verify at call site that the number of arguments matches the number of parameters.
     - Create a dictionary of replacement
     - ... Check when recording that the parameters all have different names
     - When doing an append_line, if there's a replacement directory, replace.

@@ -441,10 +441,22 @@ namespace
             {
                 std::cout << "start playing macro: " << macro_name << "\n";
             }
+
+            assert(macro_content != nullptr);
         }
 
         void update_context_stack(ContextStack& context_stack) const override
         {
+            assert(macro_content != nullptr);
+
+            const auto expected_parameter_count = macro_content->get_parameters().size();
+            const auto actual_parameter_count = actual_parameters.size();
+
+            if (expected_parameter_count != actual_parameter_count)
+            {
+                throw WrongNumberOfParameters(macro_content->get_name(), expected_parameter_count,
+                                              actual_parameter_count);
+            }
             context_stack.get_current_context()->call_macro(macro_content, actual_parameters,
                                                             file_reader);
         }
@@ -647,3 +659,10 @@ UndefinedMacro::UndefinedMacro(std::string_view macro_name)
 }
 
 InvalidEndmacro::InvalidEndmacro() { reason = ".endmacro found without a matching .macro"; }
+
+WrongNumberOfParameters::WrongNumberOfParameters(std::string_view macro_name, size_t expected,
+                                                 size_t got)
+{
+    reason = "macro '" + std::string{macro_name} + "' expected " + std::to_string(expected) +
+             " parameters, but got " + std::to_string(got) + " instead.";
+}

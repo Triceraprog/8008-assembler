@@ -537,6 +537,22 @@ TEST_F(FirstPassFixture, endmacro_pops_context)
     ASSERT_THAT(result, IsFalse());
 }
 
+TEST_F(InstructionEvaluationFixture, macro_call_verifies_number_of_arguments)
+{
+    // Registers a macro, with one parameter
+    context_stack.push();
+    context_stack.get_current_context()->start_macro("a_macro", {"param1"});
+    context_stack.get_current_context()->stop_macro();
+    context_stack.pop();
+
+    auto macro_call_instruction = get_macro_call();
+
+    const int current_address = 0xff;
+    ASSERT_THROW(int return_address =
+                         macro_call_instruction.first_pass(context_stack, current_address),
+                 WrongNumberOfParameters);
+}
+
 /// TESTS FOR THE SECOND PASS
 
 TEST_F(SecondPassFixture, does_not_output_byte_if_empty)

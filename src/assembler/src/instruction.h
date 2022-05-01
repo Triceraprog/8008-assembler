@@ -129,4 +129,10 @@ public:
     InvalidEndmacro();
 };
 
+class WrongNumberOfParameters : public ExceptionWithReason
+{
+public:
+    WrongNumberOfParameters(std::string_view macro_name, size_t expected, size_t got);
+};
+
 #endif //INC_8008_ASSEMBLER_INSTRUCTION_H
