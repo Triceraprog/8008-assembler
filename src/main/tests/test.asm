@@ -13,61 +13,40 @@ skip:
         ; LD immediate specifying two registers
 LD_IMM: .macro  r1,r2,imm
         .syntax new
-
-        MOV r1,\HB\imm
-        MOV r2,\LB\imm
-
-        .endmacro
-
-        ; MOV for a double register
-MOVI:   .macro  reg,imm
-        .syntax new
-
-        MOV high(reg),\HB\imm
-        MOV low(reg),\LB\imm
-
-        .endmacro
-
-INCR:   .macro registrer,value
-        .syntax new
-
-        INC low(register)
-        JFZ skip
-        INC high(register)
-skip:
+value:  EQU imm
+        MOV r1,\HB\value
+        MOV r2,\LB\value
         .endmacro
 
         .INC_HL
         .LD_IMM H,L,$1234
 
-    .syntax old
-    LLH
-    .context push
-    .syntax new
-    MOV L,H
-    .context pop
-    LLH
+        .syntax old
+        LLH
+        .context push
+        .syntax new
+        MOV L,H
+        .context pop
+        LLH
 
-    .if NO
-    This will no be parsed
-    .endif
+        .if NO
+        This will no be parsed
+        .endif
 
-    .if OK
-    LLH
-    .else
-    This will no be parsed
-    .endif
+        .if OK
+        LLH
+        .else
+        This will no be parsed
+        .endif
 
-    .inc_hl
-    .inc_hl
+        .inc_hl
+        .inc_hl
+        .incr hl
 
-    .context push
+        .context push
 TEST:
-    JMP TEST
-    .context pop
+        JMP TEST
+        .context pop
 TEST:
-    JMP TEST
-
-
-    END
-
+        JMP TEST
+        END
