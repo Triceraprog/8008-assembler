@@ -50,8 +50,9 @@ struct Context
 
     [[nodiscard]] bool has_macro(const std::string_view& macro_name) const;
     MacroContent* get_macro_content(std::string_view macro_name) const;
-    static void call_macro(MacroContent* macro_content, const std::vector<std::string>& arguments,
-                           FileReader& file_reader, const std::function<void()>& callback);
+    void call_macro(MacroContent* macro_content, const std::vector<std::string>& arguments,
+                    FileReader& file_reader, const std::function<void()>& callback);
+    void replace_macro_tokens(std::vector<std::string>& tokens);
 
 private:
     const std::shared_ptr<Context> parent;
@@ -61,6 +62,7 @@ private:
     ParsingMode parsing_mode{ACTIVE};
     std::unique_ptr<MacroContent> currently_recording_macro{};
     std::unordered_map<std::string, std::unique_ptr<MacroContent>> macros;
+    std::unordered_map<std::string, std::string> macro_param_arg_association;
 
     void declare_macro(std::unique_ptr<MacroContent> macro_content);
 };

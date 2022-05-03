@@ -13,7 +13,7 @@ skip:
         ; LD immediate specifying two registers
 LD_IMM: .macro  r1,r2,imm
         .syntax new
-value:  EQU imm
+value:  EQU IMM
         MVI r1,\HB\value
         MVI r2,\LB\value
         .endmacro

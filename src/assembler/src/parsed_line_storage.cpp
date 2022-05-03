@@ -12,6 +12,7 @@ void ParsedLineStorage::append_line(const std::shared_ptr<Context>& context,
     auto name_tag_ref = get_name_tag_ref(file_reader.get_name_tag());
 
     LineTokenizer tokens = parse_line(context->get_options(), input_line, line_number);
+    context->replace_macro_tokens(tokens.arguments);
     Instruction instruction{*context, tokens.label, tokens.opcode, tokens.arguments, file_reader};
     parsed_lines.push_back({line_number, address, tokens, std::move(instruction),
                             std::string{input_line}, name_tag_ref, context});

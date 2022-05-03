@@ -1,9 +1,5 @@
 - Macro system
-  - Replace arguments
-    - Create a dictionary of replacement
-    - ... Check when recording that the parameters all have different names
-    - When doing an append_line, if there's a replacement directory, replace.
-  - Add a comment in the listing when doing a macro expansion
+  - In the listing, display the replaced tokens in the Macro
 - Simplify file declaration in functional tests (based on a naming scheme)
 - The responsibility of the short format should probably be in Listing
 - Make a pass in the readability to the -debug option

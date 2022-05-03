@@ -77,8 +77,19 @@ MacroContent* Context::get_macro_content(std::string_view macro_name) const
 void Context::call_macro(MacroContent* macro_content, const std::vector<std::string>& arguments,
                          FileReader& file_reader, const std::function<void()>& callback)
 {
+    // Create the parameters/arguments association
+    const auto& parameters = macro_content->get_parameters();
+    auto arg_it = std::begin(arguments);
+
+    for (const auto& param : parameters)
+    {
+        macro_param_arg_association[param] = *arg_it;
+        ++arg_it;
+    }
+
+    // Insert the content of the macro in the input lines
     auto stream = macro_content->get_line_stream();
-    file_reader.insert_now(std::move(stream), "Macro Name", callback);
+    file_reader.insert_now(std::move(stream), macro_content->get_name(), callback);
 }
 
 void Context::start_macro(const std::string& macro_name, const std::vector<std::string>& arguments)
@@ -108,6 +119,22 @@ void Context::record_macro_line(const std::string& line)
     assert(get_parsing_mode() == Context::MACRO_RECORDING);
 
     currently_recording_macro->append_line(line);
+}
+
+void Context::replace_macro_tokens(std::vector<std::string>& tokens)
+{
+    for (auto& token : tokens)
+    {
+        std::string lowercase{token};
+        std::transform(std::begin(lowercase), std::end(lowercase), std::begin(lowercase),
+                       ::tolower);
+        auto it = macro_param_arg_association.find(lowercase);
+
+        if (it != std::end(macro_param_arg_association))
+        {
+            token = it->second;
+        }
+    }
 }
 
 AlreadyDefinedMacro::AlreadyDefinedMacro(const std::string& macro_name)
