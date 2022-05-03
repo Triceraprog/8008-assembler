@@ -14,12 +14,12 @@ skip:
 LD_IMM: .macro  r1,r2,imm
         .syntax new
 value:  EQU imm
-        MOV r1,\HB\value
-        MOV r2,\LB\value
+        MVI r1,\HB\value
+        MVI r2,\LB\value
         .endmacro
 
         .INC_HL
-        .LD_IMM H,L,$1234
+        .LD_IMM H,L,0x1234
 
         .syntax old
         LLH
@@ -41,7 +41,6 @@ value:  EQU imm
 
         .inc_hl
         .inc_hl
-        .incr hl
 
         .context push
 TEST:
