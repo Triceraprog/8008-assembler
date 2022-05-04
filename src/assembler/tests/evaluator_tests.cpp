@@ -1,7 +1,6 @@
 #include "evaluator.h"
 
 #include "options.h"
-#include "symbol_table.h"
 
 #include "gmock/gmock.h"
 
@@ -79,6 +78,12 @@ TEST_F(EvaluateArgumentFixture, evaluates_binary_with_suffix)
 {
     auto value = evaluate_argument(context, "10000000b");
     ASSERT_THAT(value, Eq(128));
+}
+
+TEST_F(EvaluateArgumentFixture, evaluates_char)
+{
+    auto value = evaluate_argument(context, "' '");
+    ASSERT_THAT(value, Eq(32));
 }
 
 TEST_F(EvaluateArgumentFixture, evaluates_addition)

@@ -200,20 +200,29 @@ int evaluate_argument(const Context& context, std::string_view arg)
     std::string_view arg_to_parse{arg};
     while (!arg_to_parse.empty())
     {
-        // Parse Operand
-        std::string value_to_parse(arg_to_parse);
-        std::smatch data_match;
-        bool found = std::regex_search(value_to_parse, data_match, not_an_operator);
-
-        if (!found)
+        // Quickly parse quoted char
+        if (arg_to_parse[0] == '\'' && arg_to_parse.size() >= 3 && arg_to_parse[2] == '\'')
         {
-            throw ExpectedValue(arg_to_parse);
+            acc.add_operand(arg_to_parse.substr(0, 3));
+            arg_to_parse = arg_to_parse.substr(3);
+        }
+        else
+        {
+            // Parse Operand
+            std::string value_to_parse(arg_to_parse);
+            std::smatch data_match;
+            bool found = std::regex_search(value_to_parse, data_match, not_an_operator);
+
+            if (!found)
+            {
+                throw ExpectedValue(arg_to_parse);
+            }
+
+            acc.add_operand(trim_string(data_match.str()));
+            arg_to_parse = arg_to_parse.substr(data_match.length());
         }
 
-        acc.add_operand(trim_string(data_match.str()));
-
         // Parse Operator
-        arg_to_parse = arg_to_parse.substr(data_match.length());
         if (!arg_to_parse.empty())
         {
             char op = arg_to_parse.front();
