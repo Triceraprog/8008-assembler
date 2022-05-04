@@ -124,6 +124,13 @@ TEST_F(EvaluateArgumentFixture, evaluates_FFh_as_a_symbol)
     ASSERT_THAT(value, Eq(123));
 }
 
+TEST_F(EvaluateArgumentFixture, evaluates_a_symbol_starting_with_underscores)
+{
+    context.define_symbol("__Symbol", 123);
+    auto value = evaluate_argument(context, "__Symbol");
+    ASSERT_THAT(value, Eq(123));
+}
+
 TEST_F(EvaluateArgumentFixture, evaluates_high_low_byte)
 {
     auto value = evaluate_argument(context, "0xFF#1b");

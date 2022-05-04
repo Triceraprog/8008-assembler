@@ -90,7 +90,7 @@ namespace
     int operand_to_int(const Context& context, const std::string& operand)
     {
         auto front = operand.front();
-        if (isalpha(front) && front != '\'')
+        if ((isalpha(front) || front == '_') && front != '\'')
         {
             return symbol_to_int(context, operand);
         }
