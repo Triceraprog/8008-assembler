@@ -240,7 +240,7 @@ void verify_arguments_count(const std::string_view instruction_name,
 int reg_name_to_code(std::string_view register_name)
 {
     assert(register_name.size() == 1);
-    const auto& reg_char = register_name[0];
+    const char reg_char = static_cast<char>(::toupper(register_name[0]));
     static const std::string registers{"ABCDEHLM"};
 
     auto reg_index = registers.find(reg_char);
@@ -249,7 +249,7 @@ int reg_name_to_code(std::string_view register_name)
     {
         return static_cast<int>(reg_index);
     }
-    throw SyntaxError("Register expected.");
+    throw SyntaxError("Register expected");
 }
 
 std::tuple<bool, Opcode, std::size_t> find_opcode_old(std::string_view opcode_name,
