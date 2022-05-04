@@ -9,6 +9,10 @@ OpcodeActionRst::OpcodeActionRst(const Context& context, Opcode::OpcodeByteType 
     : opcode{opcode_byte}, address{address}
 {
     int argument = evaluate_argument(context, arguments[0]);
+    if (argument % 8 == 0)
+    {
+        argument /= 8;
+    }
     if ((argument > 7) || (argument < 0))
     {
         throw ExpectedArgumentWithinLimits(7, arguments[0], argument);
