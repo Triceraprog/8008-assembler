@@ -518,6 +518,7 @@ InstructionEnum instruction_to_enum(std::string_view opcode)
             {"cpu", InstructionEnum::CPU},
             {"org", InstructionEnum::ORG},
             {"data", InstructionEnum::DATA},
+            {"db", InstructionEnum::DATA},
             {".include", InstructionEnum::INCLUDE},
             {".syntax", InstructionEnum::SYNTAX},
             {".context", InstructionEnum::CONTEXT},
