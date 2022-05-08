@@ -13,11 +13,40 @@ namespace
         explicit LineParser(std::string_view view) : view{view} {}
 
         std::string next_word() { return next_with_delimiters(" \t;"); }
-        std::string next_argument() { return next_with_delimiters(",;"); }
+        std::string next_argument()
+        {
+            std::string result;
+
+            while (!view.empty())
+            {
+                if ((view.front() == '\'') || (view.front() == '"'))
+                {
+                    result += next_quoted_string();
+
+                    if (is_comment() || is_comma())
+                    {
+                        return result;
+                    }
+                }
+                else
+                {
+                    result += next_with_delimiters(",;\"'");
+
+                    const auto last_char = result[result.size()];
+                    if (last_char != '\'' && last_char != '"')
+                    {
+                        return result;
+                    }
+                }
+            }
+
+            return result;
+        }
         [[nodiscard]] bool empty() const { return view.empty(); }
 
     private:
-        [[nodiscard]] bool is_comment() const { return view.front() == ';'; }
+        [[nodiscard]] bool is_comment() const { return !view.empty() && view.front() == ';'; }
+        [[nodiscard]] bool is_comma() const { return !view.empty() && view.front() == ','; }
 
         std::string next_with_delimiters(std::string_view delimiters)
         {
@@ -25,11 +54,6 @@ namespace
             if (is_comment())
             {
                 return consume_full_view();
-            }
-
-            if ((view.front() == '\'') || (view.front() == '"'))
-            {
-                return next_quoted_string();
             }
 
             auto first_delimiter = view.find_first_of(delimiters);
@@ -55,7 +79,7 @@ namespace
                 }
                 else if (view[index] == quote_type)
                 {
-                    return consume_view_and_skip_next(index + 1); // End of quoted string
+                    return consume_view_and_keep_next(index + 1); // End of quoted string
                 }
             }
             // We don't care about the presence of the closing quote if it's the end of the string

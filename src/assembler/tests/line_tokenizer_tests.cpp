@@ -187,3 +187,12 @@ TEST(LineTokenizer, extracts_comment_after_label_and_data_with_quoted_semi_comma
     ASSERT_THAT(tokenizer.arguments[1], Eq("0"));
     ASSERT_THAT(tokenizer.comment, Eq("; Comment"));
 }
+
+TEST(LineTokenizer, extracts_parameter_with_character)
+{
+    LineTokenizer tokenizer{"     mvi     b,'0'-1"};
+    ASSERT_THAT(tokenizer.opcode, Eq("mvi"));
+    ASSERT_THAT(tokenizer.arguments, SizeIs(2));
+    ASSERT_THAT(tokenizer.arguments[0], Eq("b"));
+    ASSERT_THAT(tokenizer.arguments[1], Eq("'0'-1"));
+}
