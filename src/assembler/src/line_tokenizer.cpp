@@ -12,7 +12,7 @@ namespace
     {
         explicit LineParser(std::string_view view) : view{view} {}
 
-        std::string next_string() { return next_with_delimiters(" \t;"); }
+        std::string next_word() { return next_with_delimiters(" \t;"); }
         std::string next_argument() { return next_with_delimiters(",;"); }
         [[nodiscard]] bool empty() const { return view.empty(); }
 
@@ -115,7 +115,7 @@ LineTokenizer::LineTokenizer(const std::string_view line)
 
     if (used_first_column)
     {
-        auto next = line_parser.next_string();
+        auto next = line_parser.next_word();
 
         if (next.front() == ';')
         {
@@ -128,7 +128,7 @@ LineTokenizer::LineTokenizer(const std::string_view line)
 
     if (!line_parser.empty())
     {
-        auto next = line_parser.next_string();
+        auto next = line_parser.next_word();
 
         if (next.front() == ';')
         {
