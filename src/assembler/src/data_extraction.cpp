@@ -85,6 +85,8 @@ int decode_data(const Context& context, const std::vector<std::string>& tokens,
         return 0 - number_to_reserve;
     }
 
+    const auto& options = context.get_options();
+
     /* DATA xxx,xxx,xxx,xxx */
     for (const auto& argument : tokens)
     {
@@ -98,18 +100,19 @@ int decode_data(const Context& context, const std::vector<std::string>& tokens,
         }
 
         auto byte_count = out_data.size();
-        if (byte_count > 12)
+        if (byte_count > options.data_per_line_limit)
         {
-            throw DataTooLong();
+            throw DataTooLong(0);
         }
     }
 
     return static_cast<int>(out_data.size());
 }
 
-DataTooLong::DataTooLong()
+DataTooLong::DataTooLong(std::size_t limit)
 {
-    reason = "DATA max length is 12 bytes. Use a second line for more data.";
+    reason = "DATA max length is " + std::to_string(limit) +
+             " bytes. Use a second line for more data.";
 }
 
 UnknownEscapeSequence::UnknownEscapeSequence(char escape)

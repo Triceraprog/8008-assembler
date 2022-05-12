@@ -26,6 +26,7 @@ public:
     bool mark_8_ascii = false;
     bool new_syntax = false;
     bool output_name = false;
+    size_t data_per_line_limit = 128;
 
     std::vector<std::string> input_filenames;
     std::string output_filename_base;

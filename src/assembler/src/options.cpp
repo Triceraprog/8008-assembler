@@ -25,6 +25,8 @@ std::size_t Options::parse_command_line(int argc, const char** argv)
     std::vector<std::string_view> argv_vector{argv, argv + argc};
     std::vector<std::string_view> left_arguments{};
 
+    bool as8options = false;
+
     using option_selector = std::tuple<std::string_view, bool*, bool>;
     std::vector<option_selector> options = {{"-v", &verbose, true},
                                             {"-nl", &generate_list_file, false},
@@ -33,6 +35,7 @@ std::size_t Options::parse_command_line(int argc, const char** argv)
                                             {"-octal", &input_num_as_octal, true},
                                             {"-single", &single_byte_list, true},
                                             {"-markascii", &mark_8_ascii, true},
+                                            {"-as8", &as8options, true},
                                             {"-syntax=new", &new_syntax, true},
                                             {"-syntax=old", &new_syntax, false},
                                             {"-o", &output_name, true}};
@@ -73,6 +76,12 @@ std::size_t Options::parse_command_line(int argc, const char** argv)
         std::transform(std::begin(left_arguments), std::end(left_arguments),
                        std::back_inserter(input_filenames),
                        [](const auto& str_view) { return std::string{str_view}; });
+    }
+
+    if (as8options)
+    {
+        // AS8 options compatibility
+        data_per_line_limit = 12;
     }
 
     return left_arguments.size();

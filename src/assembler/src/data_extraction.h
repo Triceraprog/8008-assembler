@@ -23,7 +23,7 @@ int decode_data(const Context& context, const std::vector<std::string>& tokens,
 class DataTooLong : public ExceptionWithReason
 {
 public:
-    DataTooLong();
+    DataTooLong(std::size_t limit);
 };
 
 class EmptyData : public ExceptionWithReason
