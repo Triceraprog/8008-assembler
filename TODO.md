@@ -10,3 +10,5 @@
 - Support for priorities in expressions (with optional compatibilities with as8)
 - Change the hardcoded path in functional tests to a parameter and generate the call to tests from CMake
 - If the push/pop contexts have performance problems with copying the options, copy on write could be used.
+- Expression with quoted char don't work
+- Is there a bug when chaining two .ifs ?

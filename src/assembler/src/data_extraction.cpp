@@ -1,7 +1,9 @@
 #include "data_extraction.h"
 #include "evaluator.h"
 #include "options.h"
+
 #include <algorithm>
+#include <cassert>
 
 size_t string_to_bytes(const Context& context, const std::string& data, std::vector<int>& out_data)
 {
@@ -65,6 +67,8 @@ size_t string_to_bytes(const Context& context, const std::string& data, std::vec
 int decode_data(const Context& context, const std::vector<std::string>& tokens,
                 std::vector<int>& out_data)
 {
+    assert(out_data.empty());
+
     if (tokens.empty())
     {
         throw EmptyData();
@@ -80,30 +84,27 @@ int decode_data(const Context& context, const std::vector<std::string>& tokens,
         int number_to_reserve = evaluate_argument(context, without_comment.substr(1));
         return 0 - number_to_reserve;
     }
-    if ((first_argument.front() == '\'') || (first_argument.front() == '"'))
-    {
-        string_to_bytes(context, first_argument, out_data);
 
-        return static_cast<int>(out_data.size());
-    }
-    else
+    /* DATA xxx,xxx,xxx,xxx */
+    for (const auto& argument : tokens)
     {
-        /* DATA xxx,xxx,xxx,xxx */
-        int byte_count = 0;
-
-        for (const auto& argument : tokens)
+        if ((argument.front() == '\'') || (argument.front() == '"'))
+        {
+            string_to_bytes(context, argument, out_data);
+        }
+        else
         {
             out_data.push_back(evaluate_argument(context, argument));
-            byte_count += 1;
-
-            if (byte_count > 12)
-            {
-                throw DataTooLong();
-            }
         }
 
-        return byte_count;
+        auto byte_count = out_data.size();
+        if (byte_count > 12)
+        {
+            throw DataTooLong();
+        }
     }
+
+    return static_cast<int>(out_data.size());
 }
 
 DataTooLong::DataTooLong()
