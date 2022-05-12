@@ -25,6 +25,7 @@ namespace
 
                     if (is_comment() || is_comma())
                     {
+                        view = view.substr(1);
                         return result;
                     }
                 }
@@ -193,7 +194,10 @@ void LineTokenizer::adjust_label()
 
 namespace
 {
-    bool is_data_opcode(std::string_view opcode) { return ci_equals(opcode, "data"); }
+    bool is_data_opcode(std::string_view opcode)
+    {
+        return ci_equals(opcode, "data") || ci_equals(opcode, "db");
+    }
     bool is_extended_command(std::string_view opcode) { return opcode[0] == '.'; }
 }
 
