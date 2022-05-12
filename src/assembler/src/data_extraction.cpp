@@ -84,9 +84,6 @@ int decode_data(const Context& context, const std::vector<std::string>& tokens,
     else
     {
         /* DATA xxx,xxx,xxx,xxx */
-        const auto first_comment = first_argument.find_first_of(';');
-        auto without_comment = std::string{first_argument.substr(0, first_comment)};
-
         int byte_count = 0;
 
         for (const auto& argument : tokens)
