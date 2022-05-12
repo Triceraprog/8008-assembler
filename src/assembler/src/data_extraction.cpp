@@ -1,8 +1,66 @@
 #include "data_extraction.h"
 #include "evaluator.h"
 #include "options.h"
-#include "symbol_table.h"
 #include <algorithm>
+
+size_t string_to_bytes(const Context& context, const std::string& data, std::vector<int>& out_data)
+{
+    // DATA "..." or DATA '...' declare strings of characters
+    // The argument has already been extracted (by the LineTokenizer), so it is assured
+    // to be a quoted string.
+    // It is possible that the string is open-ended on the right (no closing quote)
+    const char quote_to_find = data.front();
+    auto last_quote_position = data.back() == quote_to_find ? data.length() - 1 : data.length();
+    auto string_content = data.substr(1, last_quote_position - 1);
+
+    bool escape_char = false;
+    auto starting_size = out_data.size();
+
+    for (char char_data : string_content)
+    {
+        if (escape_char)
+        {
+            escape_char = false;
+            switch (char_data)
+            {
+                case '\\':
+                    out_data.push_back('\\');
+                    break;
+                case 'r':
+                    out_data.push_back('\r');
+                    break;
+                case 'n':
+                    out_data.push_back('\n');
+                    break;
+                case 't':
+                    out_data.push_back('\t');
+                    break;
+                case '0':
+                    out_data.push_back('\0');
+                    break;
+                default:
+                    throw UnknownEscapeSequence(char_data);
+            }
+        }
+        else if (char_data == '\\')
+        {
+            escape_char = true;
+        }
+        else
+        {
+            out_data.push_back(char_data);
+        }
+    }
+
+    /* If "markascii" option is set, the highest bit of these ascii bytes are forced to 1. */
+    if (context.get_options().mark_8_ascii)
+    {
+        std::ranges::transform(out_data.begin(), out_data.end(), out_data.begin(),
+                               [](const auto p) { return p | 0x80; });
+    }
+
+    return out_data.size() - starting_size;
+}
 
 int decode_data(const Context& context, const std::vector<std::string>& tokens,
                 std::vector<int>& out_data)
@@ -24,60 +82,7 @@ int decode_data(const Context& context, const std::vector<std::string>& tokens,
     }
     if ((first_argument.front() == '\'') || (first_argument.front() == '"'))
     {
-        // DATA "..." or DATA '...' declare strings of characters
-        // The argument has already been extracted (by the LineTokenizer), so it is assured
-        // to be a quoted string.
-        // It is possible that the string is open-ended on the right (no closing quote)
-        const char quote_to_find = first_argument.front();
-        auto last_quote_position = first_argument.back() == quote_to_find
-                                           ? first_argument.length() - 1
-                                           : first_argument.length();
-        auto string_content = first_argument.substr(1, last_quote_position - 1);
-
-        bool escape_char = false;
-
-        for (char char_data : string_content)
-        {
-            if (escape_char)
-            {
-                escape_char = false;
-                switch (char_data)
-                {
-                    case '\\':
-                        out_data.push_back('\\');
-                        break;
-                    case 'r':
-                        out_data.push_back('\r');
-                        break;
-                    case 'n':
-                        out_data.push_back('\n');
-                        break;
-                    case 't':
-                        out_data.push_back('\t');
-                        break;
-                    case '0':
-                        out_data.push_back('\0');
-                        break;
-                    default:
-                        throw UnknownEscapeSequence(char_data);
-                }
-            }
-            else if (char_data == '\\')
-            {
-                escape_char = true;
-            }
-            else
-            {
-                out_data.push_back(char_data);
-            }
-        }
-
-        /* If "markascii" option is set, the highest bit of these ascii bytes are forced to 1. */
-        if (context.get_options().mark_8_ascii)
-        {
-            std::ranges::transform(out_data.begin(), out_data.end(), out_data.begin(),
-                                   [](const auto p) { return p | 0x80; });
-        }
+        string_to_bytes(context, first_argument, out_data);
 
         return static_cast<int>(out_data.size());
     }
