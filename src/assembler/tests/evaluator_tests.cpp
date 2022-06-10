@@ -1,5 +1,6 @@
-#include "evaluator.h"
+#include "evaluation/evaluator.h"
 
+#include "evaluation/evaluate.h"
 #include "options.h"
 
 #include "gmock/gmock.h"

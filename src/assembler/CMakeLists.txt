@@ -13,7 +13,6 @@ set(ASSEMBLER_LIB_FILES
         src/symbol_table.cpp src/symbol_table.h
         src/line_tokenizer.cpp src/line_tokenizer.h
         src/utils.cpp src/utils.h
-        src/evaluator.cpp src/evaluator.h
         src/byte_writer.cpp src/byte_writer.h
         src/data_extraction.cpp src/data_extraction.h
         src/first_pass.cpp src/first_pass.h
@@ -37,7 +36,10 @@ set(ASSEMBLER_LIB_FILES
         src/files/file_utility.cpp src/files/file_utility.h
         src/parsed_line_storage.cpp src/parsed_line_storage.h
         src/context_stack.cpp src/context_stack.h
-        src/macro_content.cpp src/macro_content.h)
+        src/macro_content.cpp src/macro_content.h
+        src/evaluation/evaluator.cpp src/evaluation/evaluator.h
+        src/evaluation/legacy_evaluate.cpp src/evaluation/legacy_evaluate.h
+        src/evaluation/evaluate.h src/evaluation/evaluate.cpp)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp
