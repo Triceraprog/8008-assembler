@@ -60,3 +60,8 @@ UnexpectedArgumentCount::UnexpectedArgumentCount(uint32_t arg_count)
 {
     reason = "unexpected number of arguments: " + std::to_string(arg_count);
 }
+
+int OpcodeAction::evaluate(const Context& context, std::string_view arg)
+{
+    return evaluate_argument(context, arg);
+}

@@ -22,6 +22,8 @@ public:
                               std::string_view input_line) const = 0;
 
     virtual ~OpcodeAction() = default;
+
+    static int evaluate(const Context& context, std::string_view arg);
 };
 
 std::unique_ptr<OpcodeAction> create_opcode_action(const Context& context, Opcode opcode,

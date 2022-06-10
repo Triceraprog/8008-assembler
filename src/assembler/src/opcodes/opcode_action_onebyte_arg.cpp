@@ -1,7 +1,6 @@
 #include "opcode_action_onebyte_arg.h"
 
 #include "byte_writer.h"
-#include "evaluator.h"
 #include "listing.h"
 
 OpcodeActionOneByteArg::OpcodeActionOneByteArg(const Context& context,
@@ -9,7 +8,7 @@ OpcodeActionOneByteArg::OpcodeActionOneByteArg(const Context& context,
                                                const std::vector<std::string>& arguments)
     : opcode{opcode_byte}, address{address}
 {
-    evaluated_argument = evaluate_argument(context, arguments[0]);
+    evaluated_argument = evaluate(context, arguments[0]);
     if ((evaluated_argument > 255) || (evaluated_argument < 0))
     {
         throw ExpectedArgumentWithinLimits(255, arguments[0], evaluated_argument);

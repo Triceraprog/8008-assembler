@@ -1,14 +1,13 @@
 #include "opcode_action_rst.h"
 
 #include "byte_writer.h"
-#include "evaluator.h"
 #include "listing.h"
 
 OpcodeActionRst::OpcodeActionRst(const Context& context, Opcode::OpcodeByteType opcode_byte,
                                  int address, const std::vector<std::string>& arguments)
     : opcode{opcode_byte}, address{address}
 {
-    int argument = evaluate_argument(context, arguments[0]);
+    int argument = evaluate(context, arguments[0]);
     if (argument % 8 == 0)
     {
         argument /= 8;

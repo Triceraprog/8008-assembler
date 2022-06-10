@@ -1,7 +1,6 @@
 #include "opcode_action_twobyte_arg.h"
 
 #include "byte_writer.h"
-#include "evaluator.h"
 #include "listing.h"
 
 OpcodeActionTwoByteArg::OpcodeActionTwoByteArg(const Context& context,
@@ -10,7 +9,7 @@ OpcodeActionTwoByteArg::OpcodeActionTwoByteArg(const Context& context,
     : opcode{opcode_byte}, address{address}
 {
     const int MAX_ADDRESS = 1024 * 16;
-    evaluated_argument = evaluate_argument(context, arguments[0]);
+    evaluated_argument = evaluate(context, arguments[0]);
     if ((evaluated_argument > MAX_ADDRESS) || (evaluated_argument < 0))
     {
         throw ExpectedArgumentWithinLimits(MAX_ADDRESS, arguments[0], evaluated_argument);

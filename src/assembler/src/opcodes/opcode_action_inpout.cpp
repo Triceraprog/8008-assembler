@@ -1,7 +1,6 @@
 #include "opcode_action_inpout.h"
 
 #include "byte_writer.h"
-#include "evaluator.h"
 #include "listing.h"
 
 OpcodeActionInpOut::OpcodeActionInpOut(const Context& context, Opcode::OpcodeByteType opcode_byte,
@@ -9,7 +8,7 @@ OpcodeActionInpOut::OpcodeActionInpOut(const Context& context, Opcode::OpcodeByt
                                        std::string_view mnemonic)
     : address{address}
 {
-    int argument = evaluate_argument(context, arguments[0]);
+    int argument = evaluate(context, arguments[0]);
     const bool is_input = mnemonic[0] == 'i';
     const int max_port = is_input ? 7 : 23;
 
