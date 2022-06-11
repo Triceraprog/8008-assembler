@@ -1,5 +1,13 @@
 #include "evaluate.h"
 
+#include "legacy_evaluate.h"
+#include "new_evaluate.h"
+
+int evaluate(const Context& context, std::string_view arg)
+{
+    return legacy_evaluator(context, arg);
+}
+
 CannotFindSymbol::CannotFindSymbol(const std::string& symbol)
 {
     reason = "cannot find symbol " + symbol;

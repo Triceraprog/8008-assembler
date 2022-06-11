@@ -1,7 +1,6 @@
 #include "evaluator.h"
 #include "context.h"
-#include "legacy_evaluate.h"
-#include "options.h"
+#include "evaluate.h"
 
 #include <iostream>
 
@@ -34,7 +33,7 @@ int evaluate_argument(const Context& context, std::string_view arg)
         std::cout << "evaluating " << arg << "\n";
     }
 
-    int result = legacy_evaluator(context, arg);
+    int result = evaluate(context, arg);
 
     if (context.get_options().debug)
     {

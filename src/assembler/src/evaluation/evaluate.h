@@ -3,6 +3,10 @@
 
 #include "errors.h"
 
+class Context;
+
+int evaluate(const Context& context, std::string_view arg);
+
 class CannotFindSymbol : public ExceptionWithReason
 {
 public:
