@@ -165,7 +165,7 @@ class TestFunctional(unittest.TestCase):
         files = DataFiles()
 
         with temp_files(files.temp_files):
-            result = run_assembler([files.input_file])
+            result = run_assembler(["-as8", files.input_file])
 
             self.assertEqual(result.returncode, 0)
             self.assertEqual(result.stdout, '')
@@ -194,7 +194,7 @@ class TestFunctional(unittest.TestCase):
         files = DataFiles()
 
         with temp_files(files.temp_files):
-            result = run_assembler(["-d", files.input_file])
+            result = run_assembler(["-as8", "-d", files.input_file])
 
             self.assertEqual(result.returncode, 0)
             self.assertNotEqual(result.stdout, '')  # Don't care much about what's the debug output
@@ -211,7 +211,7 @@ class TestFunctional(unittest.TestCase):
         files = DataFiles()
 
         with temp_files(files.temp_files):
-            result = run_assembler(["-bin", files.input_file])
+            result = run_assembler(["-as8", "-bin", files.input_file])
 
             self.assertEqual(result.returncode, 0)
             self.assertEqual(result.stdout, '')
@@ -228,7 +228,7 @@ class TestFunctional(unittest.TestCase):
         files = DataFiles()
 
         with temp_files(files.temp_files):
-            result = run_assembler(["-octal", files.input_file])
+            result = run_assembler(["-as8", "-octal", files.input_file])
 
             self.assertEqual(result.returncode, 0)
             self.assertEqual(result.stdout, '')
@@ -245,7 +245,7 @@ class TestFunctional(unittest.TestCase):
         files = DataFiles()
 
         with temp_files(files.temp_files):
-            result = run_assembler(["-single", files.input_file])
+            result = run_assembler(["-as8", "-single", files.input_file])
 
             self.assertEqual(result.returncode, 0)
             self.assertEqual(result.stdout, '')
@@ -262,7 +262,7 @@ class TestFunctional(unittest.TestCase):
         files = DataFiles()
 
         with temp_files(files.temp_files):
-            result = run_assembler(["-markascii", files.input_file])
+            result = run_assembler(["-as8", "-markascii", files.input_file])
 
             self.assertEqual(result.returncode, 0)
             self.assertEqual(result.stdout, '')
@@ -280,7 +280,7 @@ class TestFunctional(unittest.TestCase):
         files = DataFiles()
 
         with temp_files(files.temp_files):
-            result = run_assembler(["-octal", files.scelbal_input_file])
+            result = run_assembler(["-as8", "-octal", files.scelbal_input_file])
 
             self.assertEqual(result.returncode, 0)
             self.assertEqual(result.stdout, '')
@@ -363,7 +363,7 @@ class TestFunctional(unittest.TestCase):
 
         with temp_files(files.temp_files):
             result = run_assembler(
-                ["-bin", "-o", files.output_double_base_file, files.input_file, files.micral_input_file])
+                ["-as8", "-bin", "-o", files.output_double_base_file, files.input_file, files.micral_input_file])
 
             self.assertEqual(result.returncode, 0)
             self.assertEqual(result.stdout, '')
