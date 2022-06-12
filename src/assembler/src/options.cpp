@@ -82,6 +82,7 @@ std::size_t Options::parse_command_line(int argc, const char** argv)
     {
         // AS8 options compatibility
         data_per_line_limit = 12;
+        legacy_evaluator = true;
     }
 
     return left_arguments.size();
