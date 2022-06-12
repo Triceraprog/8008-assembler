@@ -73,6 +73,7 @@ help_output = """    where <infile> is assembly code file, extension defaults to
     -bin        makes output binary ROM file, otherwise intel hex
     -octal      makes unidentified 3-digit numbers octal (default decimal)
     -single     makes .lst file single byte per line, otherwise 3/line.
+    -as8        as8 compatibility mode.
     -markascii  makes highest bit in ascii bytes a one (mark).
     -syntax=new default parsing is with new syntax mnemonics.
     -o          the next argument is the output filename base.

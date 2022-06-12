@@ -99,6 +99,7 @@ void Options::display_help(const char** argv)
     fprintf(stderr, "    -bin        makes output binary ROM file, otherwise intel hex\n");
     fprintf(stderr, "    -octal      makes unidentified 3-digit numbers octal (default decimal)\n");
     fprintf(stderr, "    -single     makes .lst file single byte per line, otherwise 3/line.\n");
+    fprintf(stderr, "    -as8        as8 compatibility mode.\n");
     fprintf(stderr, "    -markascii  makes highest bit in ascii bytes a one (mark).\n");
     fprintf(stderr, "    -syntax=new default parsing is with new syntax mnemonics.\n");
     fprintf(stderr, "    -o          the next argument is the output filename base.\n");
