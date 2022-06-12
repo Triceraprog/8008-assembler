@@ -1,7 +1,3 @@
-- Support for priorities in expressions (with optional compatibilities with as8)
-  - Extract the legacy evaluator
-  - Plug the new evaluator
-  - Have a flag for choosing which one
 - Macro system
   - In the listing, display the replaced tokens in the Macro
 - Simplify file declaration in functional tests (based on a naming scheme)
@@ -9,10 +5,8 @@
 - Make a pass in the readability to the -debug option
 - The listing can be reconstructed without keeping the initial line. Can it?
 - Option to output an expended, simple assembly code with a syntax for another assembler, especially as8
-- Check name of executable and if as8, enters a compatible mode if needed
 - If the accumulator results in a negative number, various weird things happen, because it's passed as int (wrong hex,
   wrong lst)
 - Change the hardcoded path in functional tests to a parameter and generate the call to tests from CMake
 - If the push/pop contexts have performance problems with copying the options, copy on write could be used.
-- Expression with quoted char don't work
 - Is there a bug when chaining two .ifs ?
