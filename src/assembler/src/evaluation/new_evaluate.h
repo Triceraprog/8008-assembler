@@ -138,7 +138,7 @@ namespace SimpleEvaluator
             size += 1;
         }
 
-        if (index < tokens.length() && index == 1)
+        if (index < tokens.length() && size == 1)
         {
             const char c = tokens[index];
             if (c == 'x' || c == 'X')

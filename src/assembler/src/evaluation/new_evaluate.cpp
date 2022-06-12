@@ -1,16 +1,21 @@
 #include "new_evaluate.h"
 #include "context.h"
+#include "evaluate.h"
 
 namespace SE = SimpleEvaluator;
 
 struct Configuration
 {
-    std::unordered_map<std::string, std::int32_t> symbols{{"eight", 8}, {"two", 2}, {"one", 1}};
+    Context* context{};
 
     int symbol_to_value(const std::string& symbol_name) const
     {
-        auto it = symbols.find(symbol_name);
-        return (it == std::end(symbols)) ? 0 : it->second;
+        const auto [success, value] = context->get_symbol_value(symbol_name);
+        if (success)
+        {
+            return value;
+        }
+        throw CannotFindSymbol{symbol_name};
     }
 
     std::unordered_map<std::string, SE::function_type> functions{
@@ -27,6 +32,12 @@ struct Configuration
 int new_evaluator(const Context& context, std::string_view arg)
 {
     static Configuration configuration;
-    return SE::evaluate(configuration,
-                        EvaluationFlags::get_flags_from_options(context.get_options()), arg);
+
+    // The glue is not pretty...
+    configuration.context = const_cast<Context*>(&context);
+    auto value = SE::evaluate(configuration,
+                              EvaluationFlags::get_flags_from_options(context.get_options()), arg);
+
+    configuration.context = nullptr;
+    return value;
 }

@@ -182,6 +182,7 @@ TEST_F(EvaluateArgumentFixture, evaluates_an_expression_in_legacy_form)
     ASSERT_THAT(value, Eq(208));
 }
 
+// Test for the new evaluator
 TEST_F(EvaluateArgumentFixture, evaluates_an_expression_in_new_form)
 {
     context.get_options().legacy_evaluator = false;
@@ -196,18 +197,18 @@ TEST_F(EvaluateArgumentFixture, evaluates_octal_in_new_form)
     ASSERT_THAT(value, Eq(128));
 }
 
-TEST_F(EvaluateArgumentFixture, evaluates_hex_and_bin_in_a_new_form)
+TEST_F(EvaluateArgumentFixture, evaluates_bin_in_a_new_form)
 {
     context.get_options().legacy_evaluator = false;
-    auto value = evaluate_argument(context, "03h - 10b");
+    auto value = evaluate_argument(context, "11b - 10b");
     ASSERT_THAT(value, Eq(1));
 }
 
 TEST_F(EvaluateArgumentFixture, evaluates_prefixed_hex_in_a_new_form)
 {
     context.get_options().legacy_evaluator = false;
-    auto value = evaluate_argument(context, "(0xff-ffh)");
-    ASSERT_THAT(value, Eq(0));
+    auto value = evaluate_argument(context, "(0xff-0xfe)");
+    ASSERT_THAT(value, Eq(1));
 }
 
 TEST_F(EvaluateArgumentFixture, evaluates_char_in_a_new_form)
@@ -217,4 +218,16 @@ TEST_F(EvaluateArgumentFixture, evaluates_char_in_a_new_form)
     ASSERT_THAT(value, Eq(33));
 }
 
-// TODO: test variables
+TEST_F(EvaluateArgumentFixture, evaluates_symbol_in_a_new_form)
+{
+    context.get_options().legacy_evaluator = false;
+    context.define_symbol("TEST", 127);
+    auto value = evaluate_argument(context, "TEST");
+    ASSERT_THAT(value, Eq(127));
+}
+
+TEST_F(EvaluateArgumentFixture, evaluates_symbol_not_found_in_a_new_form)
+{
+    context.get_options().legacy_evaluator = false;
+    ASSERT_THROW(evaluate_argument(context, "TEST"), CannotFindSymbol);
+}
