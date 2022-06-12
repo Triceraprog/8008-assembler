@@ -1,11 +1,17 @@
 #include "evaluate.h"
 
+#include "context.h"
 #include "legacy_evaluate.h"
-#include "new_evaluate.h"
+
+int new_evaluator(const Context& context, std::string_view arg);
 
 int evaluate(const Context& context, std::string_view arg)
 {
-    return legacy_evaluator(context, arg);
+    if (context.get_options().legacy_evaluator)
+    {
+        return legacy_evaluator(context, arg);
+    }
+    return new_evaluator(context, arg);
 }
 
 CannotFindSymbol::CannotFindSymbol(const std::string& symbol)

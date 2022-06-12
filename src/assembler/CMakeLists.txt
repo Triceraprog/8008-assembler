@@ -40,7 +40,8 @@ set(ASSEMBLER_LIB_FILES
         src/evaluation/evaluator.cpp src/evaluation/evaluator.h
         src/evaluation/legacy_evaluate.cpp src/evaluation/legacy_evaluate.h
         src/evaluation/evaluate.h src/evaluation/evaluate.cpp
-        src/evaluation/new_evaluate.h src/evaluation/new_evaluate.cpp)
+        src/evaluation/new_evaluate.h src/evaluation/new_evaluate.cpp
+        src/evaluation/string_to_int.cpp src/evaluation/string_to_int.h)
 
 set(ASSEMBLER_TEST_FILES
         tests/evaluator_tests.cpp

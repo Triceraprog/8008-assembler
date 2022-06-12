@@ -1,12 +1,11 @@
 #include "new_evaluate.h"
+#include "context.h"
 
 namespace SE = SimpleEvaluator;
 
-struct Configuration {
-    std::unordered_map<std::string, std::int32_t> symbols{
-            {"eight", 8},
-            {"two", 2},
-            {"one", 1}};
+struct Configuration
+{
+    std::unordered_map<std::string, std::int32_t> symbols{{"eight", 8}, {"two", 2}, {"one", 1}};
 
     int symbol_to_value(const std::string& symbol_name) const
     {
@@ -25,4 +24,9 @@ struct Configuration {
     }
 };
 
-int new_evaluator(const Context& context, std::string_view arg) { return 0; }
+int new_evaluator(const Context& context, std::string_view arg)
+{
+    static Configuration configuration;
+    return SE::evaluate(configuration,
+                        EvaluationFlags::get_flags_from_options(context.get_options()), arg);
+}

@@ -11,6 +11,12 @@ struct EvaluateArgumentFixture : public Test
 {
     Options options;
     Context context{options};
+
+    EvaluateArgumentFixture()
+    {
+        // All tests were initially made with the legacy evaluator
+        context.get_options().legacy_evaluator = true;
+    }
 };
 
 TEST_F(EvaluateArgumentFixture, evaluates_int)
@@ -169,3 +175,46 @@ TEST_F(EvaluateArgumentFixture, throws_if_no_expression)
 {
     ASSERT_THROW(evaluate_argument(context, "+"), ExpectedValue);
 }
+
+TEST_F(EvaluateArgumentFixture, evaluates_an_expression_in_legacy_form)
+{
+    auto value = evaluate_argument(context, "50+2*4");
+    ASSERT_THAT(value, Eq(208));
+}
+
+TEST_F(EvaluateArgumentFixture, evaluates_an_expression_in_new_form)
+{
+    context.get_options().legacy_evaluator = false;
+    auto value = evaluate_argument(context, "50+2*4");
+    ASSERT_THAT(value, Eq(58));
+}
+
+TEST_F(EvaluateArgumentFixture, evaluates_octal_in_new_form)
+{
+    context.get_options().legacy_evaluator = false;
+    auto value = evaluate_argument(context, "100o*2");
+    ASSERT_THAT(value, Eq(128));
+}
+
+TEST_F(EvaluateArgumentFixture, evaluates_hex_and_bin_in_a_new_form)
+{
+    context.get_options().legacy_evaluator = false;
+    auto value = evaluate_argument(context, "03h - 10b");
+    ASSERT_THAT(value, Eq(1));
+}
+
+TEST_F(EvaluateArgumentFixture, evaluates_prefixed_hex_in_a_new_form)
+{
+    context.get_options().legacy_evaluator = false;
+    auto value = evaluate_argument(context, "(0xff-ffh)");
+    ASSERT_THAT(value, Eq(0));
+}
+
+TEST_F(EvaluateArgumentFixture, evaluates_char_in_a_new_form)
+{
+    context.get_options().legacy_evaluator = false;
+    auto value = evaluate_argument(context, "' '+1");
+    ASSERT_THAT(value, Eq(33));
+}
+
+// TODO: test variables
