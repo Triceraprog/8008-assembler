@@ -1,3 +1,4 @@
+- Add the possibility to output the binary file with only a specified span
 - Macro system
   - In the listing, display the replaced tokens in the Macro
 - Simplify file declaration in functional tests (based on a naming scheme)

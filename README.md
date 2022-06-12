@@ -10,6 +10,10 @@ It aims to:
   * allow Anonymous Local Labels, 
   * retain compatibility with as8.c (see below), and thus Mark 8 specific format.
 
+## Documentation
+
+Documentation is available [here](doc/README.md).
+
 ## History
 
 This assembler was created with the objective of supporting the specific instructions for the "Micral N" micro-computer.
