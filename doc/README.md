@@ -93,10 +93,37 @@ be specified on command line or with assembly commands (see further).
 
 Opcode, pseudo-opcode and commands are case insensitive.
 
+### Format
+
+Labels start on the first column and are immediately followed by a column.
+
+```asm
+label:
+```
+
+Opcodes and command start anywhere after the first column and are separated 
+from their arguments by at least one blank space.
+
+```asm
+    JMP 0x0100
+```
+
+Comments start by a semi-column and can be anywhere on the line. Everything after
+is ignored.
+
+```asm
+; This is a comment
+```
+
 ### RST
 
 The `RST` opcode parsing understands both addressing forms. It accept both
 a number from `0` to `7` or an actual restart address (`0x00`, `0x08`,... `0x38`).
+
+```asm
+    RST 1 ; gives the same code as
+    RST 8
+```
 
 ### MAS
 
@@ -122,6 +149,10 @@ The assembler understands some specific commands, or pseudo opcodes.
 The assembler doesn't verify any coherency, and you can have overlaps in produced
 binary code if not careful.
 
+```asm
+    ORG 0x0100
+```
+
 ### EQU
 
 Provides equivalence between a label and the value in parameter of `EQU`.
@@ -130,15 +161,29 @@ Provides equivalence between a label and the value in parameter of `EQU`.
 label then becomes a symbol for the rest of the assembly. It can be use in
 any arithmetic expression.
 
+```asm
+count:  EQU 32  ; count is now a symbol with a decimal value of 32.
+```
+
+
 ### END
 
 `END` states the end of the input file. It is completely ignored.
+
+```asm
+    END     ; has absolutely no effect.
+```
 
 ### CPU
 
 `CPU` specified the kind of cpu. It must be either `8008` or `i8008`. It
 is provided only for compatibility. The assembler doesn't know any other
 CPU type.
+
+```asm
+    CPU 8008
+```
+
 
 ### DATA/DB
 
@@ -148,6 +193,13 @@ a comma separated list of data that will be converted to successive bytes.
 The data can any expression understood by the solver (see further), or
 character strings enclosed by double quotes and containing ASCII characters.
 
+```asm
+    DATA 32,33,34,35
+    DATA '\n'
+    DB   "Hello!",0     ; DB is an alias for DATA
+```
+
+
 ### .INCLUDE
 
 Followed by a filename, the `.include` command will insert the content of the
@@ -155,10 +207,21 @@ specified file in place.
 
 Included files can themselves include other files.
 
+```asm
+    .INCLUDE common.asm
+```
+
+
 ### .SYNTAX
 
 The command specifies the syntax used by the assembler starting the next line.
 The two valid arguments are `NEW` or `OLD`.
+
+```asm
+    .SYNTAX new
+    .SYNTAX old
+```
+
 
 ### .CONTEXT
 
@@ -170,15 +233,92 @@ By creating a new context, it is possible to create local symbols and labels, wh
 can hold new values, or be completely new. These values will be forgotten when
 the context is popped out of the context stack.
 
+When searching for a symbol value or label, the solver searches for the topmost
+context and if not found, walks the stack toward the root until it either find
+the symbol or label, or fails and report an error.
+
 The two valid arguments are `PUSH` or `POP`.
 
-This command in mainly an exposition of the internal way macros are working.
+This command is mainly an exposition of the internal way macros are working.
+
+```asm
+    .CONTEXT push
+    .CONTEXT pop
+```
+
 
 ### .IF/.ELSE/.ENDIF
 
+The conditional commands allow to conditionally assemble parts of the input file.
+What's in argument of the `.if` command is evaluated. If it's `0`, then the
+part between `.if` and `.endif` or `.else`, whatever comes first, will be skipped. 
+In the other cas, the part will be assembled.
+
+If there's an `.else` command, then the part between `.else` and `.endif` will
+be assembled with the opposite condition passed to the `.if` argument.
+
+```asm
+    .IF 0
+    ; This will be skipped
+    .ELSE
+    ; This will be parsed and assembled
+    .ENDIF
+```
+
+An `.if` command creates and pushes a local context. It allows to define symbols
+and labels local to the conditional code.
+
+```asm
+test:   EQU 32
+        .IF 1
+test:   EQU 42  ; This redefinition is valid        
+        .ENDIF
+        ; 'test' has again 32 for decimal value.
+```
 
 ### .MACRO/.ENDMACRO
 
+Macros can be defined to inject common code into assembly when they are called.
+A macro definition is started by the `.macro` command and must be associated
+to a label, which gives its name to the defined macro.  The definition is ended
+by the `.endmacro` command.
+
+A defined macro becomes a command, and it called by its name with a dot (`.`)
+prefix. When called, a macro creates and pushes a local context, which allows
+symbols and labels to be used locally in the macro.
+
+```asm
+inc_hl: .MACRO
+        .SYNTAX OLD ; By specfying a syntax inside the macro, it can be called
+                    ; wathever the calling code syntax is.
+        INL
+        JFZ skip
+skip:               ; Skip is local to the macro.
+        .ENDMACRO
+        
+        .INC_HL     ; HL is incremented
+        .INC_HL     ; ... twice
+```
+
+Macros can have parameters, which are specified as a list of names after the
+`.macro` command. These names form a substitution dictionary, they are not
+symbols in the sense of the solver. If a parameter in the code parsed during
+macro extension is exactly a substitution name, then it is replaced by whatever
+was present at call site in the matching argument.
+
+```asm
+LD_IMM: .MACRO  r1,r2,imm       ; r1, r2 and imm form a substitution dictionnary
+        .SYNTAX new
+value:  EQU     imm             ; 'imm' is turned into a local symbol named `value` 
+        MVI     r1,\HB\value    ; r1 is substituted by the calling argument 
+        MVI     r2,\LB\value    ; r2 is substituted by the calling argument
+        .ENDMACRO
+
+        .LD_IMM H,L,0x1234      ; r1 will be replaced by H
+                                ; r2 will be replaced by L
+                                ; imm will be replaced by 0x1234
+```
 
 ## Arithmetic solver
 
+\HB,...
