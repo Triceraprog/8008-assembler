@@ -321,4 +321,49 @@ value:  EQU     imm             ; 'imm' is turned into a local symbol named `val
 
 ## Arithmetic solver
 
-\HB,...
+The assembler has two different arithmetic solvers for expressions.
+
+### Legacy solver
+
+The legacy one mimics the original `as8` solver, which was designed with only
+two operands combined by one binary operator. It evaluates the expression from
+left to right without any operator precedence.
+
+It understands:
+
+- symbols and labels (which are symbols after all),
+- decimal values (e.g.: `1234`),
+- binary values suffixed by `b` (e.g.: `10110b`),
+- octal values suffixed by `o` (e.g.: `111o`) or, with the `-octal` flag, raw
+numbers of three digits (e.g.: `111`),
+- hexadecimal values in both suffix form (e.g.: `A0h`) or prefix form (e.g.: `0xA0`),
+- single quoted characters (e.g.: `'\n'`), which are replaced by their ASCII value;
+it lacks the capability of doing arithmetic with it though,
+- five operators: `+`, `-`, `*`, `/` and `#` (which means 'multiply by 256' and
+allow to write composed octal, like `100#010`),
+- the `\HB\` and `\LB\` prefixes, or the `H(...)` and `L(...)` functions, that
+respectively yield the high and low byte of the associated value (see the `.MACRO`
+example above),
+
+This solver is chosen when the `-as8` flag is passed on the command line.
+
+### New solver
+
+The new, or default, solver, honors operation precedence and is less surprising
+in its results for more complex expressions.
+
+It understands:
+
+- symbols and labels,
+- decimal values (e.g.: `1234`),
+- binary values suffixed by `b` (e.g.: `10110b`),
+- octal values suffixed by `o` (e.g.: `111o`) or, with the `-octal` flag, raw
+  numbers of three digits (e.g.: `111`),
+- hexadecimal values, only in the prefix form (e.g.: `0xA0`),
+- single quoted characters (e.g.: `'\n'`), which are replaced by their ASCII value;
+  it HAS the capability of doing arithmetic with it,
+- four operators: `+`, `-`, `*`, `/`,
+- the `\HB\` and `\LB\` prefixes, or the `H(...)` and `L(...)` functions, that
+  respectively yield the high and low byte of the associated value (see the `.MACRO`
+  example above),
+- the `square()` function as a sample on how to add functions to it in the source code...
