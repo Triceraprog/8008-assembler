@@ -10,15 +10,14 @@
 #include "macro_content.h"
 #include "opcodes/opcode_action.h"
 #include "opcodes/opcodes.h"
-#include "options.h"
 #include "utils.h"
 
 #include <algorithm>
 #include <cassert>
-#include <fstream>
 #include <iostream>
 #include <utility>
 #include <vector>
+#include <ranges>
 
 namespace
 {
