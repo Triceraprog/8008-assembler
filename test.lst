@@ -1,0 +1,15 @@
+8008 Assembler, s.glaize Version 1.0
+Originally based on AS8 assembler by t.e.jones Version 1.0
+Options: listfile=1 debug=0 binaryout=1 singlelist=0
+octalnums=0 markascii=0
+Infile=test.asm
+Assembly Performed: Mon Jun 13 00:01:34 2022
+
+
+Line Addr.  CodeBytes   Source Line
+---- ------ ----------- ----------------------------------
+   1                    	ORG 0x200
+   2 02-000 300         	LAA
+Symbol Count: 0
+    Symbol  Oct Val  DecVal
+    ------  -------  ------

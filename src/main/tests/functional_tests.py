@@ -276,7 +276,6 @@ class TestFunctional(unittest.TestCase):
             self.assertTrue(file_equal(files.output_lst_markascii_ref_file, files.output_lst_file),
                             msg=f"File differs {files.output_lst_file}")
 
-    @unittest.skip
     def test_assemble_scelbal(self):
         files = DataFiles()
 

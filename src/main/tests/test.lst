@@ -1,0 +1,86 @@
+8008 Assembler, s.glaize Version 1.0
+Originally based on AS8 assembler by t.e.jones Version 1.0
+Options: listfile=1 debug=0 binaryout=0 singlelist=0
+octalnums=0 markascii=0
+Infile=src/main/tests/test.asm
+Assembly Performed: Sun Jun 12 23:58:55 2022
+
+
+Line Addr.  CodeBytes   Source Line
+---- ------ ----------- ----------------------------------
+   1                    OK: EQU 1
+   2                    NO: EQU 0
+   3                    
+   4                    
+   5                    INC_HL: .macro
+   6                            .syntax     old
+   7                            INL
+   8                            JFZ skip
+   9                            INH
+  10                    skip:
+  11                            .endmacro
+  12                    
+  13                            ; LD immediate specifying two registers
+  14                    LD_IMM: .macro  r1,r2,imm
+  15                            .syntax new
+  16                    value:  EQU IMM
+  17                            MVI r1,\HB\value
+  18                            MVI r2,\LB\value
+  19                            .endmacro
+  20                    
+  21                            .INC_HL
+   1                            .syntax     old
+   2 00-000 060                 INL
+   3 00-001 110 005 000         JFZ skip
+   4 00-004 050                 INH
+   5                    skip:
+  22                            .LD_IMM H,L,0x1234
+   1                            .syntax new
+   2                    value:  EQU IMM
+   3 00-005 056 022             MVI r1,\HB\value
+   4 00-007 066 064             MVI r2,\LB\value
+  23                    
+  24                            .syntax old
+  25 00-011 365                 LLH
+  26                            .context push
+  27                            .syntax new
+  28 00-012 365                 MOV L,H
+  29                            .context pop
+  30 00-013 365                 LLH
+  31                    
+  32                            .if NO
+  33                            This will no be parsed
+  34                            .endif
+  35                    
+  36                            .if OK
+  37 00-014 365                 LLH
+  38                            .else
+  39                            This will no be parsed
+  40                            .endif
+  41                    
+  42                            .inc_hl
+   1                            .syntax     old
+   2 00-015 060                 INL
+   3 00-016 110 022 000         JFZ skip
+   4 00-021 050                 INH
+   5                    skip:
+  43                            .inc_hl
+   1                            .syntax     old
+   2 00-022 060                 INL
+   3 00-023 110 027 000         JFZ skip
+   4 00-026 050                 INH
+   5                    skip:
+  44                    
+  45                            .context push
+  46                    TEST:
+  47 00-027 104 027 000         JMP TEST
+  48                            .context pop
+  49                    TEST:
+  50 00-032 104 032 000         JMP TEST
+  51                            END
+Symbol Count: 3
+    Symbol  Oct Val  DecVal
+    ------  -------  ------
+        OK      001      1
+        NO      000      0
+      TEST      032     26
