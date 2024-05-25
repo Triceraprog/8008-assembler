@@ -175,7 +175,7 @@ namespace SimpleEvaluator
         const std::size_t start = index;
         const auto start_it = std::begin(tokens) + index;
         const auto first_not_alpha = std::find_if_not(start_it, std::end(tokens),
-                                                      [](auto c) { return std::isalpha(c); });
+                                                      [](auto c) { return std::isalpha(c) || c == '_'; });
         const auto count = std::distance(start_it, first_not_alpha);
         std::string value{tokens.substr(start, count)};
         return {value, start + count};
