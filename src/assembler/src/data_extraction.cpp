@@ -57,7 +57,8 @@ size_t string_to_bytes(const Context& context, const std::string& data, std::vec
     /* If "markascii" option is set, the highest bit of these ascii bytes are forced to 1. */
     if (context.get_options().mark_8_ascii)
     {
-        std::ranges::transform(out_data.begin(), out_data.end(), out_data.begin(),
+        std::ranges::transform(out_data.begin() + starting_size, out_data.end(),
+                               out_data.begin() + starting_size,
                                [](const auto p) { return p | 0x80; });
     }
 

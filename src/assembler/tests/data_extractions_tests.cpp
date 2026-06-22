@@ -38,3 +38,23 @@ TEST_F(DataExtractorFixture, throws_if_finds_an_unknown_escape_char)
 
     ASSERT_THROW(decode_data(context, tokens, out_data), UnknownEscapeSequence);
 }
+
+TEST_F(DataExtractorFixture, mark_8_ascii_sets_high_bit_on_string_bytes)
+{
+    context.get_options().mark_8_ascii = true;
+    std::vector<int> out_data;
+    std::vector<std::string> tokens = {"\"AB\""};
+    decode_data(context, tokens, out_data);
+    ASSERT_THAT(out_data[0], Eq('A' | 0x80));
+    ASSERT_THAT(out_data[1], Eq('B' | 0x80));
+}
+
+TEST_F(DataExtractorFixture, mark_8_ascii_does_not_affect_preceding_numeric_bytes)
+{
+    context.get_options().mark_8_ascii = true;
+    std::vector<int> out_data;
+    std::vector<std::string> tokens = {"65", "\"B\""};
+    decode_data(context, tokens, out_data);
+    ASSERT_THAT(out_data[0], Eq(65));
+    ASSERT_THAT(out_data[1], Eq('B' | 0x80));
+}
