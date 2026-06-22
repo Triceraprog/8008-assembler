@@ -69,5 +69,6 @@ if(WITH_TESTS)
     target_include_directories(${ASSEMBLER_TEST_NAME} PRIVATE src/)
     target_include_directories(${ASSEMBLER_TEST_NAME} PRIVATE ../)
 
-    add_test(NAME ${ASSEMBLER_TEST_NAME} COMMAND ${ASSEMBLER_TEST_NAME})
+    include(GoogleTest)
+    gtest_discover_tests(${ASSEMBLER_TEST_NAME})
 endif()
