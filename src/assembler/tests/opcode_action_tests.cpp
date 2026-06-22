@@ -94,3 +94,22 @@ TEST_F(OpcodeActionFixture, rst_action_emits_one_byte)
     ASSERT_THAT(byte_buffer.str()[0], Eq(static_cast<char>(0015)));
     ASSERT_THAT(byte_buffer.str()[1], Eq(0));
 }
+
+TEST_F(OpcodeActionFixture, two_byte_arg_accepts_max_valid_address)
+{
+    Opcode::OpcodeByteType opcode_CAL = 0106;
+    std::vector<std::string> arguments = {"16383"};
+    ASSERT_NO_THROW(
+        std::make_unique<OpcodeActionTwoByteArg>(context, opcode_CAL, current_address, arguments)
+    );
+}
+
+TEST_F(OpcodeActionFixture, two_byte_arg_rejects_address_above_max)
+{
+    Opcode::OpcodeByteType opcode_CAL = 0106;
+    std::vector<std::string> arguments = {"16384"};
+    ASSERT_THROW(
+        std::make_unique<OpcodeActionTwoByteArg>(context, opcode_CAL, current_address, arguments),
+        ExpectedArgumentWithinLimits
+    );
+}

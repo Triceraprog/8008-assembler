@@ -8,7 +8,7 @@ OpcodeActionTwoByteArg::OpcodeActionTwoByteArg(const Context& context,
                                                const std::vector<std::string>& arguments)
     : opcode{opcode_byte}, address{address}
 {
-    const int MAX_ADDRESS = 1024 * 16;
+    const int MAX_ADDRESS = 1024 * 16 - 1;
     evaluated_argument = evaluate(context, arguments[0]);
     if ((evaluated_argument > MAX_ADDRESS) || (evaluated_argument < 0))
     {
