@@ -32,12 +32,7 @@ namespace
                 else
                 {
                     result += next_with_delimiters(",;\"'");
-
-                    const auto last_char = result[result.size()];
-                    if (last_char != '\'' && last_char != '"')
-                    {
-                        return result;
-                    }
+                    return result;
                 }
             }
 
