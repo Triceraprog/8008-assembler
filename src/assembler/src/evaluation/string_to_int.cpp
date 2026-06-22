@@ -9,12 +9,14 @@ EvaluationFlags::Flags EvaluationFlags::get_flags_from_options(const Options& op
     return options.input_num_as_octal ? ThreeDigitsAsOctal : None;
 }
 
-int parse_number_value(const std::string& to_parse, int base, std::string_view type_name)
+int parse_number_value(const std::string& to_parse, int base, std::string_view type_name,
+                       bool has_suffix = false)
 {
+    std::size_t pos;
     int val;
     try
     {
-        val = std::stoi(to_parse, nullptr, base);
+        val = std::stoi(to_parse, &pos, base);
     }
     catch (const std::invalid_argument& e)
     {
@@ -23,6 +25,11 @@ int parse_number_value(const std::string& to_parse, int base, std::string_view t
     catch (const std::out_of_range& e)
     {
         throw InvalidNumber(to_parse, type_name, "out of range");
+    }
+    const auto expected_pos = has_suffix ? to_parse.size() - 1 : to_parse.size();
+    if (pos != expected_pos)
+    {
+        throw InvalidNumber(to_parse, type_name, "invalid");
     }
     return val;
 }
@@ -33,11 +40,11 @@ int string_to_int(const std::string& to_parse, EvaluationFlags::Flags flags)
     const auto last_char_in_parsing = tolower(to_parse.back());
     if (last_char_in_parsing == 'o')
     {
-        val = parse_number_value(to_parse, 8, "octal");
+        val = parse_number_value(to_parse, 8, "octal", true);
     }
     else if (last_char_in_parsing == 'h')
     {
-        val = parse_number_value(to_parse, 16, "hex");
+        val = parse_number_value(to_parse, 16, "hex", true);
     }
     else if (to_parse.starts_with("0x") || to_parse.starts_with("0X"))
     {
@@ -45,7 +52,7 @@ int string_to_int(const std::string& to_parse, EvaluationFlags::Flags flags)
     }
     else if (last_char_in_parsing == 'b')
     {
-        val = parse_number_value(to_parse, 2, "binary");
+        val = parse_number_value(to_parse, 2, "binary", true);
     }
     else if (last_char_in_parsing == '\'' && to_parse.front() == '\'' && to_parse.size() == 3)
     {

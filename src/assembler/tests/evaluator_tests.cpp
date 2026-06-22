@@ -231,3 +231,42 @@ TEST_F(EvaluateArgumentFixture, evaluates_symbol_not_found_in_a_new_form)
     context.get_options().legacy_evaluator = false;
     ASSERT_THROW(evaluate_argument(context, "TEST"), CannotFindSymbol);
 }
+
+TEST_F(EvaluateArgumentFixture, evaluates_high_byte_with_HB_prefix)
+{
+    auto value = evaluate_argument(context, "\\HB\\0x1234");
+    ASSERT_THAT(value, Eq(0x12));
+}
+
+TEST_F(EvaluateArgumentFixture, evaluates_low_byte_with_LB_prefix)
+{
+    auto value = evaluate_argument(context, "\\LB\\0x1234");
+    ASSERT_THAT(value, Eq(0x34));
+}
+
+TEST_F(EvaluateArgumentFixture, throws_if_division_by_zero)
+{
+    ASSERT_THROW(evaluate_argument(context, "10/0"), IllFormedExpression);
+}
+
+TEST_F(EvaluateArgumentFixture, throws_if_division_by_zero_in_new_form)
+{
+    context.get_options().legacy_evaluator = false;
+    ASSERT_THROW(evaluate_argument(context, "10/0"), IllFormedExpression);
+}
+
+TEST_F(EvaluateArgumentFixture, throws_if_unmatched_closing_parenthesis)
+{
+    context.get_options().legacy_evaluator = false;
+    ASSERT_ANY_THROW(evaluate_argument(context, "1+2)"));
+}
+
+TEST_F(EvaluateArgumentFixture, throws_if_invalid_octal_literal)
+{
+    ASSERT_THROW(evaluate_argument(context, "79o"), InvalidNumber);
+}
+
+TEST_F(EvaluateArgumentFixture, throws_if_invalid_binary_literal)
+{
+    ASSERT_THROW(evaluate_argument(context, "1012b"), InvalidNumber);
+}

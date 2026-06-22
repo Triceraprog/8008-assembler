@@ -1,3 +1,4 @@
+#include "evaluate.h"
 #include "string_to_int.h"
 
 #include <cctype>
@@ -46,7 +47,10 @@ namespace SimpleEvaluator
                 {'+', Operation{1, 2, [](const int* args) { return args[1] + args[0]; }}},
                 {'-', Operation{1, 2, [](const int* args) { return args[1] - args[0]; }}},
                 {'*', Operation{2, 2, [](const int* args) { return args[1] * args[0]; }}},
-                {'/', Operation{2, 2, [](const int* args) { return args[1] / args[0]; }}},
+                {'/', Operation{2, 2, [](const int* args) {
+                    if (args[0] == 0) { throw IllFormedExpression{}; }
+                    return args[1] / args[0];
+                }}},
         };
 
         return intrinsic_binaries;
