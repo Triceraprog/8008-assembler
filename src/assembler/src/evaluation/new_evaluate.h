@@ -253,6 +253,10 @@ namespace SimpleEvaluator
                     {
                         pop_and_apply_op(values, operations, configuration);
                     }
+                    if (operations.empty())
+                    {
+                        throw ValueWasExpected{};
+                    }
                     operations.pop();
                     break;
                 default:

@@ -49,6 +49,10 @@ int apply_operation(const char& op, int acc, int val)
             acc *= val;
             break;
         case '/':
+            if (val == 0)
+            {
+                throw IllFormedExpression();
+            }
             acc /= val;
             break;
         case '#':
