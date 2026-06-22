@@ -8,7 +8,7 @@ int evaluate_argument(const Context& context, std::string_view arg)
 {
     if (arg.starts_with("\\HB\\"))
     {
-        int value = evaluate_argument(context, arg.begin() + 4);
+        int value = evaluate_argument(context, arg.substr(4));
         return ((value >> 8) & 0xFF);
     }
     if (arg.starts_with("H(") && arg.ends_with(')'))
@@ -19,7 +19,7 @@ int evaluate_argument(const Context& context, std::string_view arg)
 
     if (arg.starts_with("\\LB\\"))
     {
-        int value = evaluate_argument(context, arg.begin() + 4);
+        int value = evaluate_argument(context, arg.substr(4));
         return (value & 0xFF);
     }
     if (arg.starts_with("L(") && arg.ends_with(')'))
