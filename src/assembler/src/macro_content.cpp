@@ -1,7 +1,8 @@
 #include "macro_content.h"
 
-#include <sstream>
+#include <algorithm>
 #include <ranges>
+#include <sstream>
 
 MacroContent::MacroContent(std::string_view name, const Parameters& parameters) : name{name}
 {

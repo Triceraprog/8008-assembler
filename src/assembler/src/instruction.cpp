@@ -17,6 +17,7 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <ranges>
 #include <utility>
 #include <vector>
 

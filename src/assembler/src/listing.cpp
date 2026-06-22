@@ -3,6 +3,7 @@
 #include "listing_line.h"
 #include "options.h"
 
+#include <cstdint>
 #include <cstring>
 #include <iomanip>
 #include <iostream>

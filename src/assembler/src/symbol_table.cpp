@@ -1,5 +1,6 @@
 #include "symbol_table.h"
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 

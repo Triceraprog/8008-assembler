@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <regex>
 
 namespace

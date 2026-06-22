@@ -1,6 +1,7 @@
 #ifndef INC_8008_ASSEMBLER_LISTING_LINE_H
 #define INC_8008_ASSEMBLER_LISTING_LINE_H
 
+#include <cstdint>
 #include <string>
 
 class ListingLine

@@ -3,6 +3,7 @@
 
 #include "opcodes/opcodes.h"
 
+#include <cstdint>
 #include <vector>
 
 class Options;
