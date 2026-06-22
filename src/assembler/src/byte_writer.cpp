@@ -66,7 +66,7 @@ void ByteWriter::flush_hex_line()
         checksum += data_on_line;
         output << std::setw(2) << static_cast<uint32_t>(data_on_line);
     }
-    checksum = 0x100 - (checksum & 0xFF);
+    checksum = (0x100 - (checksum & 0xFF)) & 0xFF;
 
     output << std::setw(2) << checksum;
     output << '\n';
