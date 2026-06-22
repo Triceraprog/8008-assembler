@@ -224,14 +224,12 @@ void verify_arguments_count(const std::string_view instruction_name,
         throw SyntaxError("missing argument(s) for " + std::string{instruction_name});
     }
 
-    const auto& first_argument = arguments[0];
-    if (argument_needed >= 1 && first_argument.size() != 1)
+    if (argument_needed >= 1 && arguments[0].size() != 1)
     {
         throw SyntaxError("Wrong first argument for " + std::string{instruction_name});
     }
 
-    const auto& second_argument = arguments[1];
-    if (argument_needed >= 2 && second_argument.size() != 1)
+    if (argument_needed >= 2 && arguments[1].size() != 1)
     {
         throw SyntaxError("Wrong second argument for " + std::string{instruction_name});
     }
