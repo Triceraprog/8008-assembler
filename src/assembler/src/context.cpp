@@ -71,6 +71,10 @@ MacroContent* Context::get_macro_content(std::string_view macro_name) const
                    toupper);
 
     auto it = macros.find(upper_macro_name);
+    if (it == macros.end())
+    {
+        throw InternalError("get_macro_content: macro '" + upper_macro_name + "' not found");
+    }
     return it->second.get();
 }
 
